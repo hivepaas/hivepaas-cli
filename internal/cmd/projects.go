@@ -82,6 +82,7 @@ const (
 	// the name does.
 	colKey    = "KEY"
 	colKind   = "KIND"
+	colType   = "TYPE"
 	colStatus = "STATUS"
 )
 

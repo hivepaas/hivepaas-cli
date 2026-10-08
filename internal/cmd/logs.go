@@ -26,6 +26,7 @@ type logsFlags struct {
 	tail         int
 	noTimestamps bool
 	deployment   string
+	task         string
 
 	// The stored logs: read when one of these is given.
 	history   bool
@@ -48,15 +49,16 @@ func (a *App) logsCmd() *cobra.Command {
 	var flags logsFlags
 	cmd := &cobra.Command{
 		Use:   "logs",
-		Short: "Show an app's logs, or a deployment's",
-		Long: "Show an app's logs, or with --deployment a deployment's.\n\n" +
+		Short: "Show an app's logs, a deployment's or a task's",
+		Long: "Show an app's logs, or with --deployment a deployment's, with --task a task's.\n\n" +
 			"With -f the command follows them until Ctrl-C, and opens the stream again when it drops.\n" +
 			"With -o json each line is a JSON object of its own: {type, data, ts}.\n\n" +
 			"--search, --level and --history read the stored logs instead, those of containers that no\n" +
 			"longer exist too: the last hour unless --since says otherwise, the newest lines first cut.",
 		Example: "  hivepaas logs -f --since 10m\n" +
 			"  hivepaas logs --search timeout --level error,warn --since 1d\n" +
-			"  hivepaas logs --deployment 01JA2C7W... -f",
+			"  hivepaas logs --deployment 01JA2C7W... -f\n" +
+			"  hivepaas logs --task 01JA2D8X... -f",
 		Args: usageArgs(cobra.NoArgs),
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return a.logs(cmd.Context(), flags)
@@ -67,6 +69,8 @@ func (a *App) logsCmd() *cobra.Command {
 	cmd.Flags().IntVar(&flags.tail, "tail", 0, "the last so many lines: the server's default for an app is 1000")
 	cmd.Flags().BoolVar(&flags.noTimestamps, "no-timestamps", false, "leave out each line's time")
 	cmd.Flags().StringVar(&flags.deployment, "deployment", "", "a deployment's logs, by its id")
+	cmd.Flags().StringVar(&flags.task, "task", "", "a task's logs, by its id: a job's run, for one")
+	cmd.MarkFlagsMutuallyExclusive("deployment", "task")
 	cmd.Flags().BoolVar(&flags.history, "history", false, "the stored logs, without a search")
 	cmd.Flags().StringVar(&flags.search, "search", "", "stored lines with this text, from the start of a word")
 	cmd.Flags().BoolVar(&flags.regex, "regex", false, "--search is a regular expression")
@@ -98,7 +102,18 @@ func (a *App) logs(ctx context.Context, flags logsFlags) error {
 	}
 
 	l := &stream.Logs{Query: query, Header: client.Headers(c.Target)}
-	if flags.deployment != "" {
+	switch {
+	case flags.task != "":
+		ref := taskRef{sel: sel, id: flags.task}
+		l.URL = c.BaseURL + ref.path() + "/logs"
+		if flags.follow {
+			// A task's stream ends with it, and before it starts.
+			l.Again = func(ctx context.Context) bool {
+				finished, _, err := a.taskFinished(ctx, c, ref)
+				return err == nil && !finished
+			}
+		}
+	case flags.deployment != "":
 		ref := deploymentRef{sel: sel, id: flags.deployment}
 		l.URL = c.BaseURL + ref.path() + "/logs"
 		if flags.follow {
@@ -109,7 +124,7 @@ func (a *App) logs(ctx context.Context, flags logsFlags) error {
 					!isOver(resp.JSON200.Data.Status)
 			}
 		}
-	} else {
+	default:
 		l.URL = fmt.Sprintf("%s/projects/%s/%s/apps/%s/logs", c.BaseURL, sel.Project.Id, sel.Env, sel.App.Id)
 		// The times are asked for always: a stream opened again starts from the
 		// last one. --no-timestamps only leaves them out of what is written.
@@ -179,8 +194,9 @@ func (a *App) storedLogs(ctx context.Context, flags logsFlags) error {
 	switch {
 	case flags.follow:
 		return exitcode.New(exitcode.Usage, "-f follows the live logs: --search, --level and --history read the stored ones")
-	case flags.deployment != "":
-		return exitcode.New(exitcode.Usage, "a deployment's logs are not searched: leave out --search, --level and --history")
+	case flags.deployment != "" || flags.task != "":
+		return exitcode.New(exitcode.Usage, "a deployment's or a task's logs are not searched: leave out --search, "+
+			"--level and --history")
 	case flags.tail < 0:
 		return exitcode.New(exitcode.Usage, "--tail takes a number of lines, not %d", flags.tail)
 	}

@@ -54,9 +54,10 @@ func (r *Resolver) GitCredentials(ctx context.Context, projectID, env string) (
 	}
 }
 
-// Credential is the credential of items input names: by id or name exactly, else
-// by name ignoring case. what is its kind, as the errors say it.
-func Credential[T any](what, input, where string, items []T, idName func(T) (string, string)) (T, error) {
+// Setting is the setting of items input names - a credential, a job, a secret:
+// by id or name exactly, else by name ignoring case. what is its kind, as the
+// errors say it.
+func Setting[T any](what, input, where string, items []T, idName func(T) (string, string)) (T, error) {
 	return pick(what, input, where, items, func(item T) named {
 		id, name := idName(item)
 		return named{id, name, name}

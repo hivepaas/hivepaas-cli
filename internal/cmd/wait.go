@@ -10,6 +10,7 @@ import (
 
 	"github.com/hivepaas/hivepaas-cli/internal/api"
 	"github.com/hivepaas/hivepaas-cli/internal/client"
+	"github.com/hivepaas/hivepaas-cli/internal/config"
 	"github.com/hivepaas/hivepaas-cli/internal/exitcode"
 	"github.com/hivepaas/hivepaas-cli/internal/stream"
 )
@@ -31,25 +32,53 @@ var (
 func (a *App) waitFor(ctx context.Context, c *client.Client, ref deploymentRef, logs bool) (
 	*api.AppdeploymentdtoDeploymentResp, error,
 ) {
-	var over atomic.Bool
+	logsURL := ""
+	if logs {
+		logsURL = c.BaseURL + ref.path() + "/logs"
+	}
+	err := a.follow(ctx, logsURL, "the deployment's logs", c.Target, func(ctx context.Context) (bool, error) {
+		resp, err := c.GetAppDeploymentStatusWithResponse(ctx, ref.sel.Project.Id, ref.sel.Env, ref.sel.App.Id, ref.id)
+		err = client.Check(resp, err)
+		if err == nil && (resp.JSON200 == nil || resp.JSON200.Data == nil) {
+			err = exitcode.New(exitcode.Server, "the server answered no status for deployment %s", ref.id)
+		}
+		if err != nil {
+			return false, err
+		}
+		return isOver(resp.JSON200.Data.Status), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return a.deployment(ctx, c, ref)
+}
+
+// follow waits for what over reads the state of - a deployment, a task - to
+// finish: it asks over every pollInterval, a transient error included, and with
+// a logsURL follows that log stream on stderr meanwhile, under logsName in a
+// warning when it fails. It answers ctx's error when ctx ends first.
+func (a *App) follow(ctx context.Context, logsURL, logsName string, target *config.Target,
+	over func(context.Context) (bool, error),
+) error {
+	var finished atomic.Bool
 	logsCtx, stopLogs := context.WithCancel(ctx)
 	defer stopLogs()
 	logsDone := make(chan struct{})
-	if logs {
+	if logsURL != "" {
 		go func() {
 			defer close(logsDone)
 			l := &stream.Logs{
-				URL:    c.BaseURL + ref.path() + "/logs",
+				URL:    logsURL,
 				Query:  url.Values{"follow": {"true"}},
-				Header: client.Headers(c.Target),
-				// The stream ends with the deployment, and before it starts: it is
-				// opened again until the deployment is over.
-				Again: func(context.Context) bool { return !over.Load() },
+				Header: client.Headers(target),
+				// The stream ends with what it is of, and before it starts: it is
+				// opened again until that is over.
+				Again: func(context.Context) bool { return !finished.Load() },
 				Retry: logsRetry,
 			}
 			err := l.Run(logsCtx, a.deployLine)
 			if err != nil && logsCtx.Err() == nil {
-				a.printer.Warnf("the deployment's logs: %s", err)
+				a.printer.Warnf("%s: %s", logsName, err)
 			}
 		}()
 	} else {
@@ -59,22 +88,18 @@ func (a *App) waitFor(ctx context.Context, c *client.Client, ref deploymentRef, 
 	ticker := time.NewTicker(pollInterval)
 	defer ticker.Stop()
 	for {
-		resp, err := c.GetAppDeploymentStatusWithResponse(ctx, ref.sel.Project.Id, ref.sel.Env, ref.sel.App.Id, ref.id)
-		err = client.Check(resp, err)
-		if err == nil && (resp.JSON200 == nil || resp.JSON200.Data == nil) {
-			err = exitcode.New(exitcode.Server, "the server answered no status for deployment %s", ref.id)
-		}
+		done, err := over(ctx)
 		switch {
 		case ctx.Err() != nil:
 			stopLogs()
 			<-logsDone
-			return nil, ctx.Err() //nolint:wrapcheck // the caller tells an interrupt from a timeout
+			return ctx.Err() //nolint:wrapcheck // the caller tells an interrupt from a timeout
 		case err != nil && !transient(err):
 			stopLogs()
 			<-logsDone
-			return nil, err
-		case err == nil && isOver(resp.JSON200.Data.Status):
-			over.Store(true)
+			return err
+		case err == nil && done:
+			finished.Store(true)
 			select {
 			case <-logsDone:
 			case <-time.After(logsGrace):
@@ -82,7 +107,7 @@ func (a *App) waitFor(ctx context.Context, c *client.Client, ref deploymentRef, 
 			}
 			stopLogs()
 			<-logsDone
-			return a.deployment(ctx, c, ref)
+			return nil
 		}
 		select {
 		case <-ctx.Done():

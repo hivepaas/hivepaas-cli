@@ -215,3 +215,23 @@ func Ago(value string, now time.Time) string {
 		return fmt.Sprintf("%dd ago", int(d.Hours()/24)) //nolint:mnd
 	}
 }
+
+// In is how far off an RFC 3339 time is, as a person says it: in 5m, in 2h,
+// in 3d. A time past is "now"; one it cannot read is given back as it is.
+func In(value string, now time.Time) string {
+	t, err := time.Parse(time.RFC3339, value)
+	if err != nil {
+		return value
+	}
+	d := t.Sub(now)
+	switch {
+	case d < time.Minute:
+		return "now"
+	case d < time.Hour:
+		return fmt.Sprintf("in %dm", int(d.Minutes()))
+	case d < 24*time.Hour:
+		return fmt.Sprintf("in %dh", int(d.Hours()))
+	default:
+		return fmt.Sprintf("in %dd", int(d.Hours()/24)) //nolint:mnd
+	}
+}

@@ -165,7 +165,7 @@ func (s *sourceFlags) input(ctx context.Context, c *client.Client, sel *selectio
 		if err != nil {
 			return nil, err
 		}
-		auth, err := resolve.Credential("registry credential", input, where, auths,
+		auth, err := resolve.Setting("registry credential", input, where, auths,
 			func(a api.RegistryauthdtoRegistryAuthResp) (string, string) { return a.Id, a.Name })
 		if err != nil {
 			return nil, err
@@ -201,7 +201,7 @@ func gitCredential(ctx context.Context, r *resolve.Resolver, sel *selection, whe
 	if err != nil {
 		return nil, err
 	}
-	cred, err := resolve.Credential("git credential", input, where, creds,
+	cred, err := resolve.Setting("git credential", input, where, creds,
 		func(g api.GitcredentialdtoGitCredentialResp) (string, string) { return g.Id, g.Name })
 	if err != nil {
 		return nil, err

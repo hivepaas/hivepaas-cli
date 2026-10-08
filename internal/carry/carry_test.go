@@ -74,6 +74,19 @@ func TestScaleSettingsCarryEveryField(t *testing.T) {
 	assert.Empty(t, missing, "fields of the autoscale request the CLI does not carry back")
 }
 
+// A project comes back whole: its envs, its tags and its owner.
+func TestProjectCarriesEveryField(t *testing.T) {
+	var project api.ProjectdtoProjectResp
+	fill(reflect.ValueOf(&project).Elem(), 0)
+
+	req, err := Project(&project)
+	require.NoError(t, err)
+
+	missing, _ := unfilled(reflect.ValueOf(req).Elem(), "")
+	assert.Empty(t, missing, "fields of the project request the CLI does not carry back")
+	assert.Equal(t, project.Owner.Id, req.Owner.Id)
+}
+
 // The environment variables come back whole, without those HivePaaS sets.
 func TestEnvVarsCarryEveryField(t *testing.T) {
 	var vars api.AppsettingsdtoEnvVarsResp

@@ -72,6 +72,7 @@ func (a *App) projectsCmd() *cobra.Command {
 			return nil
 		},
 	})
+	cmd.AddCommand(a.projectCreateCmd(), a.projectDeleteCmd(), a.projectEnvCmd())
 	return cmd
 }
 

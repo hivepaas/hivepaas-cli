@@ -71,6 +71,17 @@ func Autoscale(settings *api.AppsettingsdtoAppAutoscaleResp) (*api.Appsettingsdt
 	return &req, nil
 }
 
+// Project is the request that writes a project back as it is: its envs, its
+// tags, its owner - which the server sets from the request, and blanks when it
+// is left out.
+func Project(project *api.ProjectdtoProjectResp) (*api.ProjectdtoUpdateProjectReq, error) {
+	var req api.ProjectdtoUpdateProjectReq
+	if err := convert(project, &req); err != nil {
+		return nil, fmt.Errorf("the project: %w", err)
+	}
+	return &req, nil
+}
+
 // EnvVars is the request that writes an app's environment variables back as
 // they are: its own, without those HivePaaS sets (isSystem), which the lists
 // show beside them and the server does not take back.

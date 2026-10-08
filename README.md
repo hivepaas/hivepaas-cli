@@ -13,6 +13,8 @@ make build                       # bin/hivepaas
 bin/hivepaas login https://paas.example.com
 bin/hivepaas link -p shop -e production -a api
 bin/hivepaas deploy --image ghcr.io/acme/shop-api:1.4.3
+bin/hivepaas deploy --ref release --dockerfile docker/Dockerfile   # an app built from its repository
+bin/hivepaas deploy settings
 bin/hivepaas logs -f --since 10m
 bin/hivepaas env set LOG_LEVEL=debug
 bin/hivepaas update                # a newer release, checked against a list signed offline
@@ -27,6 +29,10 @@ From CI, with nothing stored:
     HIVEPAAS_API_KEY: ${{ secrets.HIVEPAAS_API_KEY }}   # <keyId>:<secret>
   run: hivepaas deploy -p shop -e production -a api --image ghcr.io/acme/shop-api:${{ github.sha }}
 ```
+
+An app built from its repository deploys the commit a job was run for with
+`--commit ${{ github.sha }}`; with `--no-auto-deploy` the push itself does not
+deploy it too.
 
 ## Developing
 

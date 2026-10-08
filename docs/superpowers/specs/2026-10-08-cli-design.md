@@ -54,7 +54,8 @@ needs for it. Later phases are listed at the end.
 | `project ls`, `project get` | list and show projects, with their environments |
 | `app ls`, `app get` | list and show apps |
 | `link`, `unlink` | tie a directory to an app |
-| `deploy [--image REF]` | deploy, and by default wait for the result while following its logs |
+| `deploy [source flags]` | deploy, and by default wait for the result while following its logs; the flags of its source - an image, or a repository to build - change what it deploys first ([design](2026-10-08-deploy-source-design.md)) |
+| `deploy settings` | what an app deploys: its image or its repository, and its commands |
 | `deploy cancel [ID]` | cancel a deployment: the app's running one when no id is given |
 | `deploy ls`, `deploy get ID` | an app's deployments: status, what started them, how long they took, what they deployed |
 | `logs [-f]` | an app's logs; `--search`, `--level`, `--history` read the stored ones |
@@ -64,7 +65,7 @@ needs for it. Later phases are listed at the end.
 | `exec [APP]` (alias `ssh`) | a shell in one of the app's containers, over the terminal websocket |
 | `domain ls\|add\|rm` | the domains an app is served on |
 | `app scale` | an app's replicas, its autoscale, and each replica's CPU and memory limits |
-| `app create NAME [--image]`, `app delete` | create an app, its variables and port set before the image deploys it; delete one with what goes with it |
+| `app create NAME [source flags]`, `app delete` | create an app, its variables and port set before its source deploys it; delete one with what goes with it |
 | `template ls`, `template deploy` | the template store |
 | `api METHOD PATH` | any endpoint, authenticated, JSON in and out |
 | `version`, `completion` | the CLI's version and shell completion |
@@ -262,7 +263,8 @@ execute, write and delete actions, never beyond its owner's permissions):
 | `app ls` | `GET /projects/{projectID}/{projectEnv}/apps` | read |
 | `app get A` | `GET .../apps/{appID}` | read |
 | `deploy` | `POST .../apps/{appID}/deploy` | execute |
-| `deploy --image R` | `GET` then `PUT .../deployment-settings` with the image changed: the change deploys | write |
+| `deploy` with source flags | `GET` then `PUT .../deployment-settings` changed as the flags ask: the change deploys. The credentials they name through `GET /projects/{projectID}/{projectEnv}/registry-auth` and `.../git-credentials` | write |
+| `deploy settings` | `GET .../deployment-settings` | read |
 | (waiting) | `GET .../deployments/{id}/status`, logs over websocket | read |
 | `deploy cancel` | `GET .../deployments` for the running one, `POST .../deployments/{id}/cancel` | execute |
 | `logs` | `GET .../apps/{appID}/logs` over websocket | read |
@@ -382,16 +384,18 @@ owner's.
 ## 5. Deploying
 
 ```
-hivepaas deploy [--image REF] [--no-cache] [--no-wait] [--timeout 30m]
+hivepaas deploy [source flags] [--no-cache] [--change-id ID] [--no-wait] [--timeout 30m]
 ```
 
-1. With `--image`, the CLI sets the image in the app's deployment settings: it
-   reads them, changes the image, and writes them back under their `updateVer` - a
-   change made meanwhile in the dashboard makes the write fail rather than be
-   overwritten, and the CLI reads again and retries once. A change of the
-   deployment settings deploys the app: the server starts that deployment itself,
-   and answers its id, so the CLI does not call `POST .../deploy` too. Without
-   `--image`, or when the image is the app's already, `POST .../deploy` starts it.
+1. With the flags of its source - `--image`, or `--repo`, `--ref`, `--commit` and
+   the rest, [their own design](2026-10-08-deploy-source-design.md) - the CLI
+   changes the app's deployment settings: it reads them, changes what the flags
+   ask, and writes them back under their `updateVer` - a change made meanwhile in
+   the dashboard makes the write fail rather than be overwritten, and the CLI
+   reads again and retries once. A change of the deployment settings deploys the
+   app: the server starts that deployment itself, and answers its id, so the CLI
+   does not call `POST .../deploy` too. Without those flags, or when the settings
+   are as asked already, `POST .../deploy` starts it.
 2. Unless `--no-wait`, the CLI follows the deployment's logs over its websocket,
    printing them to stderr, and polls its status every two seconds.
 3. It stops when the status is `done` (exit 0), `failed` or `canceled` (exit 8), or

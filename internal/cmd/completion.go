@@ -47,7 +47,50 @@ func (a *App) registerCompletions(root *cobra.Command) {
 		if choices, found := byPath[path]; found {
 			cmd.ValidArgsFunction = a.completeFirstArg(a.complete(choices))
 		}
+		// The commands that take a source's flags: deploy, app create.
+		if cmd.Flags().Lookup("push-to") != nil {
+			_ = cmd.RegisterFlagCompletionFunc("registry-auth", a.complete(a.registryAuthChoices))
+			_ = cmd.RegisterFlagCompletionFunc("push-to", a.complete(a.registryAuthChoices))
+			_ = cmd.RegisterFlagCompletionFunc("git-credential", a.complete(a.gitCredentialChoices))
+			_ = cmd.RegisterFlagCompletionFunc("use", cobra.FixedCompletions(
+				[]cobra.Completion{"image", "repo"}, cobra.ShellCompDirectiveNoFileComp))
+		}
 	})
+}
+
+// noCredential is what Tab offers first for a credential: none.
+var noCredential = cobra.CompletionWithDesc(none, "no credential")
+
+func (a *App) registryAuthChoices(ctx context.Context, c *client.Client) ([]cobra.Completion, error) {
+	project, env, err := a.completionEnv(ctx, c)
+	if err != nil {
+		return nil, err
+	}
+	auths, err := resolve.New(c).RegistryAuths(ctx, project.Id, env)
+	if err != nil {
+		return nil, err
+	}
+	out := []cobra.Completion{noCredential}
+	for _, auth := range auths {
+		out = append(out, cobra.CompletionWithDesc(auth.Name, string(auth.Kind)+", "+auth.Address))
+	}
+	return out, nil
+}
+
+func (a *App) gitCredentialChoices(ctx context.Context, c *client.Client) ([]cobra.Completion, error) {
+	project, env, err := a.completionEnv(ctx, c)
+	if err != nil {
+		return nil, err
+	}
+	creds, err := resolve.New(c).GitCredentials(ctx, project.Id, env)
+	if err != nil {
+		return nil, err
+	}
+	out := []cobra.Completion{noCredential}
+	for _, cred := range creds {
+		out = append(out, cobra.CompletionWithDesc(cred.Name, cred.Kind))
+	}
+	return out, nil
 }
 
 func walk(cmd *cobra.Command, visit func(*cobra.Command)) {

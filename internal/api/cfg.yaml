@@ -1,0 +1,6 @@
+# oapi-codegen's configuration for the client. `make gen` runs it on openapi.json.
+package: api
+generate:
+  models: true
+  client: true
+output: internal/api/client.gen.go

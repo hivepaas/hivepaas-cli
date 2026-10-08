@@ -1,0 +1,79 @@
+# The linters hivepaas runs, so that the two repositories read alike - but for
+# err113 and wrapcheck: a CLI's errors are messages for the person running it,
+# made where the cause is known, and wrapping each again says nothing more.
+version: "2"
+linters:
+  enable:
+    - bodyclose
+    - contextcheck
+    - copyloopvar
+    - dogsled
+    - errname
+    - errorlint
+    - exhaustive
+    - forbidigo
+    - forcetypeassert
+    - funlen
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - gosec
+    - govet
+    - lll
+    - makezero
+    - misspell
+    - mnd
+    - nakedret
+    - nilerr
+    - revive
+    - staticcheck
+    - unconvert
+    - unparam
+    - whitespace
+  settings:
+    funlen:
+      lines: 120
+      statements: 100
+    gocognit:
+      min-complexity: 30
+    gocyclo:
+      min-complexity: 30
+    lll:
+      line-length: 120
+    misspell:
+      locale: US
+    revive:
+      rules:
+        - name: var-naming
+          disabled: true
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - contextcheck
+          - errorlint
+          - forcetypeassert
+          - funlen
+          - gocognit
+          - goconst
+          - gocyclo
+          - gosec
+          - mnd
+          - revive
+        path: _test\.go
+formatters:
+  enable:
+    - gci
+    - gofmt
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/hivepaas/hivepaas-cli)

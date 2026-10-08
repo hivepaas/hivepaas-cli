@@ -235,7 +235,6 @@ Every command takes these global flags:
 | `-o, --output` | | `table` (default), `json` or `yaml` |
 | `--no-color` | `NO_COLOR` | no ANSI colors; also off when stdout is not a terminal |
 | `--debug` | `HIVEPAAS_DEBUG` | log each request and response to stderr, credentials redacted |
-| `-y, --yes` | | do not ask for confirmation |
 
 What each MVP command calls, and what the API key needs (an API key carries read,
 execute, write and delete actions, never beyond its owner's permissions):
@@ -248,7 +247,7 @@ execute, write and delete actions, never beyond its owner's permissions):
 | `apps ls` | `GET /projects/{projectID}/{projectEnv}/apps` | read |
 | `apps get A` | `GET .../apps/{appID}` | read |
 | `deploy` | `POST .../apps/{appID}/deploy` | execute |
-| `deploy --image R` | `GET` then `PUT .../deployment-settings` with the image changed, then the deploy | write, execute |
+| `deploy --image R` | `GET` then `PUT .../deployment-settings` with the image changed: the change deploys | write |
 | (waiting) | `GET .../deployments/{id}/status`, logs over websocket | read |
 | `deploy cancel` | `GET .../deployments` for the running one, `POST .../deployments/{id}/cancel` | execute |
 | `logs` | `GET .../apps/{appID}/logs` over websocket | read |
@@ -260,12 +259,20 @@ execute, write and delete actions, never beyond its owner's permissions):
 
 `templates deploy` runs the preflight first, as the dashboard does: what a previous
 install left on the volumes is shown, and the creation goes on only with
-`--reset-storage` or a confirmation. A parameter naming a volume or an app takes
-its name; the CLI resolves it.
+`--keep-storage`, `--reset-storage` or the answer to a question in a terminal; a
+script that gives neither exits 6 with nothing created. What the creation would
+refuse - a domain served already, a port held - is printed, and exits 6 too. A
+parameter naming a volume or an app takes its name, and the CLI sends the volume's
+id and the app's key; a volume parameter left out takes the project's only volume,
+as the dashboard's form does. Then the CLI waits for each deployment the creation
+started - the dependencies', the app's, its components' - and says how each ended.
 
 `env set KEY=VALUE...` and `env unset KEY...` change the runtime variables, or
 with `--build` or `--shared` the build-time or shared ones - the three lists the
-API keeps. `--literal` sets a value that is not expanded (`isLiteral`).
+API keeps. `--literal` sets a value that is not expanded (`isLiteral`). The lists
+show the variables HivePaaS sets (`isSystem`) beside the app's own: `env ls` leaves
+them out, `env ls --all` shows them and the inherited ones, and a write sends only
+the app's own.
 
 ## 3. Configuration and credentials
 
@@ -343,11 +350,13 @@ owner's.
 hivepaas deploy [--image REF] [--no-cache] [--no-wait] [--timeout 30m]
 ```
 
-1. With `--image`, the CLI first sets the image in the app's deployment settings:
-   it reads them, changes the image, and writes them back under their
-   `updateVer` - a change made meanwhile in the dashboard makes the write fail
-   rather than be overwritten, and the CLI reads again and retries once. Then
-   `POST .../deploy` starts the deployment.
+1. With `--image`, the CLI sets the image in the app's deployment settings: it
+   reads them, changes the image, and writes them back under their `updateVer` - a
+   change made meanwhile in the dashboard makes the write fail rather than be
+   overwritten, and the CLI reads again and retries once. A change of the
+   deployment settings deploys the app: the server starts that deployment itself,
+   and answers its id, so the CLI does not call `POST .../deploy` too. Without
+   `--image`, or when the image is the app's already, `POST .../deploy` starts it.
 2. Unless `--no-wait`, the CLI follows the deployment's logs over its websocket,
    printing them to stderr, and polls its status every two seconds.
 3. It stops when the status is `done` (exit 0), `failed` or `canceled` (exit 8), or
@@ -371,8 +380,14 @@ Logs come over a websocket: the app's at `.../apps/{appID}/logs`, a deployment's
 `since`, `duration`, `tail`, `timestamps`). The API key goes in the upgrade
 request's headers. Each binary message is a JSON array of `tasklog.LogFrame`
 (`type`, `data`, `ts`), the spec's own type. With `-f`, a dropped connection is
-opened again with `since` set to the last frame's time, so nothing is lost and
-little is repeated.
+opened again with `since` set to the last frame's second, and the lines seen
+already are left out. The times are always asked for, so that there is a last one;
+`--no-timestamps` only leaves them out of what is written. A deployment's stream
+ends with the deployment, and before it starts: it is opened again while the
+deployment's status says it has not finished.
+
+With `-o json` each line is a JSON object of its own, a frame, so that a pipe reads
+them as they come; there is no `-o yaml` for a stream.
 
 ## 7. Output and errors
 
@@ -391,8 +406,8 @@ Exit codes:
 | 0 | success |
 | 1 | an error no other code describes |
 | 2 | a usage error: an unknown flag, a missing argument |
-| 3 | not logged in, or the key was refused (401) |
-| 4 | not allowed (403) |
+| 3 | not logged in, or the key was refused (401 with `ERR_NO_SESSION`, `ERR_SESSION_*`, `ERR_API_KEY_INVALID`) |
+| 4 | not allowed (403, and the API's 401 `ERR_UNAUTHORIZED` for an action the key or its user may not take) |
 | 5 | not found (404), or a name that matches nothing |
 | 6 | refused as invalid or conflicting (400, 409, 422) |
 | 7 | the server failed or could not be reached (5xx, network) |
@@ -420,7 +435,9 @@ too old.
 **The server refuses writes from an older CLI.** A request that is not a `GET`,
 carrying the header with a level below the server's, is answered `426 Upgrade
 Required`, with an `ErrorInfo` naming both levels and how to update. A `GET` is
-served, with a `Warning` header the CLI shows once. Requests without the header -
+served. Every request with the header is answered the server's level in
+`HivePaaS-API-Level`, and a CLI below it warns once that it reads and may not
+write. Requests without the header -
 the dashboard, `curl`, a script - are not concerned. That rule is what makes the
 read-change-write of §5 and `env set` safe: the CLI writing a settings object
 back knows every field the server has.

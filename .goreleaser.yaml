@@ -1,0 +1,64 @@
+# The CLI's release: hivepaas for Linux, macOS and Windows, amd64 and arm64,
+# in a draft GitHub Release with checksums.txt. .github/workflows/release.yml
+# runs it on a tag, and attests the archives' provenance.
+version: 2
+
+project_name: hivepaas
+
+builds:
+  - id: hivepaas
+    main: ./cmd/hivepaas
+    binary: hivepaas
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X github.com/hivepaas/hivepaas-cli/internal/version.Version={{ .Version }}
+    # The files' times are the commit's, so that a build of a tag is the same
+    # build every time.
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: hivepaas
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    # The archives too are the same every time: their files carry the commit's
+    # time and no one's name, not the checkout's.
+    builds_info:
+      mtime: "{{ .CommitDate }}"
+      owner: root
+      group: root
+    files:
+      - src: LICENSE
+        info: &fileinfo
+          mtime: "{{ .CommitDate }}"
+          owner: root
+          group: root
+      - src: README.md
+        info: *fileinfo
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-snapshot"
+
+changelog:
+  use: git
+  sort: asc
+
+release:
+  github:
+    owner: hivepaas
+    name: hivepaas-cli
+  # Published by hand, once the archives are checked: as the server's releases.
+  draft: true
+  replace_existing_draft: true
+  prerelease: auto

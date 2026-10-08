@@ -517,10 +517,17 @@ Tables use `text/tabwriter`.
 
 ## 12. Releases and installation
 
-- goreleaser builds `hivepaas` for Linux, macOS and Windows, amd64 and arm64, on a
-  `v*` tag; the GitHub release carries the archives, `checksums.txt`, and a build
-  provenance attestation (`actions/attest-build-provenance`), which
-  `gh attestation verify` checks.
+- goreleaser (`.goreleaser.yaml`, `.github/workflows/release.yml`) builds `hivepaas`
+  for Linux, macOS and Windows, amd64 and arm64, on a `v*` tag; the GitHub release
+  carries the archives, `checksums.txt`, and a build provenance attestation
+  (`actions/attest-build-provenance`), which `gh attestation verify` checks. The
+  release is a draft, published by hand, as the server's are.
+- A tag is released only with the spec of a server release: `internal/api/SPEC_REF`
+  must name a tag of hivepaas, and the client must be what that spec generates. The
+  first release therefore follows the first server release with the API level.
+- The build is reproducible: the binaries are built with `-trimpath` and the
+  commit's time, and the archives' files carry the commit's time and root as owner,
+  so a tag built twice gives the same `checksums.txt`.
 - A Homebrew tap, `hivepaas/homebrew-tap`, and an install script on hivepaas.com
   follow the first release.
 - The CLI's version is its own semver. `hivepaas version` says which server

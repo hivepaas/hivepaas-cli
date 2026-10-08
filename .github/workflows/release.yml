@@ -1,0 +1,90 @@
+name: Release
+
+# A tag v1.2.3 builds the CLI for Linux, macOS and Windows, amd64 and arm64, and
+# drafts its GitHub Release: the archives, checksums.txt, and their build
+# provenance, which `gh attestation verify` checks. The draft is published by
+# hand.
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Check the tag
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: '1.27.x'
+
+      # A release is a client of a released server: the API it calls is one
+      # people run, and its API level one a server has answered.
+      - name: The spec is a server release's
+        run: |
+          ref=$(tr -d '[:space:]' < internal/api/SPEC_REF)
+          if ! [[ $ref =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::internal/api/SPEC_REF is $ref: pin a released server's spec, make update-spec REF=<hivepaas tag>"
+            exit 1
+          fi
+          git ls-remote --exit-code --tags https://github.com/hivepaas/hivepaas.git "refs/tags/$ref" >/dev/null ||
+            { echo "::error::hivepaas has no tag $ref"; exit 1; }
+
+      - name: The client is generated from it
+        run: |
+          make gen
+          git diff --exit-code -- internal/api ||
+            { echo "::error::internal/api is not what the pinned spec generates: run make gen"; exit 1; }
+
+      - name: Test
+        run: go test -count=1 ./...
+
+  release:
+    name: Build and draft the release
+    needs: check
+    runs-on: ubuntu-24.04
+    environment: release
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # the changelog is the commits since the previous tag
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: '1.27.x'
+
+      - name: Build and draft the release
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7.2.3
+        with:
+          distribution: goreleaser
+          version: v2.18.2
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Attest the archives' provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-checksums: dist/checksums.txt

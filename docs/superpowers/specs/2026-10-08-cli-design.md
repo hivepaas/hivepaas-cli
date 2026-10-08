@@ -31,13 +31,16 @@ needs for it. Later phases are listed at the end.
 6. **Output for people and for scripts.** Tables by default; `-o json` prints the
    API's own `data`, unchanged, so a script reads the documented API shapes. Exit
    codes are part of the contract (§7).
-7. **A write changes what it names, and nothing else.** No command reads a whole
-   settings object, edits it and writes it back: a CLI older than the server would
-   write back without the fields it does not know, and erase them. `deploy --image`
-   and `env set` call server operations that change one thing (§9).
-8. **The server says what it is.** `GET /sessions/me` reports the server's version
-   and the features the CLI may use (§8); a command that needs a feature the server
-   lacks says so instead of failing halfway.
+7. **A write never loses what the CLI does not know.** The CLI changes settings as
+   the dashboard does: it reads the object, changes what it was asked to, and
+   writes it back under the object's `updateVer`. That is only safe from a client
+   that knows every field, so the server refuses a write from a CLI older than its
+   API (§8), and the CLI has a test for each request it writes back that fails when
+   the request has a field it does not carry over (§10).
+8. **The server says what it is.** `GET /sessions/me` reports the server's version,
+   its API level and the oldest CLI it takes writes from (§8). Reads from an older
+   CLI still work, with a warning, so a server upgrade does not stop a pipeline
+   from following its logs.
 
 ## 1. Scope of the MVP
 
@@ -56,7 +59,156 @@ needs for it. Later phases are listed at the end.
 | `version`, `completion` | the CLI's version and shell completion |
 
 `api` is the escape hatch, as in `gh api`: everything the MVP does not wrap is
-still one command away, with the context's URL and key applied.
+still one command away, with the context's URL and key applied, and `{project}`,
+`{env}` and `{app}` in the path filled in from the flags or the link (§4).
+
+## 1.1 What it looks like
+
+Output here is illustrative: the columns and wording are settled while building.
+
+**Logging in**, with a key made in the dashboard:
+
+```console
+$ hivepaas login https://paas.example.com
+API key ID: 01J9Z6M2QK...
+API key secret: ****************
+Logged in to https://paas.example.com as dev@example.com (HivePaaS v1.0.0-beta4).
+Saved as context "paas.example.com", now the current one.
+
+$ hivepaas context ls
+CURRENT  NAME              URL                       USER
+*        paas.example.com  https://paas.example.com  dev@example.com
+         local             http://localhost:10000    admin@example.com
+```
+
+**Looking around:**
+
+```console
+$ hivepaas projects ls
+NAME  ENVS                              STATUS
+shop  development, staging, production  active
+blog  production                        active
+
+$ hivepaas apps ls -p shop -e production
+NAME   KIND      STATUS   SOURCE                          UPDATED
+api    webapp    running  ghcr.io/acme/shop-api:1.4.2     2h ago
+web    webapp    running  github.com/acme/shop-web@main   1d ago
+db     postgres  running  postgres:18.0                   5d ago
+cache  valkey    running  valkey/valkey:8.1               5d ago
+```
+
+**Linking a directory**, after which the app needs no flags:
+
+```console
+$ cd ~/src/shop-api
+$ hivepaas link -p shop -e production -a api
+Linked ~/src/shop-api to shop / production / api on paas.example.com (.hivepaas.json).
+```
+
+**Deploying** a new image, waiting, with the deployment's logs:
+
+```console
+$ hivepaas deploy --image ghcr.io/acme/shop-api:1.4.3
+Image: ghcr.io/acme/shop-api:1.4.2 -> 1.4.3
+Deploying api (shop / production), deployment 01JA2C7W...
+  14:02:11  Pulling ghcr.io/acme/shop-api:1.4.3
+  14:02:19  Updating the service
+  14:02:31  1/1 tasks running and healthy
+Deployed in 24s.
+
+$ hivepaas deploy
+Deploying api (shop / production), deployment 01JA2D0F...
+  ...
+Deployment failed after 41s: the health check did not pass.
+Its logs: hivepaas logs --deployment 01JA2D0F...
+$ echo $?
+8
+```
+
+**From CI**, with nothing stored - a GitHub Actions step:
+
+```yaml
+- name: Deploy
+  env:
+    HIVEPAAS_URL: https://paas.example.com
+    HIVEPAAS_API_KEY: ${{ secrets.HIVEPAAS_API_KEY }}   # <keyId>:<secret>
+  run: hivepaas deploy -p shop -e production -a api --image ghcr.io/acme/shop-api:${{ github.sha }}
+```
+
+**Logs:**
+
+```console
+$ hivepaas logs -f --since 10m
+2026-10-08T14:02:33Z  Listening on :8080
+2026-10-08T14:03:01Z  GET /healthz 200 1ms
+^C
+```
+
+**Environment variables:**
+
+```console
+$ hivepaas env ls
+KIND     KEY           VALUE
+runtime  DATABASE_URL  ${db.HIVEPAAS_URL}
+runtime  LOG_LEVEL     info
+build    NODE_ENV      production
+
+$ hivepaas env set LOG_LEVEL=debug FEATURE_X=on
+Changed LOG_LEVEL, added FEATURE_X (runtime) on api.
+
+$ hivepaas env set --build NODE_ENV=staging
+$ hivepaas env unset FEATURE_X
+Removed FEATURE_X (runtime) from api.
+```
+
+**Restarting** another app of the same environment:
+
+```console
+$ hivepaas restart -a web
+Restarted web (shop / production).
+```
+
+**Templates:**
+
+```console
+$ hivepaas templates ls --sort popular --search sql
+NAME      TITLE        STARS  VERSIONS
+postgres  PostgreSQL   17.2k  18, 17, 16
+mariadb   MariaDB      6.4k   11.8, 11.4
+mysql     MySQL        12.1k  8.4
+
+$ hivepaas templates deploy postgres --name orders-db -p shop -e staging --param dataVolume=default
+Nothing is left on the volumes by a previous install.
+Created orders-db (PostgreSQL 18) in shop / staging.
+Deployed in 18s.
+```
+
+**For scripts**: the API's own data, and exit codes:
+
+```console
+$ hivepaas apps ls -p shop -e production -o json | jq -r '.[].name'
+api
+web
+db
+cache
+
+$ hivepaas api GET /projects/{project}/{env}/apps/{app}/routing-settings | jq .data.domains
+```
+
+**When something is wrong:**
+
+```console
+$ hivepaas logs -a apii
+Error: no app "apii" in shop / production. Its apps: api, web, db, cache.
+$ echo $?
+5
+
+$ hivepaas env set LOG_LEVEL=warn
+Error: paas.example.com takes changes only from a newer CLI: it is at API level 15,
+this CLI at 14. Update it: brew upgrade hivepaas
+$ echo $?
+10
+```
 
 ## 2. Commands
 
@@ -84,18 +236,23 @@ execute, write and delete actions, never beyond its owner's permissions):
 | `apps ls` | `GET /projects/{projectID}/{projectEnv}/apps` | read |
 | `apps get A` | `GET .../apps/{appID}` | read |
 | `deploy` | `POST .../apps/{appID}/deploy` | execute |
-| `deploy --image R` | the same, with `image` (B1) | execute |
+| `deploy --image R` | `GET` then `PUT .../deployment-settings` with the image changed, then the deploy | write, execute |
 | (waiting) | `GET .../deployments/{id}/status`, logs over websocket | read |
 | `logs` | `GET .../apps/{appID}/logs` over websocket | read |
 | `restart` | `POST .../apps/{appID}/restart` | execute |
 | `env ls` | `GET .../apps/{appID}/env-vars` | read |
-| `env set`, `env unset` | `PATCH .../apps/{appID}/env-vars` (B2) | write |
-| `templates ls` | `GET /app-templates` (`--sort`, `--category`, `--search`) | read |
+| `env set`, `env unset` | `GET` then `PUT .../apps/{appID}/env-vars` | write |
+| `templates ls` | `GET /app-templates` (`--sort name\|popular\|trending\|new`, `--category`, `--search`) | read |
 | `templates deploy T` | `POST .../apps/from-template/preflight`, then `POST .../apps/from-template` | write |
 
 `templates deploy` runs the preflight first, as the dashboard does: what a previous
 install left on the volumes is shown, and the creation goes on only with
-`--reset-storage` or a confirmation.
+`--reset-storage` or a confirmation. A parameter naming a volume or an app takes
+its name; the CLI resolves it.
+
+`env set KEY=VALUE...` and `env unset KEY...` change the runtime variables, or
+with `--build` or `--shared` the build-time or shared ones - the three lists the
+API keeps. `--literal` sets a value that is not expanded (`isLiteral`).
 
 ## 3. Configuration and credentials
 
@@ -173,8 +330,11 @@ owner's.
 hivepaas deploy [--image REF] [--no-cache] [--no-wait] [--timeout 30m]
 ```
 
-1. `POST .../deploy` starts a deployment; with `--image`, the request carries the
-   image (B1) and the server sets it and deploys in one step.
+1. With `--image`, the CLI first sets the image in the app's deployment settings:
+   it reads them, changes the image, and writes them back under their
+   `updateVer` - a change made meanwhile in the dashboard makes the write fail
+   rather than be overwritten, and the CLI reads again and retries once. Then
+   `POST .../deploy` starts the deployment.
 2. Unless `--no-wait`, the CLI follows the deployment's logs over its websocket,
    printing them to stderr, and polls its status every two seconds.
 3. It stops when the status is `done` (exit 0), `failed` or `canceled` (exit 8), or
@@ -223,44 +383,50 @@ Exit codes:
 | 7 | the server failed or could not be reached (5xx, network) |
 | 8 | the deployment failed or was canceled |
 | 9 | timed out waiting |
+| 10 | the server takes no writes from a CLI this old (426) |
 | 130 | interrupted |
 
-## 8. Knowing the server
+## 8. Knowing the server, and what it takes from the CLI
 
-`GET /sessions/me` gains a `server` object (B0):
+**The API level** is a number the server's spec carries, raised whenever a
+request it accepts changes: a field added to a body, a parameter added to an
+operation. `make gen-swag` computes a fingerprint of every request in the spec,
+and raises the level when the fingerprint changes; CI fails when the committed
+level is behind the spec. Descriptions and responses do not move it, so a release
+that only fixes things does not ask anything of the CLI.
+
+**The CLI says what it is.** Every request carries
+`HivePaaS-CLI: <cli version>; api-level=<level of the spec it was built from>`,
+from the first release on - a CLI that never sent it could never be told it is
+too old.
+
+**The server refuses writes from an older CLI.** A request that is not a `GET`,
+carrying the header with a level below the server's, is answered `426 Upgrade
+Required`, with an `ErrorInfo` naming both levels and how to update. A `GET` is
+served, with a `Warning` header the CLI shows once. Requests without the header -
+the dashboard, `curl`, a script - are not concerned. That rule is what makes the
+read-change-write of §5 and `env set` safe: the CLI writing a settings object
+back knows every field the server has.
+
+**A newer CLI works with an older server**: the server ignores fields it does not
+know. A command that needs what the server does not have yet says so, from
+`GET /sessions/me`, which now answers:
 
 ```json
-"server": { "version": "v1.0.0-beta4", "versionCode": "v000001", "features": ["deploy-image", "env-vars-patch"] }
+"server": { "version": "v1.0.0-beta4", "apiLevel": 14, "minCliApiLevel": 14 }
 ```
 
-- `features` names what the server can do that a CLI may need, one string each,
-  added with the feature. A command checks for the one it needs and, when it is
-  missing, says which server version brings it. This is sturdier than comparing
-  versions: beta, stable and later backports all just list what they have.
-- A server that sends no `server` predates B0: the CLI goes on, and the commands
-  that need B1 or B2 say the server is too old.
-- `hivepaas version` prints the CLI's version, the server release its spec was
-  pinned from, and the current context's server version.
+`hivepaas version` prints the CLI's version and API level, the server release
+its spec was pinned from, and the current context's server version and level.
 
 ## 9. What the server needs
 
-Three small additions to hivepaas, made before the CLI's first release:
+| | Change |
+|---|---|
+| B0 | `GET /sessions/me` answers `server: {version, apiLevel, minCliApiLevel}`. `GET /system/hivepaas/release-info` is for an admin with Write on the System module, which a developer's key is not. |
+| B1 | The API level: computed by `make gen-swag` from the requests in the spec, kept in the spec's `info` (`x-api-level`), checked in CI. A middleware answers 426 to a write from a CLI whose level is below it. |
 
-| | Change | Why |
-|---|---|---|
-| B0 | `GET /sessions/me` answers `server: {version, versionCode, features}` | §8. `GET /system/hivepaas/release-info` is for an admin with Write on the System module, which a developer's key is not. |
-| B1 | `POST .../deploy` takes an optional `image` | Deploying a new tag from CI is one call, atomic, and changes nothing else: today it is a `PUT` of the whole deployment settings, whose response and request shapes differ, and an older client would erase fields it does not know. Refused for an app that does not deploy an image. |
-| B2 | `PATCH .../env-vars` with `set` and `unset` lists | `env set A=1` changes A. The server applies the change under the settings' `updateVer`, so two changes at once do not lose each other, and an older client cannot drop fields it does not know. |
-
-B2's body, for each of the three lists the `PUT` has (`runtime`, `shared`,
-`buildtime`):
-
-```json
-{ "set": [{ "kind": "runtime", "key": "A", "value": "1", "isLiteral": false }],
-  "unset": [{ "kind": "runtime", "key": "B" }] }
-```
-
-It answers the env vars as `GET` does, and applies them as the `PUT` does today.
+Nothing else: the CLI writes through the endpoints the dashboard uses.
 
 ## 10. The generated client
 
@@ -277,6 +443,14 @@ It answers the env vars as `GET` does, and applies them as the `PUT` does today.
   regenerated client in the working tree; `git checkout internal/api` undoes it.
 - **Weekly**, a job runs `spec-check` against hivepaas `main`, to hear early about
   changes the next server release will bring.
+- **Every request the CLI writes back is carried over whole.** The CLI turns what
+  a `GET` answers into what the `PUT` takes - the shapes differ: the deployment
+  settings answer a registry auth as an object and take its id. For each of
+  those requests a test walks the generated request type and fails on a field
+  the conversion does not fill. A server change adding a field to such a request
+  therefore fails hivepaas's `cli-compat` job until the CLI carries the field,
+  and the CLI release goes out before, or with, the server release that raises
+  the API level.
 - **What is known of the spec** (2026-10-08, against hivepaas `ddc19486`): 763
   operations, each with its own id; every route in it and nothing else; query
   parameters checked against what handlers read; optional, nullable and
@@ -334,7 +508,7 @@ Tables use `text/tabwriter`.
   shown before it is applied.
 - `hivepaas compose up -f docker-compose.yml`: a project from a compose file.
 - `hivepaas login` through the browser: a device flow, which needs the server to
-  issue a key the person approves in the dashboard (B3).
+  issue a key the person approves in the dashboard (B2).
 - A GitHub Action wrapping `hivepaas deploy`.
 - `hivepaas up`: deploy the working directory's source, which needs the server to
   build from an uploaded archive.

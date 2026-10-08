@@ -76,7 +76,7 @@ The example is `v0.2.0`.
 5. **Check the draft.** Download an archive for your machine with
    `gh release download v0.2.0 -p '*darwin_arm64*'`, check it with
    `gh attestation verify <archive> --repo hivepaas/hivepaas-cli`, and run it: `version`,
-   `login`, `apps ls`, a `deploy`.
+   `login`, `app ls`, a `deploy`.
 
 6. **Publish** the draft.
 

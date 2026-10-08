@@ -20,7 +20,7 @@ var templateSorts = map[string]string{
 const templatesPage = 1000
 
 func (a *App) templatesCmd() *cobra.Command {
-	cmd := &cobra.Command{Use: "templates", Short: "The template store"}
+	cmd := &cobra.Command{Use: "template", Aliases: []string{"templates"}, Short: "The template store"}
 	var sort, search, category string
 	ls := &cobra.Command{
 		Use:   "ls",

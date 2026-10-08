@@ -14,7 +14,7 @@ import (
 )
 
 func (a *App) appsCmd() *cobra.Command {
-	cmd := &cobra.Command{Use: "apps", Short: "Apps"}
+	cmd := &cobra.Command{Use: "app", Aliases: []string{"apps"}, Short: "An environment's apps"}
 	cmd.AddCommand(&cobra.Command{
 		Use:   "ls",
 		Short: "List an environment's apps",

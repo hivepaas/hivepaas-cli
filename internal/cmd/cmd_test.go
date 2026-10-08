@@ -324,7 +324,7 @@ func TestTemplatesDeployAsksAboutDataLeftBehind(t *testing.T) {
 	f.json("POST /api/projects/P1/production/apps/from-template", http.StatusCreated,
 		`{"data":{"app":{"id":"A9"},"deployment":{"id":"D9"}}}`)
 
-	r := f.run(args("templates deploy postgres --name orders-db -p shop -e production " +
+	r := f.run(args("template deploy postgres --name orders-db -p shop -e production " +
 		"--param dataVolume=fast --param replicaOf=api --param port=6432")...)
 
 	assert.Equal(t, exitcode.Invalid, r.code)
@@ -335,7 +335,7 @@ func TestTemplatesDeployAsksAboutDataLeftBehind(t *testing.T) {
 	assert.Equal(t, map[string]any{"dataVolume": "V2", "replicaOf": "api", "port": float64(6432)}, asked["params"],
 		"a volume by its id, an app by its key, a number as one")
 
-	r = f.run(args("templates deploy postgres --name orders-db -p shop -e production --param dataVolume=fast " +
+	r = f.run(args("template deploy postgres --name orders-db -p shop -e production --param dataVolume=fast " +
 		"--reset-storage --no-wait")...)
 	require.Equal(t, exitcode.OK, r.code, r.stderr)
 	assert.Equal(t, true, f.body("POST /api/projects/P1/production/apps/from-template", 0)["resetStorage"])
@@ -349,7 +349,7 @@ func TestTemplatesDeployNeedsAVolumeWhenThereAreSeveral(t *testing.T) {
 	f.json("GET /api/projects/P1/cluster-volumes", http.StatusOK,
 		`{"data":[{"id":"V1","name":"default"},{"id":"V2","name":"fast"}]}`)
 
-	r := f.run(args("templates deploy postgres -p shop -e production")...)
+	r := f.run(args("template deploy postgres -p shop -e production")...)
 
 	assert.Equal(t, exitcode.Usage, r.code)
 	assert.Contains(t, r.stderr, "which volume for dataVolume (Data volume)? Give --param dataVolume=NAME, "+
@@ -359,11 +359,28 @@ func TestTemplatesDeployNeedsAVolumeWhenThereAreSeveral(t *testing.T) {
 func TestListsShowKeys(t *testing.T) {
 	f := newFakeAPI(t)
 
-	r := f.run("projects", "ls")
+	r := f.run("project", "ls")
 	require.Equal(t, exitcode.OK, r.code, r.stderr)
 	assert.Equal(t, "NAME  KEY   ENVS        STATUS\nshop  shop  production  \n", r.stdout)
 
-	r = f.run(args("apps ls -p shop -e production")...)
+	r = f.run(args("app ls -p shop -e production")...)
 	require.Equal(t, exitcode.OK, r.code, r.stderr)
 	assert.Equal(t, "NAME  KEY  KIND  STATUS  UPDATED\napi   api  -     active  \n", r.stdout)
+}
+
+// The nouns are singular, as gh's; the plural, as fly's, does the same.
+func TestThePluralIsAnAlias(t *testing.T) {
+	f := newFakeAPI(t)
+	for _, pair := range [][2]string{
+		{"project ls", "projects ls"},
+		{"app ls -p shop -e production", "apps ls -p shop -e production"},
+		{"app get api -p shop -e production -o json", "apps get api -p shop -e production -o json"},
+	} {
+		singular, plural := f.run(args(pair[0])...), f.run(args(pair[1])...)
+		assert.Equal(t, singular, plural, pair[1])
+	}
+	f.json("GET /api/app-templates", 200, `{"data":[{"name":"postgres","title":"PostgreSQL"}]}`)
+	assert.Equal(t, f.run("template", "ls"), f.run("templates", "ls"))
+	r := f.run("contexts", "ls")
+	assert.Equal(t, exitcode.OK, r.code, r.stderr)
 }

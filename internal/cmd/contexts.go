@@ -10,8 +10,9 @@ import (
 
 func (a *App) contextCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "context",
-		Short: "The installations the CLI is logged in to",
+		Use:     "context",
+		Aliases: []string{"contexts"},
+		Short:   "The installations the CLI is logged in to",
 	}
 	cmd.AddCommand(&cobra.Command{
 		Use:   "ls",

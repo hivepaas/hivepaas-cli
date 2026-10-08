@@ -14,7 +14,7 @@ import (
 )
 
 func (a *App) projectsCmd() *cobra.Command {
-	cmd := &cobra.Command{Use: "projects", Short: "Projects and their environments"}
+	cmd := &cobra.Command{Use: "project", Aliases: []string{"projects"}, Short: "Projects and their environments"}
 	cmd.AddCommand(&cobra.Command{
 		Use:   "ls",
 		Short: "List the projects",

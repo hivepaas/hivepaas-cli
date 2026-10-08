@@ -44,7 +44,7 @@ func (a *App) templatesDeployCmd() *cobra.Command {
 			"First the server checks what a previous install left where the new apps would keep their\n" +
 			"data. If it finds some, the apps are created only with --keep-storage, to start on it, or\n" +
 			"--reset-storage, to delete it first - or with the answer to a question in a terminal.",
-		Example: "  hivepaas templates deploy postgres --name orders-db -p shop -e staging --param dataVolume=default",
+		Example: "  hivepaas template deploy postgres --name orders-db -p shop -e staging --param dataVolume=default",
 		Args:    usageArgs(cobra.ExactArgs(1)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return a.templatesDeploy(cmd.Context(), args[0], flags)

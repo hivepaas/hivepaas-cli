@@ -51,15 +51,15 @@ needs for it. Later phases are listed at the end.
 | Command | What it does |
 |---|---|
 | `login [URL]`, `logout`, `context ls\|use\|rm`, `whoami` | manage installations and keys |
-| `projects ls`, `projects get` | list and show projects, with their environments |
-| `apps ls`, `apps get` | list and show apps |
+| `project ls`, `project get` | list and show projects, with their environments |
+| `app ls`, `app get` | list and show apps |
 | `link`, `unlink` | tie a directory to an app |
 | `deploy [--image REF]` | deploy, and by default wait for the result while following its logs |
 | `deploy cancel [ID]` | cancel a deployment: the app's running one when no id is given |
 | `logs [-f]` | an app's logs |
 | `restart` | restart an app |
 | `env ls\|set\|unset` | an app's environment variables |
-| `templates ls`, `templates deploy` | the template store |
+| `template ls`, `template deploy` | the template store |
 | `api METHOD PATH` | any endpoint, authenticated, JSON in and out |
 | `version`, `completion` | the CLI's version and shell completion |
 | `update [--check]` | install a newer release of the CLI, checked against a signed list (§13) |
@@ -90,12 +90,12 @@ CURRENT  NAME              URL                       USER
 **Looking around:**
 
 ```console
-$ hivepaas projects ls
+$ hivepaas project ls
 NAME  KEY   ENVS                              STATUS
 Shop  shop  development, staging, production  active
 Blog  blog  production                        active
 
-$ hivepaas apps ls -p shop -e production
+$ hivepaas app ls -p shop -e production
 NAME       KEY     KIND      STATUS   UPDATED
 API        api     -         active   2h ago
 Web        web     -         active   1d ago
@@ -188,13 +188,13 @@ Restarted web (shop / production).
 **Templates:**
 
 ```console
-$ hivepaas templates ls --sort popular --search sql
+$ hivepaas template ls --sort popular --search sql
 NAME      TITLE        STARS  VERSIONS
 postgres  PostgreSQL   17.2k  18, 17, 16
 mariadb   MariaDB      6.4k   11.8, 11.4
 mysql     MySQL        12.1k  8.4
 
-$ hivepaas templates deploy postgres --name orders-db -p shop -e staging --param dataVolume=default
+$ hivepaas template deploy postgres --name orders-db -p shop -e staging --param dataVolume=default
 Nothing is left on the volumes by a previous install.
 Created orders-db (PostgreSQL 18) in shop / staging.
 Deployed in 18s.
@@ -203,7 +203,7 @@ Deployed in 18s.
 **For scripts**: the API's own data, and exit codes:
 
 ```console
-$ hivepaas apps ls -p shop -e production -o json | jq -r '.[].name'
+$ hivepaas app ls -p shop -e production -o json | jq -r '.[].name'
 api
 web
 db
@@ -229,6 +229,10 @@ $ echo $?
 
 ## 2. Commands
 
+The nouns are singular, as `gh`'s - `project`, `app`, `template`, `context` - and the
+plural, which `fly` and `heroku` use, is an alias of each: `hivepaas apps ls` is
+`hivepaas app ls`.
+
 Every command takes these global flags:
 
 | Flag | Environment | Meaning |
@@ -247,10 +251,10 @@ execute, write and delete actions, never beyond its owner's permissions):
 | Command | API | Key needs |
 |---|---|---|
 | `login`, `whoami` | `GET /sessions/me` | read |
-| `projects ls` | `GET /projects` | read |
-| `projects get P` | `GET /projects/{projectID}` | read |
-| `apps ls` | `GET /projects/{projectID}/{projectEnv}/apps` | read |
-| `apps get A` | `GET .../apps/{appID}` | read |
+| `project ls` | `GET /projects` | read |
+| `project get P` | `GET /projects/{projectID}` | read |
+| `app ls` | `GET /projects/{projectID}/{projectEnv}/apps` | read |
+| `app get A` | `GET .../apps/{appID}` | read |
 | `deploy` | `POST .../apps/{appID}/deploy` | execute |
 | `deploy --image R` | `GET` then `PUT .../deployment-settings` with the image changed: the change deploys | write |
 | (waiting) | `GET .../deployments/{id}/status`, logs over websocket | read |
@@ -259,10 +263,10 @@ execute, write and delete actions, never beyond its owner's permissions):
 | `restart` | `POST .../apps/{appID}/restart` | execute |
 | `env ls` | `GET .../apps/{appID}/env-vars` | read |
 | `env set`, `env unset` | `GET` then `PUT .../apps/{appID}/env-vars` | write |
-| `templates ls` | `GET /app-templates` (`--sort name\|popular\|trending\|new`, `--category`, `--search`) | read |
-| `templates deploy T` | `POST .../apps/from-template/preflight`, then `POST .../apps/from-template` | write |
+| `template ls` | `GET /app-templates` (`--sort name\|popular\|trending\|new`, `--category`, `--search`) | read |
+| `template deploy T` | `POST .../apps/from-template/preflight`, then `POST .../apps/from-template` | write |
 
-`templates deploy` runs the preflight first, as the dashboard does: what a previous
+`template deploy` runs the preflight first, as the dashboard does: what a previous
 install left on the volumes is shown, and the creation goes on only with
 `--keep-storage`, `--reset-storage` or the answer to a question in a terminal; a
 script that gives neither exits 6 with nothing created. What the creation would
@@ -406,7 +410,7 @@ them as they come; there is no `-o yaml` for a stream.
 ## 7. Output and errors
 
 - Tables and progress are for people; stdout carries the result, stderr everything
-  else, so `hivepaas apps ls -o json | jq` never reads a progress line.
+  else, so `hivepaas app ls -o json | jq` never reads a progress line.
 - `-o json` and `-o yaml` print the response's `data` as the API sends it: the
   types are the spec's, and the CLI adds nothing a script would come to depend on.
 - An API error is the server's `hperrors.ErrorInfo`: the CLI prints its `detail`,
@@ -681,7 +685,7 @@ something to update to from the second.
 - Command tests against an `httptest` server answering with the generated types,
   and golden files for table output.
 - A smoke test against a running installation, before each release: login with a
-  key, `projects ls`, `deploy --image` with `--wait`, `logs -f`, `env set`.
+  key, `project ls`, `deploy --image` with `--wait`, `logs -f`, `env set`.
 
 ## 15. Later
 

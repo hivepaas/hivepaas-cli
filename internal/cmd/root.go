@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -75,6 +76,9 @@ func (a *App) Run(ctx context.Context, args []string) int {
 	root.SetErr(a.stderr)
 	notice := a.startNotice(ctx, root, args)
 	err := root.ExecuteContext(ctx)
+	if isFlagGroupError(err) {
+		err = exitcode.Wrap(exitcode.Usage, err)
+	}
 	if err != nil {
 		a.reportError(err)
 	}
@@ -211,6 +215,17 @@ func (a *App) updateCommand() string {
 
 // usageArgs checks a command's arguments as cobra does, and makes a mistake a
 // usage error.
+// isFlagGroupError says err is cobra's for flags given against their group -
+// two that exclude each other, say - which comes past the flag error function.
+func isFlagGroupError(err error) bool {
+	if err == nil || exitcode.Of(err) != exitcode.Failure {
+		return false
+	}
+	msg := err.Error()
+	return strings.HasPrefix(msg, "if any flags in the group") ||
+		strings.HasPrefix(msg, "at least one of the flags in the group")
+}
+
 func usageArgs(check cobra.PositionalArgs) cobra.PositionalArgs {
 	return func(cmd *cobra.Command, args []string) error {
 		return exitcode.Wrap(exitcode.Usage, check(cmd, args))

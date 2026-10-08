@@ -41,6 +41,10 @@ needs for it. Later phases are listed at the end.
    its API level and the oldest CLI it takes writes from (§8). Reads from an older
    CLI still work, with a warning, so a server upgrade does not stop a pipeline
    from following its logs.
+9. **The CLI updates itself, when asked, from a list signed offline.** It says when
+   a newer release is out, and `hivepaas update` installs it. What it installs is
+   named, with its checksum, by a list signed with the server's offline release
+   keys, as an installation's `release.json` is (§13).
 
 ## 1. Scope of the MVP
 
@@ -58,6 +62,7 @@ needs for it. Later phases are listed at the end.
 | `templates ls`, `templates deploy` | the template store |
 | `api METHOD PATH` | any endpoint, authenticated, JSON in and out |
 | `version`, `completion` | the CLI's version and shell completion |
+| `update [--check]` | install a newer release of the CLI, checked against a signed list (§13) |
 
 `api` is the escape hatch, as in `gh api`: everything the MVP does not wrap is
 still one command away, with the context's URL and key applied, and `{project}`,
@@ -217,7 +222,7 @@ $ echo $?
 
 $ hivepaas env set LOG_LEVEL=warn
 Error: paas.example.com takes changes only from a newer CLI: it is at API level 15,
-this CLI at 14. Update it: brew upgrade hivepaas
+this CLI at 14. Update it: hivepaas update
 $ echo $?
 10
 ```
@@ -505,8 +510,11 @@ internal/
   resolve/      names to ids
   stream/       the websocket streams: logs now, the terminal later
   output/       table, JSON, YAML; colors
+  selfupdate/   the signed release list, its keys, the notice, the replacement
   cmd/          one file per command (cobra)
-Makefile        build, test, lint, gen, update-spec, spec-check
+Makefile        build, test, lint, gen, update-spec, spec-check, release-manifest
+release.json, release.signed.json   the releases the CLI updates to (§13)
+docs/RELEASING.md
 .goreleaser.yaml
 .github/workflows/  ci.yml, spec-main.yml, release.yml
 ```
@@ -533,7 +541,131 @@ Tables use `text/tabwriter`.
 - The CLI's version is its own semver. `hivepaas version` says which server
   release it was built against (§8).
 
-## 13. Testing
+## 13. Updating itself
+
+The server refuses writes from a CLI older than its API (§8), so updating the CLI is
+something everyone who uses it does, and it takes one command. The CLI says when a
+newer release is out, and `hivepaas update` installs it - only when asked: the CLI
+never replaces itself on its own. A pipeline whose binary changes between two runs
+is not the same pipeline, and a program that rewrites itself unasked is the last
+thing anyone audits.
+
+### What is trusted
+
+A binary that replaces itself runs what it downloads, with its user's rights, on
+every machine it is on. A GitHub Release alone is not trusted for that - an account
+or a workflow taken over could put anything in one. The CLI trusts a list of its
+releases signed offline with the server's release keys, the way an installation
+trusts `release.json`.
+
+- **`release.json`**, in this repository, names each channel's current release, and
+  for every release the SHA-256 of each archive:
+
+  ```json
+  {
+    "channels": { "stable": "v0.2.0", "beta": "v0.3.0-beta1" },
+    "releases": {
+      "v0.2.0": {
+        "releaseDate": "2026-10-20",
+        "archives": {
+          "darwin_arm64": { "file": "hivepaas_0.2.0_darwin_arm64.tar.gz", "sha256": "..." }
+        }
+      }
+    }
+  }
+  ```
+
+  `make release-manifest TAG=v0.2.0` writes a release's entry from its draft's
+  `checksums.txt`. Releases stay in the list, so `--version` can go back to one.
+- **`release.signed.json`** is that list signed, on the offline machine, with the
+  server's tool and keys - `make release-sign` in hivepaas - under a context of its
+  own, `hivepaas-cli-release-v1`. As for the server, both an ed25519 and an
+  ML-DSA-65 signature by a key the CLI was built with are required. The context
+  keeps the two uses apart - a signed CLI list is not a valid server release, nor
+  the reverse - so one set of offline keys serves both. The CLI embeds the same
+  `*.pub.pem` as `hivepaas_app/pkg/releasesig/releasekeys`, and a rotation adds the
+  new key to both.
+- **The `release` branch** of hivepaas-cli holds the `release.signed.json` the CLI
+  reads, from
+  `https://raw.githubusercontent.com/hivepaas/hivepaas-cli/release/release.signed.json`.
+  A release is offered once the branch moves to it, after its draft is checked - as
+  for the server.
+- An archive is downloaded from the release the signed list names,
+  `https://github.com/hivepaas/hivepaas-cli/releases/download/<version>/<file>`, and
+  used only when its SHA-256 is the signed one.
+
+What it does not stop: someone in control of the repository can serve an older
+signed list, which hides newer releases. That cannot make the CLI run anything
+unsigned, and the CLI never moves to a version older than its own unless
+`--version` names it.
+
+### Telling the user
+
+- At most once a day the CLI reads the signed list in the background, while the
+  command runs, and keeps what it found in `state.yaml` beside the config. When the
+  channel's release is newer than the CLI, a line on stderr after the command says
+  so:
+
+  ```
+  A new release of hivepaas is out: 0.3.0 (this is 0.2.1). Update it: hivepaas update
+  ```
+- It never makes a command fail, and hardly slower: the check has two seconds, and a
+  command that ends before it waits for it at most one second, once a day. A failure
+  - no network, a machine that cannot reach GitHub - is silent.
+- Not in CI (`CI` set), not when stderr is not a terminal, not with
+  `HIVEPAAS_NO_UPDATE_NOTIFIER=1`, not for a `dev` build.
+- A stable CLI follows the `stable` channel; a beta follows the newer of `beta` and
+  `stable`.
+- When a server refuses a write (exit 10), or answers an API level above the CLI's,
+  the message names the command that updates this CLI.
+
+### `hivepaas update`
+
+```
+hivepaas update [--check] [--version vX.Y.Z] [--channel stable|beta]
+```
+
+1. It reads the signed list and verifies it, and picks the channel's release, or
+   the one `--version` names, which must be in the list. Without `--version` it never
+   installs a version older than its own. `--check` stops here and says what it
+   would do.
+2. It refuses where something else installed it, and names what updates it there:
+   Homebrew (`brew upgrade hivepaas`), scoop. It tells from where its executable is,
+   symlinks resolved.
+3. It downloads the archive for its OS and architecture, checks its SHA-256 against
+   the signed one, and takes the binary out of it - that one file, at most 100 MB.
+4. It writes the binary next to the running one, with its mode, and renames it over
+   it: the replacement is atomic, and a failure leaves the old binary. On Windows,
+   where a running executable cannot be replaced, the old one is renamed to
+   `hivepaas.exe.old` first, and the next run removes it.
+5. Without the right to write there - `/usr/local/bin` owned by root - it says so,
+   and that `sudo hivepaas update` would.
+
+No library: a few hundred lines on the standard library, its `crypto/mldsa`
+included, as the server verifies its releases.
+
+### Releasing, with the list
+
+`docs/RELEASING.md` in this repository: the tag drafts the release (§12);
+`make release-manifest TAG=...` adds it to `release.json`; `make release-sign` in
+hivepaas, offline, with `IN`, `OUT` and `CONTEXT=cli`, signs it; both files go to
+`main` through a pull request; the draft is checked and published; a pull request
+moves the `release` branch, and from then on CLIs are told.
+
+### What the server repository changes
+
+- `tools/releasesign` signs and verifies under the context it is given: `-context
+  cli` for `hivepaas-cli-release-v1`, the server's when left out, nothing else.
+  `scripts/release-sign.sh` passes it on (`CONTEXT=cli`) and checks the envelope
+  with openssl under it. `RELEASESIGN_SHA` then moves to the reviewed commit, as for
+  any change of the tool.
+- `docs/RELEASING.md` and the keys' README name the CLI as a holder of the keys:
+  a key added to `releasekeys` is added to the CLI before it signs anything.
+
+The first release of the CLI carries the verification and the keys; `update` has
+something to update to from the second.
+
+## 14. Testing
 
 - Unit tests for resolution, the link file, configuration, output and exit codes.
 - Command tests against an `httptest` server answering with the generated types,
@@ -541,7 +673,7 @@ Tables use `text/tabwriter`.
 - A smoke test against a running installation, before each release: login with a
   key, `projects ls`, `deploy --image` with `--wait`, `logs -f`, `env set`.
 
-## 14. Later
+## 15. Later
 
 - `hivepaas exec` / `ssh`: a shell in the app's container, over the terminal
   websocket (`.../terminal`, with `w`, `h` and `shell`).

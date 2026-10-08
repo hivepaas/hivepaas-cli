@@ -16,7 +16,7 @@ import (
 )
 
 type appCreateFlags struct {
-	image   string
+	source  *sourceFlags
 	port    int
 	vars    []string
 	noWait  bool
@@ -27,20 +27,23 @@ func (a *App) appCreateCmd() *cobra.Command {
 	var flags appCreateFlags
 	cmd := &cobra.Command{
 		Use:   "create NAME",
-		Short: "Create an app, and with --image deploy it",
-		Long: "Create an app in an environment. With --image it runs that image: its variables (--var) and\n" +
-			"port (--port) are set first, then the image, which deploys it; the command waits for the\n" +
-			"deployment as deploy does. Without --image the app is created empty, for the dashboard or\n" +
-			"`hivepaas deploy --image` to fill.",
+		Short: "Create an app, and with --image or --repo deploy it",
+		Long: "Create an app in an environment. With --image it runs that image, with --repo it builds that\n" +
+			"repository, with the flags of its source as `hivepaas deploy` takes them: its variables (--var)\n" +
+			"and port (--port) are set first, then its source, which deploys it; the command waits for the\n" +
+			"deployment as deploy does. Without a source the app is created empty, for the dashboard or\n" +
+			"`hivepaas deploy` to fill.",
 		Example: "  hivepaas app create api -p shop -e staging --image ghcr.io/acme/api:1.4.3 --port 8080 \\\n" +
-			"    --var LOG_LEVEL=info --var DATABASE_URL='${db.HIVEPAAS_URL}'",
+			"    --var LOG_LEVEL=info --var DATABASE_URL='${db.HIVEPAAS_URL}'\n" +
+			"  hivepaas app create web -p shop -e staging --repo https://github.com/acme/web.git --ref main \\\n" +
+			"    --git-credential acme --push-to ghcr --port 3000",
 		Args: usageArgs(cobra.ExactArgs(1)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return a.appCreate(cmd.Context(), args[0], flags)
 		},
 	}
+	flags.source = addSourceFlags(cmd)
 	f := cmd.Flags()
-	f.StringVar(&flags.image, "image", "", "the image the app runs: ghcr.io/acme/api:1.4.3")
 	f.IntVar(&flags.port, "port", 0, "the port the app listens on")
 	// Not --env, which names the environment, as for every command.
 	f.StringArrayVar(&flags.vars, "var", nil, "a runtime variable, KEY=VALUE; repeat for more")
@@ -64,6 +67,18 @@ func (a *App) appCreate(ctx context.Context, name string, flags appCreateFlags) 
 	sel, err := a.selectTarget(ctx, c, scopeEnv)
 	if err != nil {
 		return err
+	}
+	// What the flags name is found before anything is created.
+	var in *sourceInput
+	if flags.source.asked() {
+		if in, err = flags.source.input(ctx, c, sel, a.stdin); err != nil {
+			return err
+		}
+		// And checked as for any app never deployed, before this one is created.
+		if _, err = applySource(name, &api.AppsettingsdtoDeploymentSettingsResp{},
+			&api.AppsettingsdtoUpdateAppDeploymentSettingsReq{}, in); err != nil {
+			return err
+		}
 	}
 	resp, err := c.CreateAppWithResponse(ctx, sel.Project.Id, sel.Env, api.AppdtoCreateAppReq{
 		Name: name, Status: api.AppStatusActive, Tags: &[]string{},
@@ -101,14 +116,13 @@ func (a *App) appCreate(ctx context.Context, name string, flags appCreateFlags) 
 			return unfinished(err, "set its port in the dashboard")
 		}
 	}
-	if flags.image == "" {
-		a.printer.Infof("It runs nothing yet: hivepaas deploy --image <image>%s", sel.flags())
+	if in == nil {
+		a.printer.Infof("It runs nothing yet: hivepaas deploy --image <image>%s, or --repo <url>", sel.flags())
 		return nil
 	}
-	deploymentID, err := a.changeSource(ctx, c, sel,
-		&sourceInput{image: &flags.image, imageFlags: []string{"--image"}}, nil)
+	deploymentID, err := a.changeSource(ctx, c, sel, in, nil)
 	if err != nil {
-		return unfinished(err, "deploy it with hivepaas deploy --image "+flags.image+sel.flags())
+		return unfinished(err, "deploy it with hivepaas deploy "+flags.source.commandLine()+sel.flags())
 	}
 	if deploymentID == "" {
 		return nil

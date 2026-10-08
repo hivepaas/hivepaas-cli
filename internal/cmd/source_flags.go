@@ -89,6 +89,24 @@ func (s *sourceFlags) asked() bool {
 		len(s.given(repoFlagNames)) > 0 || len(s.given(commandFlagNames)) > 0
 }
 
+// commandLine is the flags as given, to be given again: --image nginx:1.30.
+func (s *sourceFlags) commandLine() string {
+	var parts []string
+	for _, name := range append(append(append([]string{"use"}, imageFlagNames...), repoFlagNames...),
+		commandFlagNames...) {
+		flag := s.cmd.Flags().Lookup(name)
+		if !flag.Changed {
+			continue
+		}
+		if flag.Value.Type() == "bool" {
+			parts = append(parts, "--"+name)
+		} else {
+			parts = append(parts, "--"+name+" "+shellWord(flag.Value.String()))
+		}
+	}
+	return strings.Join(parts, " ")
+}
+
 // input is what the flags ask, with the credentials they name found among the
 // environment's and the Dockerfile they name read.
 func (s *sourceFlags) input(ctx context.Context, c *client.Client, sel *selection, stdin io.Reader) (

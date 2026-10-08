@@ -219,12 +219,18 @@ func pick[T any](what, input, where string, items []T, name func(T) named) (T, e
 		return zero, exitcode.New(exitcode.NotFound, "no %s %q%s. There: %s", what, input, where, list(labels))
 	default:
 		labels := make([]string, 0, len(matches))
+		keyed := false
 		for _, item := range matches {
 			n := name(item)
 			labels = append(labels, n.label()+" "+n.id)
+			keyed = keyed || n.key != n.name
 		}
-		return zero, exitcode.New(exitcode.Usage, "%s %q%s names more than one - give its key or id: %s",
-			what, input, where, list(labels))
+		give := "its id"
+		if keyed {
+			give = "its key or id"
+		}
+		return zero, exitcode.New(exitcode.Usage, "%s %q%s names more than one - give %s: %s",
+			what, input, where, give, list(labels))
 	}
 }
 

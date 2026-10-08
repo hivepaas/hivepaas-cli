@@ -105,7 +105,8 @@ func (a *App) appCreate(ctx context.Context, name string, flags appCreateFlags) 
 		a.printer.Infof("It runs nothing yet: hivepaas deploy --image <image>%s", sel.flags())
 		return nil
 	}
-	deploymentID, err := a.setImage(ctx, c, sel, flags.image)
+	deploymentID, err := a.changeSource(ctx, c, sel,
+		&sourceInput{image: &flags.image, imageFlags: []string{"--image"}}, nil)
 	if err != nil {
 		return unfinished(err, "deploy it with hivepaas deploy --image "+flags.image+sel.flags())
 	}

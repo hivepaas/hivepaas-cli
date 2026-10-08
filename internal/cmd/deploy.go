@@ -25,10 +25,11 @@ const (
 )
 
 type deployFlags struct {
-	image   string
-	noCache bool
-	noWait  bool
-	timeout time.Duration
+	source   *sourceFlags
+	noCache  bool
+	changeID string
+	noWait   bool
+	timeout  time.Duration
 }
 
 func (a *App) deployCmd() *cobra.Command {
@@ -36,16 +37,24 @@ func (a *App) deployCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deploy",
 		Short: "Deploy an app, and wait for the result while following its logs",
-		Long: "Deploy an app. With --image, the image in its deployment settings is changed first.\n\n" +
+		Long: "Deploy an app: the image it runs, or a build of its repository. The flags of its source -\n" +
+			"--image, or --repo, --ref, --commit and the rest - and of its commands change the deployment\n" +
+			"settings first, in one write, which deploys them. `hivepaas deploy settings` shows them.\n\n" +
 			"The command waits for the deployment to finish, following its logs on stderr. Ctrl-C stops\n" +
 			"the waiting, not the deployment: `hivepaas deploy cancel` cancels it.",
+		Example: "  hivepaas deploy --image ghcr.io/acme/api:1.4.3\n" +
+			"  hivepaas deploy --commit $GITHUB_SHA\n" +
+			"  hivepaas deploy --ref release --dockerfile docker/Dockerfile --push-to ghcr\n" +
+			"  hivepaas deploy --use repo --repo https://github.com/acme/api.git --git-credential acme",
 		Args: usageArgs(cobra.NoArgs),
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return a.deploy(cmd.Context(), flags)
 		},
 	}
-	cmd.Flags().StringVar(&flags.image, "image", "", "deploy this image: ghcr.io/acme/api:1.4.3")
+	flags.source = addSourceFlags(cmd)
 	cmd.Flags().BoolVar(&flags.noCache, "no-cache", false, "build without the build cache")
+	cmd.Flags().StringVar(&flags.changeID, "change-id", "",
+		"what the deployment is for: pr-12 has its result commented on that pull request")
 	cmd.Flags().BoolVar(&flags.noWait, "no-wait", false, "start the deployment and return")
 	cmd.Flags().DurationVar(&flags.timeout, "timeout", defaultDeployTimeout, "how long to wait for the deployment")
 	cmd.AddCommand(a.deployCancelCmd(), a.deployLsCmd(), a.deployGetCmd())
@@ -53,9 +62,6 @@ func (a *App) deployCmd() *cobra.Command {
 }
 
 func (a *App) deploy(ctx context.Context, flags deployFlags) error {
-	if flags.image != "" && flags.noCache {
-		return exitcode.New(exitcode.Usage, "--no-cache is for an app built from source, and --image deploys an image")
-	}
 	c, err := a.client()
 	if err != nil {
 		return err
@@ -65,16 +71,24 @@ func (a *App) deploy(ctx context.Context, flags deployFlags) error {
 		return err
 	}
 	var started api.AppactiondtoDeployAppDataResp
-	if flags.image != "" {
+	if flags.source.asked() {
+		in, err := flags.source.input(ctx, c, sel, a.stdin)
+		if err != nil {
+			return err
+		}
 		// A change of the deployment settings deploys it: the server starts the
 		// deployment itself.
-		if started.DeploymentId, err = a.setImage(ctx, c, sel, flags.image); err != nil {
+		started.DeploymentId, err = a.changeSource(ctx, c, sel, in,
+			func(req *api.AppsettingsdtoUpdateAppDeploymentSettingsReq, changed bool) error {
+				return postOnly(req, changed, flags)
+			})
+		if err != nil {
 			return err
 		}
 	}
 	if started.DeploymentId == "" {
 		resp, err := c.AppActionDeployWithResponse(ctx, sel.Project.Id, sel.Env, sel.App.Id,
-			api.AppactiondtoDeployAppReq{NoCache: flags.noCache})
+			api.AppactiondtoDeployAppReq{NoCache: flags.noCache, ChangeId: flags.changeID})
 		if err = client.Check(resp, err); err != nil {
 			return err
 		}
@@ -104,64 +118,96 @@ func (a *App) deploy(ctx context.Context, flags deployFlags) error {
 	return a.outcome(deployment, ref)
 }
 
-// setImage changes the image in the app's deployment settings: it reads them,
-// changes the image and writes them back under their updateVer, so that a
-// change made meanwhile is not overwritten - it is read, and the image set on
-// it, once more. It answers the deployment the change started, none when the
-// image was the app's already.
-func (a *App) setImage(ctx context.Context, c *client.Client, sel *selection, image string) (string, error) {
-	for attempt := 0; ; attempt++ {
+// postOnly checks the flags of POST .../deploy against the settings about to be
+// written: a change starts a deployment of its own, which takes neither.
+func postOnly(req *api.AppsettingsdtoUpdateAppDeploymentSettingsReq, changed bool, flags deployFlags) error {
+	if flags.noCache && req.ActiveMethod == api.DeploymentMethodImage {
+		return exitcode.New(exitcode.Usage, "--no-cache is for an app built from source, and an image is not built")
+	}
+	var given []string
+	if flags.noCache {
+		given = append(given, "--no-cache")
+	}
+	if flags.changeID != "" {
+		given = append(given, "--change-id")
+	}
+	if changed && len(given) > 0 {
+		return exitcode.New(exitcode.Usage, "%s cannot go with a change of the settings, whose write starts a "+
+			"deployment of its own: deploy the change, then deploy again with %s",
+			strings.Join(given, " and "), strings.Join(given, " and "))
+	}
+	return nil
+}
+
+// errUnchanged stops a write of settings that are as asked already.
+var errUnchanged = errors.New("the deployment settings are as asked already")
+
+// changeSource changes the app's deployment settings as in asks: it reads them,
+// changes them and writes them back under their updateVer, so that a change
+// made meanwhile is not overwritten - it is read, and changed, once more. check
+// sees the settings about to be written, and whether they change. It answers
+// the deployment the write started; none when nothing was to change.
+func (a *App) changeSource(ctx context.Context, c *client.Client, sel *selection, in *sourceInput,
+	check func(*api.AppsettingsdtoUpdateAppDeploymentSettingsReq, bool) error,
+) (string, error) {
+	var current *api.AppsettingsdtoDeploymentSettingsResp
+	var lines []string
+	var written *api.AppsettingsdtoUpdateAppDeploymentSettingsReq
+	var deploymentID string
+	read := func(ctx context.Context) (*api.AppsettingsdtoDeploymentSettingsResp, error) {
 		resp, err := c.GetAppDeploymentSettingsWithResponse(ctx, sel.Project.Id, sel.Env, sel.App.Id)
 		if err = client.Check(resp, err); err != nil {
-			return "", err
+			return nil, err
 		}
-		settings := resp.JSON200.Data
-		// An app that has never been deployed has no method yet: --image gives it one.
-		fresh := settings.ActiveMethod == ""
-		if !fresh && (settings.ActiveMethod != api.DeploymentMethodImage || settings.ImageSource == nil) {
-			return "", exitcode.New(exitcode.Invalid, "%s deploys from its %s, not an image: --image is for an app "+
-				"that deploys one", sel.App.Name, methodName(settings.ActiveMethod))
+		current = &api.AppsettingsdtoDeploymentSettingsResp{}
+		if resp.JSON200 != nil && resp.JSON200.Data != nil {
+			current = resp.JSON200.Data
 		}
-		old := ""
-		if settings.ImageSource != nil {
-			old = settings.ImageSource.Image
-		}
-		if old == image {
-			a.printer.Infof("Image: %s, unchanged", image)
-			return "", nil
-		}
-		req, err := carry.DeploymentSettings(settings)
-		if err != nil {
-			return "", err
-		}
-		req.ActiveMethod = api.DeploymentMethodImage
-		if req.ImageSource == nil {
-			req.ImageSource = &api.AppsettingsdtoDeploymentImageSourceReq{}
-		}
-		req.ImageSource.Image = image
-		if fresh && req.Notification == nil {
-			// As the dashboard starts an app: its notices go where the project's do.
-			req.Notification = &api.BasedtoBaseEventNotificationReq{SuccessUseDefault: true, FailureUseDefault: true}
-		}
-		update, err := c.UpdateAppDeploymentSettingsWithResponse(ctx, sel.Project.Id, sel.Env, sel.App.Id, *req)
-		err = client.Check(update, err)
-		var apiErr *client.APIError
-		if attempt == 0 && errors.As(err, &apiErr) && apiErr.Info.Code == errUpdateVerMismatched {
-			continue
-		}
-		if err != nil {
-			return "", err
-		}
-		if fresh {
-			a.printer.Infof("Image: %s", image)
-		} else {
-			a.printer.Infof("Image: %s", imageChange(old, image))
-		}
-		if update.JSON200 == nil || update.JSON200.Data == nil || update.JSON200.Data.DeploymentId == nil {
-			return "", nil
-		}
-		return *update.JSON200.Data.DeploymentId, nil
+		return current, nil
 	}
+	change := func(req *api.AppsettingsdtoUpdateAppDeploymentSettingsReq) (string, error) {
+		var err error
+		if lines, err = applySource(sel.App.Name, current, req, in); err != nil {
+			return "", err
+		}
+		if check != nil {
+			if err = check(req, len(lines) > 0); err != nil {
+				return "", err
+			}
+		}
+		if len(lines) == 0 {
+			return "", errUnchanged
+		}
+		written = req
+		return "", nil
+	}
+	write := func(ctx context.Context, req *api.AppsettingsdtoUpdateAppDeploymentSettingsReq) error {
+		resp, err := c.UpdateAppDeploymentSettingsWithResponse(ctx, sel.Project.Id, sel.Env, sel.App.Id, *req)
+		if err = client.Check(resp, err); err != nil {
+			return err
+		}
+		if resp.JSON200 != nil && resp.JSON200.Data != nil && resp.JSON200.Data.DeploymentId != nil {
+			deploymentID = *resp.JSON200.Data.DeploymentId
+		}
+		return nil
+	}
+	_, err := writeBack(ctx, read, carry.DeploymentSettings, change, write)
+	if errors.Is(err, errUnchanged) {
+		a.printer.Infof("The deployment settings are as asked already.")
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	for _, line := range lines {
+		a.printer.Infof("%s", line)
+	}
+	if repo := written.RepoSource; in.commit != nil && *in.commit != "" &&
+		written.ActiveMethod == api.DeploymentMethodRepo && repo != nil && autoDeploys(repo.AutoDeploy) {
+		a.printer.Warnf("%s also deploys each push to %s: this commit may be deployed twice, once by its push. "+
+			"--no-auto-deploy leaves deploying to this command.", sel.App.Name, refWords(repo.RepoRef))
+	}
+	return deploymentID, nil
 }
 
 func methodName(method api.BaseDeploymentMethod) string {

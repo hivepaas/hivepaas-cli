@@ -1,0 +1,26 @@
+{
+  "channels": {
+    "beta": "v0.3.0-beta1",
+    "stable": "v0.2.0"
+  },
+  "releases": {
+    "v0.2.0": {
+      "releaseDate": "2026-10-20",
+      "archives": {
+        "darwin_arm64": {
+          "file": "hivepaas_0.2.0_darwin_arm64.tar.gz",
+          "sha256": "97f6a51e684b885f57da6f2cb0e6ef71e1e5a6d9cb76439a88196ecca1195ec1"
+        }
+      }
+    },
+    "v0.3.0-beta1": {
+      "releaseDate": "2026-10-25",
+      "archives": {
+        "darwin_arm64": {
+          "file": "hivepaas_0.3.0-beta1_darwin_arm64.tar.gz",
+          "sha256": "f1c2a575dc1de0baa0fc198952d9b1dad94c08fda2111984278fb91919684689"
+        }
+      }
+    }
+  }
+}

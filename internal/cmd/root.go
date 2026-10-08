@@ -17,6 +17,7 @@ import (
 	"github.com/hivepaas/hivepaas-cli/internal/config"
 	"github.com/hivepaas/hivepaas-cli/internal/exitcode"
 	"github.com/hivepaas/hivepaas-cli/internal/output"
+	"github.com/hivepaas/hivepaas-cli/internal/selfupdate"
 )
 
 // App is what every command shares: the global flags, the configuration, and
@@ -40,6 +41,11 @@ type App struct {
 	cfg     *config.Config
 	secrets *config.Secrets
 	printer *output.Printer
+
+	// newUpdater makes the updater of `update`, and executable finds the binary
+	// it replaces; nil for the real ones.
+	newUpdater func() (*selfupdate.Updater, error)
+	executable func() (string, error)
 }
 
 // Execute runs the CLI and answers its exit code.
@@ -57,11 +63,14 @@ func (a *App) Run(ctx context.Context, args []string) int {
 	root.SetIn(a.stdin)
 	root.SetOut(a.stdout)
 	root.SetErr(a.stderr)
+	notice := a.startNotice(ctx, root, args)
 	err := root.ExecuteContext(ctx)
-	if err == nil {
-		return exitcode.OK
+	if err != nil {
+		a.reportError(err)
 	}
-	a.reportError(err)
+	if line := notice(); line != "" {
+		fmt.Fprintln(a.stderr, line)
+	}
 	return exitcode.Of(err)
 }
 
@@ -88,7 +97,7 @@ func (a *App) rootCmd() *cobra.Command {
 	})
 
 	root.AddCommand(
-		a.versionCmd(),
+		a.versionCmd(), a.updateCmd(),
 		a.loginCmd(), a.logoutCmd(), a.whoamiCmd(), a.contextCmd(),
 		a.projectsCmd(), a.appsCmd(), a.linkCmd(), a.unlinkCmd(),
 		a.deployCmd(), a.logsCmd(), a.restartCmd(), a.envCmd(), a.templatesCmd(), a.apiCmd(),
@@ -138,7 +147,10 @@ func (a *App) client() (*client.Client, error) {
 }
 
 func (a *App) clientOf(target *config.Target) (*client.Client, error) {
-	opts := client.Options{Warn: func(message string) { a.printer.Warnf("%s", message) }}
+	opts := client.Options{
+		Warn:          func(message string) { a.printer.Warnf("%s", message) },
+		UpdateCommand: a.updateCommand(),
+	}
 	if a.debug {
 		opts.Debug = a.stderr
 	}
@@ -159,9 +171,22 @@ func (a *App) reportError(err error) {
 	}
 	if a.printer != nil {
 		a.printer.Errorf("%s", err)
-		return
+	} else {
+		fmt.Fprintln(a.stderr, "Error:", err)
 	}
-	fmt.Fprintln(a.stderr, "Error:", err)
+	if exitcode.Of(err) == exitcode.CLIOutdated {
+		fmt.Fprintf(a.stderr, "Update it: %s\n", a.updateCommand())
+	}
+}
+
+// updateCommand is what updates this CLI: hivepaas update, or the package
+// manager's command when one installed it.
+func (a *App) updateCommand() string {
+	path, err := a.exe()
+	if err != nil {
+		return "hivepaas update"
+	}
+	return selfupdate.UpdateCommand(path)
 }
 
 // usageArgs checks a command's arguments as cobra does, and makes a mistake a

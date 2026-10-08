@@ -1,7 +1,7 @@
 VERSION ?= dev
 LDFLAGS := -s -w -X github.com/hivepaas/hivepaas-cli/internal/version.Version=$(VERSION)
 
-.PHONY: build test lint gen update-spec spec-check
+.PHONY: build test lint gen update-spec spec-check release-manifest keys-check
 
 build:
 	go build -ldflags "$(LDFLAGS)" -o bin/hivepaas ./cmd/hivepaas
@@ -32,3 +32,15 @@ spec-check:
 	$(MAKE) gen
 	go build ./...
 	go test ./...
+
+# Add a release to release.json, the list `hivepaas update` installs from once
+# it is signed: TAG=v0.2.0, and CHECKSUMS=<file> unless the draft's is read with
+# gh. docs/RELEASING.md has the steps around it.
+release-manifest:
+	@test -n "$(TAG)" || (echo "usage: make release-manifest TAG=v0.2.0 [CHECKSUMS=checksums.txt]" && exit 2)
+	go run ./tools/releasemanifest -tag "$(TAG)" -checksums "$(CHECKSUMS)"
+
+# The CLI trusts the release keys hivepaas signs with:
+# RELEASEKEYS=<hivepaas>/hivepaas_app/pkg/releasesig/releasekeys.
+keys-check:
+	./scripts/keys-check.sh

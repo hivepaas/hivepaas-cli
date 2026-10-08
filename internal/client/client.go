@@ -51,6 +51,8 @@ type Options struct {
 	Debug io.Writer
 	// Warn is told, once, that the server's API is newer than this CLI's.
 	Warn func(message string)
+	// UpdateCommand is what updates this CLI, for that warning.
+	UpdateCommand string
 }
 
 // New is a client of target.
@@ -60,6 +62,7 @@ func New(target *config.Target, opts Options) (*Client, error) {
 		header: Headers(target),
 		debug:  opts.Debug,
 		warn:   opts.Warn,
+		update: firstNonEmpty(opts.UpdateCommand, "hivepaas update"),
 	}
 	httpClient := &http.Client{Transport: transport, Timeout: requestTimeout}
 	baseURL := target.URL + apiPath
@@ -105,6 +108,7 @@ type transport struct {
 	header http.Header
 	debug  io.Writer
 	warn   func(string)
+	update string
 	once   sync.Once
 }
 
@@ -130,8 +134,17 @@ func (t *transport) RoundTrip(req *http.Request) (*http.Response, error) {
 		t.warn != nil {
 		t.once.Do(func() {
 			t.warn(fmt.Sprintf("this server's API is at level %d and this CLI's at %d: "+
-				"it reads, and the server refuses its changes. Update the CLI.", level, api.APILevel))
+				"it reads, and the server refuses its changes. Update it: %s", level, api.APILevel, t.update))
 		})
 	}
 	return resp, nil
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
 }

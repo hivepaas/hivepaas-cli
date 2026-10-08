@@ -45,6 +45,20 @@ jobs:
           git ls-remote --exit-code --tags https://github.com/hivepaas/hivepaas.git "refs/tags/$ref" >/dev/null ||
             { echo "::error::hivepaas has no tag $ref"; exit 1; }
 
+      - name: Checkout hivepaas's release keys
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: hivepaas/hivepaas
+          ref: main
+          path: .hivepaas
+          sparse-checkout: hivepaas_app/pkg/releasesig/releasekeys
+          persist-credentials: false
+
+      # A release updates itself from lists signed with these keys for as long as
+      # it is used.
+      - name: The CLI trusts hivepaas's release keys
+        run: make keys-check RELEASEKEYS=.hivepaas/hivepaas_app/pkg/releasesig/releasekeys
+
       - name: The client is generated from it
         run: |
           make gen

@@ -584,7 +584,8 @@ trusts `release.json`.
   keeps the two uses apart - a signed CLI list is not a valid server release, nor
   the reverse - so one set of offline keys serves both. The CLI embeds the same
   `*.pub.pem` as `hivepaas_app/pkg/releasesig/releasekeys`, and a rotation adds the
-  new key to both.
+  new key to both. `make keys-check` compares the two, in the weekly job and before
+  a release.
 - **The `release` branch** of hivepaas-cli holds the `release.signed.json` the CLI
   reads, from
   `https://raw.githubusercontent.com/hivepaas/hivepaas-cli/release/release.signed.json`.

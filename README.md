@@ -15,6 +15,7 @@ bin/hivepaas link -p shop -e production -a api
 bin/hivepaas deploy --image ghcr.io/acme/shop-api:1.4.3
 bin/hivepaas logs -f --since 10m
 bin/hivepaas env set LOG_LEVEL=debug
+bin/hivepaas update                # a newer release, checked against a list signed offline
 ```
 
 From CI, with nothing stored:
@@ -35,6 +36,8 @@ From CI, with nothing stored:
 | `make gen` | the client in `internal/api`, from the pinned spec `internal/api/openapi.json` |
 | `make update-spec REF=<hivepaas tag>` | pin the spec of a server release; `SPEC=<file>` for a local one |
 | `make spec-check SPEC=<file>` | build and test against another spec, as hivepaas's CI does for every change of its API |
+| `make release-manifest TAG=<tag>` | add a release to `release.json`, the list `hivepaas update` installs from: [docs/RELEASING.md](docs/RELEASING.md) |
+| `make keys-check RELEASEKEYS=<dir>` | the CLI trusts the release keys hivepaas signs with |
 
 A command that writes an object back - the deployment settings, the environment
 variables - carries every field of it through `internal/carry`, whose tests fail on

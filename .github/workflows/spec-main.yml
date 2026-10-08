@@ -1,8 +1,9 @@
 name: Spec of hivepaas main
 
-# The CLI against the API the next server release will have: hivepaas's own CI
-# checks every change of its spec against the CLI (its cli-compat job); this
-# hears about the changes that reached main from this side, weekly.
+# The CLI against the API the next server release will have, and the keys it
+# will sign with: hivepaas's own CI checks every change of its spec against the
+# CLI (its cli-compat job); this hears about the changes that reached main from
+# this side, weekly.
 on:
   schedule:
     - cron: '0 6 * * 1'
@@ -27,7 +28,14 @@ jobs:
           repository: hivepaas/hivepaas
           ref: main
           path: .hivepaas
-          sparse-checkout: docs/openapi
+          sparse-checkout: |
+            docs/openapi
+            hivepaas_app/pkg/releasesig/releasekeys
 
       - name: Check the CLI against its spec
         run: make spec-check SPEC=.hivepaas/docs/openapi/swagger.json
+
+      # The CLI updates itself only from a list signed with hivepaas's release
+      # keys: a key hivepaas adds must reach the CLI before it signs with it.
+      - name: The CLI trusts hivepaas's release keys
+        run: make keys-check RELEASEKEYS=.hivepaas/hivepaas_app/pkg/releasesig/releasekeys

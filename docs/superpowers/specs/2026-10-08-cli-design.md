@@ -51,6 +51,7 @@ needs for it. Later phases are listed at the end.
 | `apps ls`, `apps get` | list and show apps |
 | `link`, `unlink` | tie a directory to an app |
 | `deploy [--image REF]` | deploy, and by default wait for the result while following its logs |
+| `deploy cancel [ID]` | cancel a deployment: the app's running one when no id is given |
 | `logs [-f]` | an app's logs |
 | `restart` | restart an app |
 | `env ls\|set\|unset` | an app's environment variables |
@@ -115,6 +116,17 @@ Deploying api (shop / production), deployment 01JA2C7W...
   14:02:19  Updating the service
   14:02:31  1/1 tasks running and healthy
 Deployed in 24s.
+
+$ hivepaas deploy --image ghcr.io/acme/shop-api:1.4.4
+Deploying api (shop / production), deployment 01JA2E3K...
+  14:20:05  Pulling ghcr.io/acme/shop-api:1.4.4
+^C
+Stopped waiting. Deployment 01JA2E3K... is still running on the server.
+  Follow it:  hivepaas logs --deployment 01JA2E3K... -f
+  Cancel it:  hivepaas deploy cancel 01JA2E3K...
+
+$ hivepaas deploy cancel
+Canceled deployment 01JA2E3K... of api (shop / production).
 
 $ hivepaas deploy
 Deploying api (shop / production), deployment 01JA2D0F...
@@ -238,6 +250,7 @@ execute, write and delete actions, never beyond its owner's permissions):
 | `deploy` | `POST .../apps/{appID}/deploy` | execute |
 | `deploy --image R` | `GET` then `PUT .../deployment-settings` with the image changed, then the deploy | write, execute |
 | (waiting) | `GET .../deployments/{id}/status`, logs over websocket | read |
+| `deploy cancel` | `GET .../deployments` for the running one, `POST .../deployments/{id}/cancel` | execute |
 | `logs` | `GET .../apps/{appID}/logs` over websocket | read |
 | `restart` | `POST .../apps/{appID}/restart` | execute |
 | `env ls` | `GET .../apps/{appID}/env-vars` | read |
@@ -340,9 +353,11 @@ hivepaas deploy [--image REF] [--no-cache] [--no-wait] [--timeout 30m]
 3. It stops when the status is `done` (exit 0), `failed` or `canceled` (exit 8), or
    at `--timeout` (exit 9).
 
-Ctrl-C stops the waiting, not the deployment, and says so with the command that
-follows it again (`hivepaas logs --deployment <id> -f`). `--cancel-on-interrupt`
-cancels it instead, through `POST .../deployments/{id}/cancel`.
+**Ctrl-C stops the CLI, not the deployment.** The deployment goes on on the
+server, and the CLI says so before it exits (130), with the two commands that
+pick it up again: `hivepaas logs --deployment <id> -f` to follow it, and
+`hivepaas deploy cancel <id>` to cancel it. Cancelling is a decision of its own,
+never a side effect of an interrupted terminal or a CI job that timed out.
 
 With `-o json`, stdout carries only the finished deployment
 (`GET .../deployments/{id}`), so a pipeline can read its id and status.

@@ -29,18 +29,28 @@ func (a *App) registerCompletions(root *cobra.Command) {
 		[]cobra.Completion{"table", "json", "yaml"}, cobra.ShellCompDirectiveNoFileComp))
 
 	byPath := map[string]func(context.Context, *client.Client) ([]cobra.Completion, error){
-		"project get":     a.projectChoices,
-		"app get":         a.appChoices,
-		"app stop":        a.appChoices,
-		"app start":       a.appChoices,
-		"restart":         a.appChoices,
-		"open":            a.appChoices,
-		"exec":            a.appChoices,
-		"app scale":       a.appChoices,
-		"domain rm":       a.domainChoices,
-		"template deploy": a.templateChoices,
-		"deploy get":      a.deploymentChoices,
-		"deploy cancel":   a.deploymentChoices,
+		"project get":      a.projectChoices,
+		"app get":          a.appChoices,
+		"app stop":         a.appChoices,
+		"app start":        a.appChoices,
+		"restart":          a.appChoices,
+		"open":             a.appChoices,
+		"exec":             a.appChoices,
+		"app scale":        a.appChoices,
+		"domain rm":        a.domainChoices,
+		"template deploy":  a.templateChoices,
+		"deploy get":       a.deploymentChoices,
+		"deploy cancel":    a.deploymentChoices,
+		"ps":               a.appChoices,
+		"job run":          a.jobChoices,
+		"job enable":       a.jobChoices,
+		"job disable":      a.jobChoices,
+		"task get":         a.taskChoices,
+		"task cancel":      a.taskChoices,
+		"secret rm":        a.secretChoices,
+		"config-file push": a.configFileChoices,
+		"config-file pull": a.configFileChoices,
+		"config-file rm":   a.configFileChoices,
 	}
 	walk(root, func(cmd *cobra.Command) {
 		path := strings.TrimPrefix(cmd.CommandPath(), root.Name()+" ")
@@ -240,4 +250,68 @@ func (a *App) completionEnv(ctx context.Context, c *client.Client) (*api.Project
 		return nil, "", err
 	}
 	return sel.Project, sel.Env, nil
+}
+
+func (a *App) jobChoices(ctx context.Context, c *client.Client) ([]cobra.Completion, error) {
+	sel, err := a.selectTarget(ctx, c, scopeApp)
+	if err != nil {
+		return nil, err
+	}
+	jobs, err := schedJobs(ctx, c, sel)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]cobra.Completion, 0, len(jobs))
+	for _, j := range jobs {
+		out = append(out, cobra.CompletionWithDesc(j.Name, string(j.JobType)+", "+string(j.Status)))
+	}
+	return out, nil
+}
+
+func (a *App) taskChoices(ctx context.Context, c *client.Client) ([]cobra.Completion, error) {
+	sel, err := a.selectTarget(ctx, c, scopeApp)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.ListAppTaskWithResponse(ctx, sel.Project.Id, sel.Env, sel.App.Id,
+		&api.ListAppTaskParams{PageLimit: ptr(tasksShown)})
+	if err = client.Check(resp, err); err != nil {
+		return nil, err
+	}
+	tasks := resolve.Deref(resp.JSON200.Data)
+	out := make([]cobra.Completion, 0, len(tasks))
+	for _, t := range tasks {
+		out = append(out, cobra.CompletionWithDesc(t.Id, taskType(t.Type)+", "+string(t.Status)+", "+taskWhat(t)))
+	}
+	return out, nil
+}
+
+func (a *App) secretChoices(ctx context.Context, c *client.Client) ([]cobra.Completion, error) {
+	sel, err := a.selectTarget(ctx, c, scopeApp)
+	if err != nil {
+		return nil, err
+	}
+	secrets, err := appSecrets(ctx, c, sel)
+	if err != nil {
+		return nil, err
+	}
+	var out []cobra.Completion
+	for _, s := range secrets {
+		if s.Inherited == nil || !*s.Inherited {
+			out = append(out, s.Key)
+		}
+	}
+	return out, nil
+}
+
+func (a *App) configFileChoices(ctx context.Context, _ *client.Client) ([]cobra.Completion, error) {
+	_, _, files, err := a.configFiles(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]cobra.Completion, 0, len(files))
+	for _, f := range files {
+		out = append(out, cobra.CompletionWithDesc(f.Name, owner(f.Inherited)))
+	}
+	return out, nil
 }

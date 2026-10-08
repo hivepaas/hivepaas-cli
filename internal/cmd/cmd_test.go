@@ -111,6 +111,12 @@ type result struct {
 // CI job gives it.
 func (f *fakeAPI) run(args ...string) result {
 	f.t.Helper()
+	return f.runWithStdin("", args...)
+}
+
+// runWithStdin runs the CLI as run does, with stdin giving what a pipe would.
+func (f *fakeAPI) runWithStdin(stdin string, args ...string) result {
+	f.t.Helper()
 	env := map[string]string{
 		"HIVEPAAS_CONFIG_DIR": f.t.TempDir(),
 		"HIVEPAAS_URL":        f.srv.URL,
@@ -118,7 +124,7 @@ func (f *fakeAPI) run(args ...string) result {
 	}
 	var stdout, stderr bytes.Buffer
 	a := &App{
-		stdin: strings.NewReader(""), stdout: &stdout, stderr: &stderr,
+		stdin: strings.NewReader(stdin), stdout: &stdout, stderr: &stderr,
 		getenv: func(k string) string { return env[k] },
 	}
 	code := a.Run(context.Background(), args)

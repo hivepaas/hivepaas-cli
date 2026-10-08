@@ -1,5 +1,5 @@
-// Package stream is the API's websocket streams: an app's logs and a
-// deployment's.
+// Package stream is the API's websocket streams: an app's logs, a deployment's,
+// and a terminal in an app's container.
 package stream
 
 import (
@@ -124,16 +124,6 @@ func (l *Logs) read(ctx context.Context, since time.Time, emit func(api.TasklogL
 }
 
 func (l *Logs) dial(ctx context.Context, since time.Time) (*websocket.Conn, error) {
-	target, err := url.Parse(l.URL)
-	if err != nil {
-		return nil, fmt.Errorf("the log stream's address: %w", err)
-	}
-	switch target.Scheme {
-	case "https":
-		target.Scheme = "wss"
-	case "http":
-		target.Scheme = "ws"
-	}
 	query := url.Values{}
 	for key, values := range l.Query {
 		query[key] = values
@@ -145,13 +135,29 @@ func (l *Logs) dial(ctx context.Context, since time.Time) (*websocket.Conn, erro
 		query.Del("tail")
 		query.Del("duration")
 	}
-	target.RawQuery = query.Encode()
+	return dial(ctx, l.Dialer, l.URL, query, l.Header)
+}
 
-	dialer := l.Dialer
+// dial opens a websocket of the API: rawURL, http or https, made ws or wss. A
+// request the server refuses is its APIError.
+func dial(ctx context.Context, dialer *websocket.Dialer, rawURL string, query url.Values, header http.Header) (
+	*websocket.Conn, error,
+) {
+	target, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, fmt.Errorf("the stream's address: %w", err)
+	}
+	switch target.Scheme {
+	case "https":
+		target.Scheme = "wss"
+	case "http":
+		target.Scheme = "ws"
+	}
+	target.RawQuery = query.Encode()
 	if dialer == nil {
 		dialer = websocket.DefaultDialer
 	}
-	conn, resp, err := dialer.DialContext(ctx, target.String(), l.Header)
+	conn, resp, err := dialer.DialContext(ctx, target.String(), header)
 	if err == nil {
 		return conn, nil
 	}
@@ -164,7 +170,7 @@ func (l *Logs) dial(ctx context.Context, since time.Time) (*websocket.Conn, erro
 			}
 		}
 	}
-	return nil, exitcode.Wrap(exitcode.Server, fmt.Errorf("opening the log stream: %w", err))
+	return nil, exitcode.Wrap(exitcode.Server, fmt.Errorf("opening the stream: %w", err))
 }
 
 // retryable says whether opening the stream again may go better: not when the

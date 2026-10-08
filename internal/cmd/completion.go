@@ -35,6 +35,7 @@ func (a *App) registerCompletions(root *cobra.Command) {
 		"app start":       a.appChoices,
 		"restart":         a.appChoices,
 		"open":            a.appChoices,
+		"exec":            a.appChoices,
 		"template deploy": a.templateChoices,
 		"deploy get":      a.deploymentChoices,
 		"deploy cancel":   a.deploymentChoices,

@@ -76,3 +76,15 @@ func TestPlainHTTPServer(t *testing.T) {
 	assert.Equal(t, host+" answers plain HTTP, not HTTPS: use http://"+host+" if that is the server you mean - "+
 		"the key's secret then crosses the network unencrypted", err.Error())
 }
+
+// A refusal cut short - a websocket handshake keeps its first kilobyte - still
+// gives its code and detail.
+func TestCheckStatusOfATruncatedRefusal(t *testing.T) {
+	body := `{"title":"Not Found","status":404,"code":"ERR_NOT_FOUND","detail":"Running task of service not found",` +
+		`"cause":"ERR_NOT_FOUND","stackTrace":"*errors.errorString ERR_NOT_FOUND\n/very/long/tra`
+
+	err := CheckStatus(http.StatusNotFound, []byte(body))
+
+	assert.Equal(t, "Running task of service not found (ERR_NOT_FOUND)", err.Error())
+	assert.Equal(t, exitcode.NotFound, exitcode.Of(err))
+}

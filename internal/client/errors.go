@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -106,7 +107,10 @@ func CheckStatus(status int, body []byte) error {
 		return nil
 	}
 	apiErr := &APIError{Status: status}
-	if json.Unmarshal(body, &apiErr.Info) != nil || apiErr.Info.Code == "" {
+	if json.Unmarshal(body, &apiErr.Info) != nil {
+		apiErr.Info = leadingErrorInfo(body)
+	}
+	if apiErr.Info.Code == "" {
 		apiErr.Info.Detail = strings.TrimSpace(string(body))
 		if len(apiErr.Info.Detail) > maxRawDetail {
 			apiErr.Info.Detail = apiErr.Info.Detail[:maxRawDetail] + "..."
@@ -116,6 +120,42 @@ func CheckStatus(status int, body []byte) error {
 }
 
 const maxRawDetail = 300
+
+// leadingErrorInfo is what can be read of an ErrorInfo that was cut short - a
+// websocket handshake keeps the first kilobyte of a refusal, and a server's
+// stack trace runs past it: the fields before the cut, of which code and detail
+// come first.
+func leadingErrorInfo(body []byte) api.HperrorsErrorInfo {
+	var info api.HperrorsErrorInfo
+	dec := json.NewDecoder(bytes.NewReader(body))
+	if tok, err := dec.Token(); err != nil || tok != json.Delim('{') {
+		return info
+	}
+	for dec.More() {
+		key, err := dec.Token()
+		if err != nil {
+			return info
+		}
+		var value any
+		if err = dec.Decode(&value); err != nil {
+			return info
+		}
+		text, _ := value.(string)
+		switch key {
+		case "code":
+			info.Code = text
+		case "detail":
+			info.Detail = text
+		case "title":
+			info.Title = text
+		case "status":
+			if n, ok := value.(float64); ok {
+				info.Status = int(n)
+			}
+		}
+	}
+	return info
+}
 
 func unreachable(err error) error {
 	var exitErr *exitcode.Error

@@ -87,7 +87,7 @@ func (a *App) login(ctx context.Context, baseURL, keyID, secret, name string, in
 	a.printer.Infof("Saved as context %q, now the current one.", name)
 	if me.Server != nil && me.Server.MinCliApiLevel > api.APILevel {
 		a.printer.Warnf("this server takes changes only from a CLI built for API level %d; this one is at %d. "+
-			"Update it to make changes.", me.Server.MinCliApiLevel, api.APILevel)
+			"Update it to make changes: %s", me.Server.MinCliApiLevel, api.APILevel, a.updateCommand())
 	}
 	return nil
 }

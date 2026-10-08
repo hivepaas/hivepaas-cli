@@ -308,7 +308,12 @@ are read on every run, and take precedence over any context. This is the form th
 API's `Authorization: Bearer <keyId>:<secret>` already takes.
 
 **`hivepaas login [URL]`** asks for what it is not given: the URL, the key id, and
-the secret without echoing it. `--key-id` and `--with-secret` (the secret on stdin)
+the secret without echoing it. A URL without a scheme is `https`, but for this
+machine - `localhost:10000`, `127.0.0.1`, a `.localhost` name - where a local
+installation serves plain `http`. The CLI never falls back from `https` to `http`
+on its own: a server that answers plain HTTP is named, with the `http://` URL to
+give if that is the one meant, since the key's secret would then cross the
+network unencrypted. `--key-id` and `--with-secret` (the secret on stdin)
 make it non-interactive. It calls `GET /sessions/me` before saving anything, so a
 context that is saved works, and names the user and the server's version. The key
 is created in the dashboard - Settings, API keys - with the actions the commands

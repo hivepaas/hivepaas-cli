@@ -1,13 +1,17 @@
 package client
 
 import (
+	"context"
 	"errors"
 	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/hivepaas/hivepaas-cli/internal/config"
 	"github.com/hivepaas/hivepaas-cli/internal/exitcode"
 )
 
@@ -54,4 +58,21 @@ func TestUnreachable(t *testing.T) {
 	assert.Equal(t, exitcode.Server, exitcode.Of(err))
 	assert.Equal(t, "reaching the server: dial tcp: connection refused", err.Error())
 	assert.False(t, IsUnreachable(CheckStatus(http.StatusBadGateway, nil)))
+}
+
+// A server that answers plain HTTP to an https URL is named, with the URL that
+// would reach it - and not tried over http on its own.
+func TestPlainHTTPServer(t *testing.T) {
+	srv := httptest.NewServer(http.NotFoundHandler())
+	defer srv.Close()
+	host := strings.TrimPrefix(srv.URL, "http://")
+
+	c, err := New(&config.Target{URL: "https://" + host, KeyID: "k", Secret: "s"}, Options{})
+	require.NoError(t, err)
+	resp, err := c.GetMeWithResponse(context.Background(), nil)
+	err = Check(resp, err)
+
+	assert.Equal(t, exitcode.Server, exitcode.Of(err))
+	assert.Equal(t, host+" answers plain HTTP, not HTTPS: use http://"+host+" if that is the server you mean - "+
+		"the key's secret then crosses the network unencrypted", err.Error())
 }

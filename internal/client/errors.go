@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"reflect"
 	"slices"
 	"strings"
@@ -127,7 +128,22 @@ func unreachable(err error) error {
 // unreachableError is a request the server never answered.
 type unreachableError struct{ err error }
 
-func (e *unreachableError) Error() string { return "reaching the server: " + e.err.Error() }
+func (e *unreachableError) Error() string {
+	if errors.Is(e.err, http.ErrSchemeMismatch) {
+		// Not tried again over http on its own: the key's secret would cross the
+		// network unencrypted, which is for the person to choose.
+		host := "the server"
+		var urlErr *url.Error
+		if errors.As(e.err, &urlErr) {
+			if u, err := url.Parse(urlErr.URL); err == nil && u.Host != "" {
+				host = u.Host
+			}
+		}
+		return fmt.Sprintf("%s answers plain HTTP, not HTTPS: use http://%s if that is the server you mean - "+
+			"the key's secret then crosses the network unencrypted", host, host)
+	}
+	return "reaching the server: " + e.err.Error()
+}
 func (e *unreachableError) Unwrap() error { return e.err }
 
 // IsUnreachable says err is a request the server never answered: it was not

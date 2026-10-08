@@ -3,6 +3,8 @@ package config
 import (
 	"errors"
 	"fmt"
+	"net"
+	"net/url"
 	"strings"
 )
 
@@ -60,12 +62,33 @@ func ResolveTarget(cfg *Config, secrets *Secrets, contextFlag string, getenv fun
 }
 
 // NormalizeURL is an installation's URL as the CLI keeps it: with a scheme, no
-// trailing slash, and no /api - the CLI adds the API's path itself.
-func NormalizeURL(url string) string {
-	url = strings.TrimSpace(url)
-	if !strings.Contains(url, "://") {
-		url = "https://" + url
+// trailing slash, and no /api - the CLI adds the API's path itself. Without a
+// scheme it is https, but for this machine - localhost:10000 - which a local
+// installation serves over plain http.
+func NormalizeURL(rawURL string) string {
+	rawURL = strings.TrimSpace(rawURL)
+	if !strings.Contains(rawURL, "://") {
+		scheme := "https://"
+		if isLoopback(rawURL) {
+			scheme = "http://"
+		}
+		rawURL = scheme + rawURL
 	}
-	url = strings.TrimRight(url, "/")
-	return strings.TrimSuffix(url, "/api")
+	rawURL = strings.TrimRight(rawURL, "/")
+	return strings.TrimSuffix(rawURL, "/api")
+}
+
+// isLoopback says a URL without its scheme names this machine: localhost, a
+// name under .localhost, or a loopback address.
+func isLoopback(hostAndPath string) bool {
+	u, err := url.Parse("//" + hostAndPath)
+	if err != nil {
+		return false
+	}
+	host := strings.ToLower(u.Hostname())
+	if host == "localhost" || strings.HasSuffix(host, ".localhost") {
+		return true
+	}
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
 }

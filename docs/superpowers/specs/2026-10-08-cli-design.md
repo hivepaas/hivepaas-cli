@@ -91,16 +91,16 @@ CURRENT  NAME              URL                       USER
 
 ```console
 $ hivepaas projects ls
-NAME  ENVS                              STATUS
-shop  development, staging, production  active
-blog  production                        active
+NAME  KEY   ENVS                              STATUS
+Shop  shop  development, staging, production  active
+Blog  blog  production                        active
 
 $ hivepaas apps ls -p shop -e production
-NAME   KIND      STATUS   SOURCE                          UPDATED
-api    webapp    running  ghcr.io/acme/shop-api:1.4.2     2h ago
-web    webapp    running  github.com/acme/shop-web@main   1d ago
-db     postgres  running  postgres:18.0                   5d ago
-cache  valkey    running  valkey/valkey:8.1               5d ago
+NAME       KEY     KIND      STATUS   UPDATED
+API        api     -         active   2h ago
+Web        web     -         active   1d ago
+Orders DB  db      postgres  active   5d ago
+cache      cache   valkey    active   5d ago
 ```
 
 **Linking a directory**, after which the app needs no flags:

@@ -33,9 +33,9 @@ func (a *App) projectsCmd() *cobra.Command {
 			}
 			rows := make([][]string, 0, len(projects))
 			for _, p := range projects {
-				rows = append(rows, []string{p.Name, envNames(p.Envs), string(p.Status)})
+				rows = append(rows, []string{p.Name, p.Key, envNames(p.Envs), string(p.Status)})
 			}
-			return a.printer.Table([]string{colName, "ENVS", "STATUS"}, rows)
+			return a.printer.Table([]string{colName, colKey, "ENVS", "STATUS"}, rows)
 		},
 	}, &cobra.Command{
 		Use:   "get [PROJECT]",
@@ -78,6 +78,9 @@ func (a *App) projectsCmd() *cobra.Command {
 // The heads of the columns several lists have.
 const (
 	colName = "NAME"
+	// colKey is what -p and -a take, beside the name: a key does not change when
+	// the name does.
+	colKey  = "KEY"
 	colKind = "KIND"
 )
 

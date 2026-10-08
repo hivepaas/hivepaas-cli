@@ -55,3 +55,18 @@ func TestNewRefusesAnUnknownFormat(t *testing.T) {
 	_, err := New(nil, nil, "xml", false)
 	assert.Error(t, err)
 }
+
+// A color in a cell takes no room: the columns after it stay in line.
+func TestTableAlignsWhatShows(t *testing.T) {
+	p, out := printer(t, Table)
+	require.NoError(t, p.Table([]string{"NAME", "KEY", "STATUS"}, [][]string{
+		{"web", "web", "active"},
+		{"worker \x1b[2m(of web)\x1b[0m", "web_worker", "active"},
+		{"nhập liệu", "nhap_lieu", "active"},
+	}))
+	assert.Equal(t, ""+
+		"NAME             KEY         STATUS\n"+
+		"web              web         active\n"+
+		"worker \x1b[2m(of web)\x1b[0m  web_worker  active\n"+
+		"nhập liệu        nhap_lieu   active\n", out.String())
+}

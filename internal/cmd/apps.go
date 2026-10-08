@@ -42,9 +42,10 @@ func (a *App) appsCmd() *cobra.Command {
 				if app.ParentApp != nil {
 					name += a.printer.Dim(" (of " + app.ParentApp.Name + ")")
 				}
-				rows = append(rows, []string{name, kindOf(app), string(app.Status), output.Ago(app.UpdatedAt, now)})
+				rows = append(rows, []string{name, app.Key, kindOf(app), string(app.Status),
+					output.Ago(app.UpdatedAt, now)})
 			}
-			return a.printer.Table([]string{colName, colKind, "STATUS", "UPDATED"}, rows)
+			return a.printer.Table([]string{colName, colKey, colKind, "STATUS", "UPDATED"}, rows)
 		},
 	}, &cobra.Command{
 		Use:   "get [APP]",
@@ -72,6 +73,7 @@ func (a *App) appsCmd() *cobra.Command {
 				return a.printer.Data(app)
 			}
 			fmt.Fprintf(a.stdout, "%s %s\n", app.Name, a.printer.Dim(app.Id))
+			fmt.Fprintf(a.stdout, "Key:     %s\n", app.Key)
 			fmt.Fprintf(a.stdout, "In:      %s / %s\n", sel.Project.Name, sel.Env)
 			fmt.Fprintf(a.stdout, "Kind:    %s\n", kindOf(*app))
 			fmt.Fprintf(a.stdout, "Status:  %s\n", app.Status)

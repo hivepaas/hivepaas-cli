@@ -355,3 +355,15 @@ func TestTemplatesDeployNeedsAVolumeWhenThereAreSeveral(t *testing.T) {
 	assert.Contains(t, r.stderr, "which volume for dataVolume (Data volume)? Give --param dataVolume=NAME, "+
 		"of: default, fast")
 }
+
+func TestListsShowKeys(t *testing.T) {
+	f := newFakeAPI(t)
+
+	r := f.run("projects", "ls")
+	require.Equal(t, exitcode.OK, r.code, r.stderr)
+	assert.Equal(t, "NAME  KEY   ENVS        STATUS\nshop  shop  production  \n", r.stdout)
+
+	r = f.run(args("apps ls -p shop -e production")...)
+	require.Equal(t, exitcode.OK, r.code, r.stderr)
+	assert.Equal(t, "NAME  KEY  KIND  STATUS  UPDATED\napi   api  -     active  \n", r.stdout)
+}

@@ -9,9 +9,10 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strings"
-	"text/tabwriter"
 	"time"
+	"unicode/utf8"
 
 	"golang.org/x/term"
 	"gopkg.in/yaml.v3"
@@ -123,13 +124,43 @@ func blockStyle(node *yaml.Node) {
 }
 
 // Table writes rows under a header, in columns.
+//
+// The columns are as wide as their widest cell as it shows: colors take no room,
+// so a dimmed note in a cell does not push the columns after it out of line, as
+// it would with text/tabwriter, which counts their escape codes.
 func (p *Printer) Table(header []string, rows [][]string) error {
-	w := tabwriter.NewWriter(p.Out, 0, 0, 2, ' ', 0) //nolint:mnd
-	fmt.Fprintln(w, strings.Join(header, "\t"))
-	for _, row := range rows {
-		fmt.Fprintln(w, strings.Join(row, "\t"))
+	all := append([][]string{header}, rows...)
+	var widths []int
+	for _, row := range all {
+		for i, cell := range row {
+			if i == len(widths) {
+				widths = append(widths, 0)
+			}
+			widths[i] = max(widths[i], visibleWidth(cell))
+		}
 	}
-	return w.Flush() //nolint:wrapcheck
+	var b strings.Builder
+	for _, row := range all {
+		for i, cell := range row {
+			b.WriteString(cell)
+			if i < len(row)-1 {
+				b.WriteString(strings.Repeat(" ", widths[i]-visibleWidth(cell)+columnGap))
+			}
+		}
+		b.WriteString("\n")
+	}
+	_, err := io.WriteString(p.Out, b.String())
+	return err //nolint:wrapcheck
+}
+
+// columnGap is the space between two columns.
+const columnGap = 2
+
+// ansiCode is a color code, which takes no room on a terminal.
+var ansiCode = regexp.MustCompile("\x1b\\[[0-9;]*m")
+
+func visibleWidth(cell string) int {
+	return utf8.RuneCountInString(ansiCode.ReplaceAllString(cell, ""))
 }
 
 // Infof is a message for the person running the command, on stderr.

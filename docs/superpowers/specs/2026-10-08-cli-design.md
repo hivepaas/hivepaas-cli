@@ -52,13 +52,19 @@ needs for it. Later phases are listed at the end.
 |---|---|
 | `login [URL]`, `logout`, `context ls\|use\|rm`, `whoami` | manage installations and keys |
 | `project ls`, `project get` | list and show projects, with their environments |
+| `project create\|delete`, `project env add\|rm` | create and delete projects, add and remove their environments ([design](2026-10-08-app-ops-design.md)) |
 | `app ls`, `app get` | list and show apps |
 | `link`, `unlink` | tie a directory to an app |
 | `deploy [source flags]` | deploy, and by default wait for the result while following its logs; the flags of its source - an image, or a repository to build - change what it deploys first ([design](2026-10-08-deploy-source-design.md)) |
 | `deploy settings` | what an app deploys: its image or its repository, and its commands |
 | `deploy cancel [ID]` | cancel a deployment: the app's running one when no id is given |
 | `deploy ls`, `deploy get ID` | an app's deployments: status, what started them, how long they took, what they deployed |
-| `logs [-f]` | an app's logs; `--search`, `--level`, `--history` read the stored ones |
+| `logs [-f]` | an app's logs; `--search`, `--level`, `--history` read the stored ones; `--deployment`, `--task` theirs |
+| `ps [APP]` | an app's replicas: where each runs, its state, why one failed |
+| `cp SRC DST` | copy a file or a directory into an app's container, or out of it |
+| `job ls\|run\|enable\|disable` | an app's scheduled jobs; `run` waits for the run as `deploy` does |
+| `task ls\|get\|cancel` | an app's tasks: its jobs' runs and the like |
+| `secret ls\|set\|rm`, `config-file ls\|push\|pull\|rm` | what HivePaaS keeps for an app: hidden values, mounted files |
 | `restart`, `app stop`, `app start` | restart an app, stop it, start it again |
 | `env ls\|set\|unset\|pull` | an app's environment variables; `set --file .env`, `pull` to a .env file |
 | `open` | open an app's address in the browser, or `--print` it |
@@ -260,6 +266,8 @@ execute, write and delete actions, never beyond its owner's permissions):
 | `login`, `whoami` | `GET /sessions/me` | read |
 | `project ls` | `GET /projects` | read |
 | `project get P` | `GET /projects/{projectID}` | read |
+| `project create`, `project delete` | `POST /projects`, `DELETE /projects/{projectID}` (`removeStorage`) | write, delete |
+| `project env add`, `project env rm` | `GET` then `PUT /projects/{projectID}` with the env added; `DELETE /projects/{projectID}/{projectEnv}` | write, delete |
 | `app ls` | `GET /projects/{projectID}/{projectEnv}/apps` | read |
 | `app get A` | `GET .../apps/{appID}` | read |
 | `deploy` | `POST .../apps/{appID}/deploy` | execute |
@@ -275,6 +283,11 @@ execute, write and delete actions, never beyond its owner's permissions):
 | `env pull` | `GET .../apps/{appID}/env-vars` | read |
 | `open` | `GET .../apps/{appID}` (its access links) | read |
 | `exec` | `GET .../apps/{appID}/terminal` over websocket | execute |
+| `ps` | `GET .../apps/{appID}/service-tasks` | read |
+| `cp` | `POST .../container/file-upload`, `GET .../container/file-download` | execute, read |
+| `job ls`, `job run`, `job enable\|disable` | `GET .../sched-jobs`, `POST .../sched-jobs/{id}/exec`, `PUT .../sched-jobs/{id}/status` | read, execute, write |
+| `task ls\|get\|cancel`, `logs --task` | `GET .../tasks`, `GET .../tasks/{id}`, `POST .../tasks/{id}/cancel`, `.../tasks/{id}/logs` over websocket | read, execute |
+| `secret`, `config-file` | `GET`, `POST`, `PUT`, `DELETE .../secrets`, `.../config-files` | read, write, delete |
 | `domain add`, `domain rm` | `GET` then `PUT .../routing-settings` | write |
 | `app scale` | `GET` then `PUT .../autoscale`, `.../service-settings`, `.../resource-settings` | write |
 | `app create` | `POST .../apps`, then `env-vars`, `routing-settings`, `deployment-settings` | write |
@@ -454,7 +467,7 @@ Exit codes:
 | 5 | not found (404), or a name that matches nothing |
 | 6 | refused as invalid or conflicting (400, 409, 422) |
 | 7 | the server failed or could not be reached (5xx, network) |
-| 8 | the deployment failed or was canceled |
+| 8 | what the command waited for - a deployment, a job's run - failed or was canceled |
 | 9 | timed out waiting |
 | 10 | the server takes no writes from a CLI this old (426) |
 | 130 | interrupted |

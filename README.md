@@ -15,6 +15,10 @@ bin/hivepaas link -p shop -e production -a api
 bin/hivepaas deploy --image ghcr.io/acme/shop-api:1.4.3
 bin/hivepaas deploy --ref release --dockerfile docker/Dockerfile   # an app built from its repository
 bin/hivepaas deploy settings
+bin/hivepaas ps                                # where each replica runs, and why one failed
+bin/hivepaas job run migrate                   # a scheduled job, now, waited for
+bin/hivepaas cp ./config.yaml :/app/config.yaml
+bin/hivepaas secret set STRIPE_KEY             # the value asked for, not on the command line
 bin/hivepaas logs -f --since 10m
 bin/hivepaas env set LOG_LEVEL=debug
 bin/hivepaas update                # a newer release, checked against a list signed offline

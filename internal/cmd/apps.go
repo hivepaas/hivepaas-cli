@@ -45,7 +45,7 @@ func (a *App) appsCmd() *cobra.Command {
 				rows = append(rows, []string{name, app.Key, kindOf(app), string(app.Status),
 					output.Ago(app.UpdatedAt, now)})
 			}
-			return a.printer.Table([]string{colName, colKey, colKind, "STATUS", "UPDATED"}, rows)
+			return a.printer.Table([]string{colName, colKey, colKind, colStatus, "UPDATED"}, rows)
 		},
 	}, &cobra.Command{
 		Use:   "get [APP]",
@@ -84,7 +84,43 @@ func (a *App) appsCmd() *cobra.Command {
 			return nil
 		},
 	})
+	cmd.AddCommand(a.appRunningCmd("stop", false), a.appRunningCmd("start", true))
 	return cmd
+}
+
+// appRunningCmd stops an app, or starts it again: its service, scaled to none
+// or back, with its settings and data kept.
+func (a *App) appRunningCmd(verb string, running bool) *cobra.Command {
+	short := map[bool]string{
+		false: "Stop an app: it keeps its settings and data, and runs nothing until started",
+		true:  "Start an app that was stopped",
+	}[running]
+	done := map[bool]string{false: "Stopped", true: "Started"}[running]
+	return &cobra.Command{
+		Use:   verb + " [APP]",
+		Short: short,
+		Args:  usageArgs(cobra.MaximumNArgs(1)),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 1 {
+				a.app = args[0]
+			}
+			c, err := a.client()
+			if err != nil {
+				return err
+			}
+			sel, err := a.selectTarget(cmd.Context(), c, scopeApp)
+			if err != nil {
+				return err
+			}
+			resp, err := c.AppActionSetRunningWithResponse(cmd.Context(), sel.Project.Id, sel.Env, sel.App.Id,
+				api.AppactiondtoSetAppRunningReq{Running: running})
+			if err = client.Check(resp, err); err != nil {
+				return err
+			}
+			a.printer.Successf("%s %s.", done, sel.where())
+			return nil
+		},
+	}
 }
 
 // kindOf is what an app is, as its list says it: its engine, else its category.

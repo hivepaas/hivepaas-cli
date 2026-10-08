@@ -56,9 +56,11 @@ needs for it. Later phases are listed at the end.
 | `link`, `unlink` | tie a directory to an app |
 | `deploy [--image REF]` | deploy, and by default wait for the result while following its logs |
 | `deploy cancel [ID]` | cancel a deployment: the app's running one when no id is given |
-| `logs [-f]` | an app's logs |
-| `restart` | restart an app |
-| `env ls\|set\|unset` | an app's environment variables |
+| `deploy ls`, `deploy get ID` | an app's deployments: status, what started them, how long they took, what they deployed |
+| `logs [-f]` | an app's logs; `--search`, `--level`, `--history` read the stored ones |
+| `restart`, `app stop`, `app start` | restart an app, stop it, start it again |
+| `env ls\|set\|unset\|pull` | an app's environment variables; `set --file .env`, `pull` to a .env file |
+| `open` | open an app's address in the browser, or `--print` it |
 | `template ls`, `template deploy` | the template store |
 | `api METHOD PATH` | any endpoint, authenticated, JSON in and out |
 | `version`, `completion` | the CLI's version and shell completion |
@@ -261,6 +263,11 @@ execute, write and delete actions, never beyond its owner's permissions):
 | `deploy cancel` | `GET .../deployments` for the running one, `POST .../deployments/{id}/cancel` | execute |
 | `logs` | `GET .../apps/{appID}/logs` over websocket | read |
 | `restart` | `POST .../apps/{appID}/restart` | execute |
+| `app stop`, `app start` | `POST .../apps/{appID}/running-status` | execute |
+| `deploy ls`, `deploy get` | `GET .../deployments`, `GET .../deployments/{id}` | read |
+| `logs --search\|--level\|--history` | `GET .../apps/{appID}/logs/history` | read |
+| `env pull` | `GET .../apps/{appID}/env-vars` | read |
+| `open` | `GET .../apps/{appID}` (its access links) | read |
 | `env ls` | `GET .../apps/{appID}/env-vars` | read |
 | `env set`, `env unset` | `GET` then `PUT .../apps/{appID}/env-vars` | write |
 | `template ls` | `GET /app-templates` (`--sort name\|popular\|trending\|new`, `--category`, `--search`) | read |
@@ -275,6 +282,11 @@ parameter naming a volume or an app takes its name, and the CLI sends the volume
 id and the app's key; a volume parameter left out takes the project's only volume,
 as the dashboard's form does. Then the CLI waits for each deployment the creation
 started - the dependencies', the app's, its components' - and says how each ended.
+
+Tab completes, from the installation, what the flags and arguments name -
+projects and apps by key with their names beside them, environments, templates,
+deployments - for the target the command line names so far; it never asks, and
+offers nothing rather than wait more than three seconds.
 
 `env set KEY=VALUE...` and `env unset KEY...` change the runtime variables, or
 with `--build` or `--shared` the build-time or shared ones - the three lists the

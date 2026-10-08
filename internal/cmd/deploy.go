@@ -48,7 +48,7 @@ func (a *App) deployCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&flags.noCache, "no-cache", false, "build without the build cache")
 	cmd.Flags().BoolVar(&flags.noWait, "no-wait", false, "start the deployment and return")
 	cmd.Flags().DurationVar(&flags.timeout, "timeout", defaultDeployTimeout, "how long to wait for the deployment")
-	cmd.AddCommand(a.deployCancelCmd())
+	cmd.AddCommand(a.deployCancelCmd(), a.deployLsCmd(), a.deployGetCmd())
 	return cmd
 }
 

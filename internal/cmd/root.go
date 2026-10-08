@@ -31,6 +31,8 @@ type App struct {
 	noColor     bool
 	debug       bool
 	ignoreLink  bool
+	// completing says the CLI answers the shell's Tab: it asks nothing.
+	completing bool
 
 	stdin  io.Reader
 	stdout io.Writer
@@ -107,8 +109,9 @@ func (a *App) rootCmd() *cobra.Command {
 		a.versionCmd(), a.updateCmd(),
 		a.loginCmd(), a.logoutCmd(), a.whoamiCmd(), a.contextCmd(),
 		a.projectsCmd(), a.appsCmd(), a.linkCmd(), a.unlinkCmd(),
-		a.deployCmd(), a.logsCmd(), a.restartCmd(), a.envCmd(), a.templatesCmd(), a.apiCmd(),
+		a.deployCmd(), a.logsCmd(), a.restartCmd(), a.envCmd(), a.templatesCmd(), a.openCmd(), a.apiCmd(),
 	)
+	a.registerCompletions(root)
 	return root
 }
 

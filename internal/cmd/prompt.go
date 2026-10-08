@@ -15,6 +15,9 @@ import (
 
 // interactive says the CLI may ask: stdin and stderr are terminals.
 func (a *App) interactive() bool {
+	if a.completing {
+		return false
+	}
 	in, inOK := a.stdin.(*os.File)
 	errw, errOK := a.stderr.(*os.File)
 	return inOK && errOK && term.IsTerminal(int(in.Fd())) && term.IsTerminal(int(errw.Fd())) //nolint:gosec

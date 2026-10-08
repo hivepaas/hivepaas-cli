@@ -35,7 +35,7 @@ func (a *App) projectsCmd() *cobra.Command {
 			for _, p := range projects {
 				rows = append(rows, []string{p.Name, p.Key, envNames(p.Envs), string(p.Status)})
 			}
-			return a.printer.Table([]string{colName, colKey, "ENVS", "STATUS"}, rows)
+			return a.printer.Table([]string{colName, colKey, "ENVS", colStatus}, rows)
 		},
 	}, &cobra.Command{
 		Use:   "get [PROJECT]",
@@ -80,8 +80,9 @@ const (
 	colName = "NAME"
 	// colKey is what -p and -a take, beside the name: a key does not change when
 	// the name does.
-	colKey  = "KEY"
-	colKind = "KIND"
+	colKey    = "KEY"
+	colKind   = "KIND"
+	colStatus = "STATUS"
 )
 
 func envNames(envs *[]api.ProjectdtoProjectEnvResp) string {

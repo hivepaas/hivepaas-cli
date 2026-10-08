@@ -3,6 +3,9 @@ package cmd
 import (
 	"context"
 	"errors"
+	"fmt"
+	"io/fs"
+	"os"
 	"slices"
 	"strings"
 
@@ -45,7 +48,7 @@ func (f *envKindFlags) kind() string {
 
 func (a *App) envCmd() *cobra.Command {
 	cmd := &cobra.Command{Use: "env", Short: "An app's environment variables"}
-	cmd.AddCommand(a.envLsCmd(), a.envSetCmd(), a.envUnsetCmd())
+	cmd.AddCommand(a.envLsCmd(), a.envSetCmd(), a.envUnsetCmd(), a.envPullCmd())
 	return cmd
 }
 
@@ -133,16 +136,31 @@ func envRows(vars *api.AppsettingsdtoEnvVarsResp, only string, all bool) [][]str
 func (a *App) envSetCmd() *cobra.Command {
 	var kinds envKindFlags
 	var literal bool
+	var file string
 	cmd := &cobra.Command{
-		Use:   "set KEY=VALUE...",
+		Use:   "set [KEY=VALUE...]",
 		Short: "Set environment variables of an app",
 		Long: "Set environment variables of an app: the runtime ones, or with --build or --shared the\n" +
-			"build-time or shared ones. A value may name others, ${db.HIVEPAAS_URL}, unless --literal.",
-		Args: usageArgs(cobra.MinimumNArgs(1)),
+			"build-time or shared ones. A value may name others, ${db.HIVEPAAS_URL}, unless --literal.\n\n" +
+			"--file sets those of a .env file, - for stdin; KEY=VALUE arguments beside it win.",
+		Example: "  hivepaas env set LOG_LEVEL=debug FEATURE_X=on\n" +
+			"  hivepaas env set --file .env.production\n" +
+			"  hivepaas env set --build NODE_ENV=production",
+		Args: usageArgs(cobra.ArbitraryArgs),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pairs, err := keyValues(args)
+			if len(args) == 0 && file == "" {
+				return exitcode.New(exitcode.Usage, "give KEY=VALUE, or --file with a .env file")
+			}
+			pairs, err := a.envFile(cmd.Context(), file)
 			if err != nil {
 				return err
+			}
+			given, err := keyValues(args)
+			if err != nil {
+				return err
+			}
+			for _, pair := range given {
+				pairs = appendPair(pairs, pair[0], pair[1])
 			}
 			kind := kinds.kind()
 			return a.changeEnvVars(cmd.Context(), kind, func(_ *api.AppsettingsdtoEnvVarsResp,
@@ -167,8 +185,150 @@ func (a *App) envSetCmd() *cobra.Command {
 	}
 	kinds.add(cmd, "set")
 	cmd.Flags().BoolVar(&literal, "literal", false, "take the values as they are, without expanding ${...}")
+	cmd.Flags().StringVar(&file, "file", "", "set the variables of this .env file; - reads stdin")
 	return cmd
 }
+
+// envFile is what a .env file sets: none without one.
+func (a *App) envFile(ctx context.Context, file string) ([][2]string, error) {
+	var content string
+	switch file {
+	case "":
+		return nil, nil
+	case "-":
+		var err error
+		if content, err = a.readStdin(ctx, "the .env file"); err != nil {
+			return nil, err
+		}
+	default:
+		data, err := os.ReadFile(file)
+		if err != nil {
+			return nil, exitcode.Wrap(exitcode.Usage, fmt.Errorf("reading %s: %w", file, err))
+		}
+		content = string(data)
+	}
+	pairs, err := parseDotenv(content)
+	if err != nil {
+		return nil, exitcode.New(exitcode.Usage, "%s: %s", firstOf(strings.TrimPrefix(file, "-"), "stdin"), err)
+	}
+	return pairs, nil
+}
+
+func (a *App) envPullCmd() *cobra.Command {
+	var build, force bool
+	cmd := &cobra.Command{
+		Use:   "pull [FILE]",
+		Short: "Write an app's environment variables as a .env file, to run it on this machine",
+		Long: "Write the variables an app runs with as a .env file: those it inherits, its shared ones and\n" +
+			"its runtime ones, or with --build its build-time ones - the app's own over what it inherits.\n" +
+			"Those HivePaaS sets, which describe the app where it runs, are left out. A value naming\n" +
+			"others, ${db.HIVEPAAS_URL}, is written as it is: only the server expands it.\n\n" +
+			"Without FILE it writes to stdout. A FILE that exists is replaced only with --force; the file\n" +
+			"is made readable by you alone, for it holds secrets.",
+		Example: "  hivepaas env pull .env.local\n" +
+			"  hivepaas env pull -a worker > worker.env",
+		Args: usageArgs(cobra.MaximumNArgs(1)),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			c, err := a.client()
+			if err != nil {
+				return err
+			}
+			sel, err := a.selectTarget(cmd.Context(), c, scopeApp)
+			if err != nil {
+				return err
+			}
+			vars, err := envVars(cmd.Context(), c, sel)
+			if err != nil {
+				return err
+			}
+			pairs, references := pulled(vars, build)
+			for _, key := range references {
+				a.printer.Warnf("%s names other variables, which only the server expands: it is written as it is", key)
+			}
+			content := formatDotenv(pairs)
+			if len(args) == 0 {
+				_, err = fmt.Fprint(a.stdout, content)
+				return err //nolint:wrapcheck
+			}
+			if err = writeSecretFile(args[0], content, force); err != nil {
+				return err
+			}
+			a.printer.Successf("Wrote %d variables of %s to %s.", len(pairs), sel.where(), args[0])
+			return nil
+		},
+	}
+	cmd.Flags().BoolVar(&build, "build", false, "the build-time variables instead of the runtime ones")
+	cmd.Flags().BoolVar(&force, "force", false, "replace FILE when it exists")
+	return cmd
+}
+
+// pulled are the variables an app runs with - or is built with - as pairs: the
+// inherited ones, then its shared ones, then its runtime or build-time ones,
+// each over those before it; HivePaaS's own left out. references are the keys
+// whose values name other variables.
+func pulled(vars *api.AppsettingsdtoEnvVarsResp, build bool) (pairs [][2]string, references []string) {
+	lists := []*[]api.BasedtoEnvVarResp{vars.InheritedRuntimeEnvVars, vars.SharedEnvVars, vars.RuntimeEnvVars}
+	if build {
+		lists = []*[]api.BasedtoEnvVarResp{vars.InheritedBuildtimeEnvVars, vars.SharedEnvVars, vars.BuildtimeEnvVars}
+	}
+	for _, list := range lists {
+		for _, v := range resolve.Deref(list) {
+			if v.IsSystem != nil && *v.IsSystem {
+				continue
+			}
+			pairs = appendPair(pairs, v.Key, v.Value)
+		}
+	}
+	for _, pair := range pairs {
+		if strings.Contains(pair[1], "${") && !isLiteral(vars, pair[0]) {
+			references = append(references, pair[0])
+		}
+	}
+	return pairs, references
+}
+
+// isLiteral says the variable key, as the app's own lists have it, is not
+// expanded.
+func isLiteral(vars *api.AppsettingsdtoEnvVarsResp, key string) bool {
+	literal := false
+	for _, list := range []*[]api.BasedtoEnvVarResp{vars.InheritedRuntimeEnvVars, vars.InheritedBuildtimeEnvVars,
+		vars.SharedEnvVars, vars.RuntimeEnvVars, vars.BuildtimeEnvVars} {
+		for _, v := range resolve.Deref(list) {
+			if v.Key == key {
+				literal = v.IsLiteral != nil && *v.IsLiteral
+			}
+		}
+	}
+	return literal
+}
+
+// writeSecretFile writes content to path, readable by its owner alone, and
+// never over a file that is there unless force.
+func writeSecretFile(path, content string, force bool) error {
+	flags := os.O_WRONLY | os.O_CREATE | os.O_EXCL
+	if force {
+		flags = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
+	}
+	f, err := os.OpenFile(path, flags, secretFileMode)
+	if errors.Is(err, fs.ErrExist) {
+		return exitcode.New(exitcode.Usage, "%s exists: give --force to replace it", path)
+	}
+	if err != nil {
+		return fmt.Errorf("writing %s: %w", path, err)
+	}
+	if _, err = f.WriteString(content); err != nil {
+		_ = f.Close()
+		return fmt.Errorf("writing %s: %w", path, err)
+	}
+	if err = f.Chmod(secretFileMode); err != nil {
+		_ = f.Close()
+		return fmt.Errorf("writing %s: %w", path, err)
+	}
+	return f.Close() //nolint:wrapcheck
+}
+
+// secretFileMode is a file of secrets: its owner's alone.
+const secretFileMode = 0o600
 
 func (a *App) envUnsetCmd() *cobra.Command {
 	var kinds envKindFlags

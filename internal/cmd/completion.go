@@ -36,6 +36,8 @@ func (a *App) registerCompletions(root *cobra.Command) {
 		"restart":         a.appChoices,
 		"open":            a.appChoices,
 		"exec":            a.appChoices,
+		"app scale":       a.appChoices,
+		"domain rm":       a.domainChoices,
 		"template deploy": a.templateChoices,
 		"deploy get":      a.deploymentChoices,
 		"deploy cancel":   a.deploymentChoices,
@@ -157,6 +159,23 @@ func (a *App) deploymentChoices(ctx context.Context, c *client.Client) ([]cobra.
 	out := make([]cobra.Completion, 0, len(deployments))
 	for _, d := range deployments {
 		out = append(out, cobra.CompletionWithDesc(d.Id, string(d.Status)+", "+d.CreatedAt))
+	}
+	return out, nil
+}
+
+func (a *App) domainChoices(ctx context.Context, c *client.Client) ([]cobra.Completion, error) {
+	sel, err := a.selectTarget(ctx, c, scopeApp)
+	if err != nil {
+		return nil, err
+	}
+	settings, err := routingSettings(ctx, c, sel)
+	if err != nil {
+		return nil, err
+	}
+	domains := resolve.Deref(settings.Domains)
+	out := make([]cobra.Completion, 0, len(domains))
+	for _, d := range domains {
+		out = append(out, d.Domain)
 	}
 	return out, nil
 }

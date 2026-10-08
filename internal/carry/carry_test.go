@@ -37,6 +37,43 @@ func TestDeploymentSettingsCarryEveryField(t *testing.T) {
 		"notCarried names a field the request no longer has")
 }
 
+// The routing settings come back whole: a domain added or removed leaves every
+// other domain, with its certificate, headers and limits, as it was.
+func TestRoutingSettingsCarryEveryField(t *testing.T) {
+	var settings api.AppsettingsdtoRoutingSettingsResp
+	fill(reflect.ValueOf(&settings).Elem(), 0)
+
+	req, err := RoutingSettings(&settings)
+	require.NoError(t, err)
+
+	missing, _ := unfilled(reflect.ValueOf(req).Elem(), "")
+	assert.Empty(t, missing, "fields of the routing settings request the CLI does not carry back from the response")
+}
+
+// The service, resource and autoscale settings come back whole.
+func TestScaleSettingsCarryEveryField(t *testing.T) {
+	var service api.AppsettingsdtoServiceSettingsResp
+	fill(reflect.ValueOf(&service).Elem(), 0)
+	serviceReq, err := ServiceSettings(&service)
+	require.NoError(t, err)
+	missing, _ := unfilled(reflect.ValueOf(serviceReq).Elem(), "")
+	assert.Empty(t, missing, "fields of the service settings request the CLI does not carry back")
+
+	var resources api.AppsettingsdtoResourceSettingsResp
+	fill(reflect.ValueOf(&resources).Elem(), 0)
+	resourcesReq, err := ResourceSettings(&resources)
+	require.NoError(t, err)
+	missing, _ = unfilled(reflect.ValueOf(resourcesReq).Elem(), "")
+	assert.Empty(t, missing, "fields of the resource settings request the CLI does not carry back")
+
+	var autoscale api.AppsettingsdtoAppAutoscaleResp
+	fill(reflect.ValueOf(&autoscale).Elem(), 0)
+	autoscaleReq, err := Autoscale(&autoscale)
+	require.NoError(t, err)
+	missing, _ = unfilled(reflect.ValueOf(autoscaleReq).Elem(), "")
+	assert.Empty(t, missing, "fields of the autoscale request the CLI does not carry back")
+}
+
 // The environment variables come back whole, without those HivePaaS sets.
 func TestEnvVarsCarryEveryField(t *testing.T) {
 	var vars api.AppsettingsdtoEnvVarsResp

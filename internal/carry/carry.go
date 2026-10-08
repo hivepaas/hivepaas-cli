@@ -25,6 +25,52 @@ func DeploymentSettings(settings *api.AppsettingsdtoDeploymentSettingsResp) (
 	return &req, nil
 }
 
+// RoutingSettings is the request that writes an app's routing settings - its
+// domains and all they carry - back as they are.
+func RoutingSettings(settings *api.AppsettingsdtoRoutingSettingsResp) (
+	*api.AppsettingsdtoUpdateAppRoutingSettingsReq, error,
+) {
+	var req api.AppsettingsdtoUpdateAppRoutingSettingsReq
+	if err := convert(settings, &req); err != nil {
+		return nil, fmt.Errorf("the routing settings: %w", err)
+	}
+	return &req, nil
+}
+
+// ServiceSettings is the request that writes an app's service settings - its
+// mode, replicas and placement - back as they are.
+func ServiceSettings(settings *api.AppsettingsdtoServiceSettingsResp) (
+	*api.AppsettingsdtoUpdateAppServiceSettingsReq, error,
+) {
+	var req api.AppsettingsdtoUpdateAppServiceSettingsReq
+	if err := convert(settings, &req); err != nil {
+		return nil, fmt.Errorf("the service settings: %w", err)
+	}
+	return &req, nil
+}
+
+// ResourceSettings is the request that writes an app's resource settings -
+// limits, reservations, memory, capabilities - back as they are.
+func ResourceSettings(settings *api.AppsettingsdtoResourceSettingsResp) (
+	*api.AppsettingsdtoUpdateAppResourceSettingsReq, error,
+) {
+	var req api.AppsettingsdtoUpdateAppResourceSettingsReq
+	if err := convert(settings, &req); err != nil {
+		return nil, fmt.Errorf("the resource settings: %w", err)
+	}
+	return &req, nil
+}
+
+// Autoscale is the request that writes an app's autoscale settings back as they
+// are; what the response adds of the moment - replicas now, events - stays out.
+func Autoscale(settings *api.AppsettingsdtoAppAutoscaleResp) (*api.AppsettingsdtoUpdateAppAutoscaleReq, error) {
+	var req api.AppsettingsdtoUpdateAppAutoscaleReq
+	if err := convert(settings, &req); err != nil {
+		return nil, fmt.Errorf("the autoscale settings: %w", err)
+	}
+	return &req, nil
+}
+
 // EnvVars is the request that writes an app's environment variables back as
 // they are: its own, without those HivePaaS sets (isSystem), which the lists
 // show beside them and the server does not take back.

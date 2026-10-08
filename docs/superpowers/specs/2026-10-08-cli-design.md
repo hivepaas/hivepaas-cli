@@ -61,6 +61,9 @@ needs for it. Later phases are listed at the end.
 | `restart`, `app stop`, `app start` | restart an app, stop it, start it again |
 | `env ls\|set\|unset\|pull` | an app's environment variables; `set --file .env`, `pull` to a .env file |
 | `open` | open an app's address in the browser, or `--print` it |
+| `exec [APP]` (alias `ssh`) | a shell in one of the app's containers, over the terminal websocket |
+| `domain ls\|add\|rm` | the domains an app is served on |
+| `app scale` | an app's replicas, its autoscale, and each replica's CPU and memory limits |
 | `template ls`, `template deploy` | the template store |
 | `api METHOD PATH` | any endpoint, authenticated, JSON in and out |
 | `version`, `completion` | the CLI's version and shell completion |
@@ -268,6 +271,9 @@ execute, write and delete actions, never beyond its owner's permissions):
 | `logs --search\|--level\|--history` | `GET .../apps/{appID}/logs/history` | read |
 | `env pull` | `GET .../apps/{appID}/env-vars` | read |
 | `open` | `GET .../apps/{appID}` (its access links) | read |
+| `exec` | `GET .../apps/{appID}/terminal` over websocket | execute |
+| `domain add`, `domain rm` | `GET` then `PUT .../routing-settings` | write |
+| `app scale` | `GET` then `PUT .../autoscale`, `.../service-settings`, `.../resource-settings` | write |
 | `env ls` | `GET .../apps/{appID}/env-vars` | read |
 | `env set`, `env unset` | `GET` then `PUT .../apps/{appID}/env-vars` | write |
 | `template ls` | `GET /app-templates` (`--sort name\|popular\|trending\|new`, `--category`, `--search`) | read |

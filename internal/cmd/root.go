@@ -109,7 +109,8 @@ func (a *App) rootCmd() *cobra.Command {
 		a.versionCmd(), a.updateCmd(),
 		a.loginCmd(), a.logoutCmd(), a.whoamiCmd(), a.contextCmd(),
 		a.projectsCmd(), a.appsCmd(), a.linkCmd(), a.unlinkCmd(),
-		a.deployCmd(), a.logsCmd(), a.restartCmd(), a.execCmd(), a.envCmd(), a.templatesCmd(), a.openCmd(),
+		a.deployCmd(), a.logsCmd(), a.restartCmd(), a.execCmd(), a.envCmd(), a.domainCmd(), a.templatesCmd(),
+		a.openCmd(),
 		a.apiCmd(),
 	)
 	a.registerCompletions(root)

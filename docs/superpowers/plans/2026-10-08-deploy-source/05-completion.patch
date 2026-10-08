@@ -1,0 +1,100 @@
+From 7f6d81f05259e251f36426f588e2735e8a3a1bc0 Mon Sep 17 00:00:00 2001
+From: tiendc <tiendc@gmail.com>
+Date: Thu, 8 Oct 2026 20:11:01 +0700
+Subject: [PATCH 5/6] Tab completes the credentials deploy names
+
+---
+ internal/cmd/completion.go             | 43 ++++++++++++++++++++++++++
+ internal/cmd/completion_source_test.go | 26 ++++++++++++++++
+ 2 files changed, 69 insertions(+)
+ create mode 100644 internal/cmd/completion_source_test.go
+
+diff --git a/internal/cmd/completion.go b/internal/cmd/completion.go
+index b6cf7b6..4a0b411 100644
+--- a/internal/cmd/completion.go
++++ b/internal/cmd/completion.go
+@@ -47,9 +47,52 @@ func (a *App) registerCompletions(root *cobra.Command) {
+ 		if choices, found := byPath[path]; found {
+ 			cmd.ValidArgsFunction = a.completeFirstArg(a.complete(choices))
+ 		}
++		// The commands that take a source's flags: deploy, app create.
++		if cmd.Flags().Lookup("push-to") != nil {
++			_ = cmd.RegisterFlagCompletionFunc("registry-auth", a.complete(a.registryAuthChoices))
++			_ = cmd.RegisterFlagCompletionFunc("push-to", a.complete(a.registryAuthChoices))
++			_ = cmd.RegisterFlagCompletionFunc("git-credential", a.complete(a.gitCredentialChoices))
++			_ = cmd.RegisterFlagCompletionFunc("use", cobra.FixedCompletions(
++				[]cobra.Completion{"image", "repo"}, cobra.ShellCompDirectiveNoFileComp))
++		}
+ 	})
+ }
+ 
++// noCredential is what Tab offers first for a credential: none.
++var noCredential = cobra.CompletionWithDesc(none, "no credential")
++
++func (a *App) registryAuthChoices(ctx context.Context, c *client.Client) ([]cobra.Completion, error) {
++	project, env, err := a.completionEnv(ctx, c)
++	if err != nil {
++		return nil, err
++	}
++	auths, err := resolve.New(c).RegistryAuths(ctx, project.Id, env)
++	if err != nil {
++		return nil, err
++	}
++	out := []cobra.Completion{noCredential}
++	for _, auth := range auths {
++		out = append(out, cobra.CompletionWithDesc(auth.Name, string(auth.Kind)+", "+auth.Address))
++	}
++	return out, nil
++}
++
++func (a *App) gitCredentialChoices(ctx context.Context, c *client.Client) ([]cobra.Completion, error) {
++	project, env, err := a.completionEnv(ctx, c)
++	if err != nil {
++		return nil, err
++	}
++	creds, err := resolve.New(c).GitCredentials(ctx, project.Id, env)
++	if err != nil {
++		return nil, err
++	}
++	out := []cobra.Completion{noCredential}
++	for _, cred := range creds {
++		out = append(out, cobra.CompletionWithDesc(cred.Name, cred.Kind))
++	}
++	return out, nil
++}
++
+ func walk(cmd *cobra.Command, visit func(*cobra.Command)) {
+ 	visit(cmd)
+ 	for _, child := range cmd.Commands() {
+diff --git a/internal/cmd/completion_source_test.go b/internal/cmd/completion_source_test.go
+new file mode 100644
+index 0000000..735cdb3
+--- /dev/null
++++ b/internal/cmd/completion_source_test.go
+@@ -0,0 +1,26 @@
++package cmd
++
++import (
++	"net/http"
++	"strings"
++	"testing"
++
++	"github.com/stretchr/testify/assert"
++)
++
++func TestTabCompletesCredentials(t *testing.T) {
++	f := newFakeAPI(t)
++	f.json("GET /api/projects/P1/production/registry-auth", http.StatusOK,
++		`{"data":[{"id":"R1","name":"ghcr","kind":"generic","address":"ghcr.io"}]}`)
++	f.json("GET /api/projects/P1/production/git-credentials", http.StatusOK,
++		`{"data":[{"id":"G2","name":"deploy-key","kind":"ssh-key"}]}`)
++
++	r := f.run("__complete", "deploy", "-p", "shop", "-e", "production", "--push-to", "")
++	assert.True(t, strings.HasPrefix(r.stdout, "none\tno credential\nghcr\tgeneric, ghcr.io\n:4\n"), r.stdout)
++
++	r = f.run("__complete", "deploy", "-p", "shop", "-e", "production", "--git-credential", "")
++	assert.True(t, strings.HasPrefix(r.stdout, "none\tno credential\ndeploy-key\tssh-key\n:4\n"), r.stdout)
++
++	r = f.run("__complete", "deploy", "--use", "")
++	assert.True(t, strings.HasPrefix(r.stdout, "image\nrepo\n:4\n"), r.stdout)
++}

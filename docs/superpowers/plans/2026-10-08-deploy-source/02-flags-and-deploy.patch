@@ -1,0 +1,750 @@
+From a314327efab2e74a4bb2aec3416faae63ee2975f Mon Sep 17 00:00:00 2001
+From: tiendc <tiendc@gmail.com>
+Date: Thu, 8 Oct 2026 20:10:35 +0700
+Subject: [PATCH 2/6] deploy: every field of an image's or a repository's
+ settings, in one write
+
+---
+ internal/cmd/appcreate.go          |   3 +-
+ internal/cmd/deploy.go             | 164 +++++++++++++++--------
+ internal/cmd/deploy_source_test.go | 174 ++++++++++++++++++++++++
+ internal/cmd/source_flags.go       | 208 +++++++++++++++++++++++++++++
+ internal/resolve/credentials.go    |  64 +++++++++
+ internal/resolve/resolve.go        |  10 +-
+ 6 files changed, 561 insertions(+), 62 deletions(-)
+ create mode 100644 internal/cmd/deploy_source_test.go
+ create mode 100644 internal/cmd/source_flags.go
+ create mode 100644 internal/resolve/credentials.go
+
+diff --git a/internal/cmd/appcreate.go b/internal/cmd/appcreate.go
+index 7847212..9c919c2 100644
+--- a/internal/cmd/appcreate.go
++++ b/internal/cmd/appcreate.go
+@@ -105,7 +105,8 @@ func (a *App) appCreate(ctx context.Context, name string, flags appCreateFlags)
+ 		a.printer.Infof("It runs nothing yet: hivepaas deploy --image <image>%s", sel.flags())
+ 		return nil
+ 	}
+-	deploymentID, err := a.setImage(ctx, c, sel, flags.image)
++	deploymentID, err := a.changeSource(ctx, c, sel,
++		&sourceInput{image: &flags.image, imageFlags: []string{"--image"}}, nil)
+ 	if err != nil {
+ 		return unfinished(err, "deploy it with hivepaas deploy --image "+flags.image+sel.flags())
+ 	}
+diff --git a/internal/cmd/deploy.go b/internal/cmd/deploy.go
+index 93b0c39..10a8275 100644
+--- a/internal/cmd/deploy.go
++++ b/internal/cmd/deploy.go
+@@ -25,10 +25,11 @@ const (
+ )
+ 
+ type deployFlags struct {
+-	image   string
+-	noCache bool
+-	noWait  bool
+-	timeout time.Duration
++	source   *sourceFlags
++	noCache  bool
++	changeID string
++	noWait   bool
++	timeout  time.Duration
+ }
+ 
+ func (a *App) deployCmd() *cobra.Command {
+@@ -36,16 +37,24 @@ func (a *App) deployCmd() *cobra.Command {
+ 	cmd := &cobra.Command{
+ 		Use:   "deploy",
+ 		Short: "Deploy an app, and wait for the result while following its logs",
+-		Long: "Deploy an app. With --image, the image in its deployment settings is changed first.\n\n" +
++		Long: "Deploy an app: the image it runs, or a build of its repository. The flags of its source -\n" +
++			"--image, or --repo, --ref, --commit and the rest - and of its commands change the deployment\n" +
++			"settings first, in one write, which deploys them. `hivepaas deploy settings` shows them.\n\n" +
+ 			"The command waits for the deployment to finish, following its logs on stderr. Ctrl-C stops\n" +
+ 			"the waiting, not the deployment: `hivepaas deploy cancel` cancels it.",
++		Example: "  hivepaas deploy --image ghcr.io/acme/api:1.4.3\n" +
++			"  hivepaas deploy --commit $GITHUB_SHA\n" +
++			"  hivepaas deploy --ref release --dockerfile docker/Dockerfile --push-to ghcr\n" +
++			"  hivepaas deploy --use repo --repo https://github.com/acme/api.git --git-credential acme",
+ 		Args: usageArgs(cobra.NoArgs),
+ 		RunE: func(cmd *cobra.Command, _ []string) error {
+ 			return a.deploy(cmd.Context(), flags)
+ 		},
+ 	}
+-	cmd.Flags().StringVar(&flags.image, "image", "", "deploy this image: ghcr.io/acme/api:1.4.3")
++	flags.source = addSourceFlags(cmd)
+ 	cmd.Flags().BoolVar(&flags.noCache, "no-cache", false, "build without the build cache")
++	cmd.Flags().StringVar(&flags.changeID, "change-id", "",
++		"what the deployment is for: pr-12 has its result commented on that pull request")
+ 	cmd.Flags().BoolVar(&flags.noWait, "no-wait", false, "start the deployment and return")
+ 	cmd.Flags().DurationVar(&flags.timeout, "timeout", defaultDeployTimeout, "how long to wait for the deployment")
+ 	cmd.AddCommand(a.deployCancelCmd(), a.deployLsCmd(), a.deployGetCmd())
+@@ -53,9 +62,6 @@ func (a *App) deployCmd() *cobra.Command {
+ }
+ 
+ func (a *App) deploy(ctx context.Context, flags deployFlags) error {
+-	if flags.image != "" && flags.noCache {
+-		return exitcode.New(exitcode.Usage, "--no-cache is for an app built from source, and --image deploys an image")
+-	}
+ 	c, err := a.client()
+ 	if err != nil {
+ 		return err
+@@ -65,16 +71,24 @@ func (a *App) deploy(ctx context.Context, flags deployFlags) error {
+ 		return err
+ 	}
+ 	var started api.AppactiondtoDeployAppDataResp
+-	if flags.image != "" {
++	if flags.source.asked() {
++		in, err := flags.source.input(ctx, c, sel, a.stdin)
++		if err != nil {
++			return err
++		}
+ 		// A change of the deployment settings deploys it: the server starts the
+ 		// deployment itself.
+-		if started.DeploymentId, err = a.setImage(ctx, c, sel, flags.image); err != nil {
++		started.DeploymentId, err = a.changeSource(ctx, c, sel, in,
++			func(req *api.AppsettingsdtoUpdateAppDeploymentSettingsReq, changed bool) error {
++				return postOnly(req, changed, flags)
++			})
++		if err != nil {
+ 			return err
+ 		}
+ 	}
+ 	if started.DeploymentId == "" {
+ 		resp, err := c.AppActionDeployWithResponse(ctx, sel.Project.Id, sel.Env, sel.App.Id,
+-			api.AppactiondtoDeployAppReq{NoCache: flags.noCache})
++			api.AppactiondtoDeployAppReq{NoCache: flags.noCache, ChangeId: flags.changeID})
+ 		if err = client.Check(resp, err); err != nil {
+ 			return err
+ 		}
+@@ -104,64 +118,96 @@ func (a *App) deploy(ctx context.Context, flags deployFlags) error {
+ 	return a.outcome(deployment, ref)
+ }
+ 
+-// setImage changes the image in the app's deployment settings: it reads them,
+-// changes the image and writes them back under their updateVer, so that a
+-// change made meanwhile is not overwritten - it is read, and the image set on
+-// it, once more. It answers the deployment the change started, none when the
+-// image was the app's already.
+-func (a *App) setImage(ctx context.Context, c *client.Client, sel *selection, image string) (string, error) {
+-	for attempt := 0; ; attempt++ {
++// postOnly checks the flags of POST .../deploy against the settings about to be
++// written: a change starts a deployment of its own, which takes neither.
++func postOnly(req *api.AppsettingsdtoUpdateAppDeploymentSettingsReq, changed bool, flags deployFlags) error {
++	if flags.noCache && req.ActiveMethod == api.DeploymentMethodImage {
++		return exitcode.New(exitcode.Usage, "--no-cache is for an app built from source, and an image is not built")
++	}
++	var given []string
++	if flags.noCache {
++		given = append(given, "--no-cache")
++	}
++	if flags.changeID != "" {
++		given = append(given, "--change-id")
++	}
++	if changed && len(given) > 0 {
++		return exitcode.New(exitcode.Usage, "%s cannot go with a change of the settings, whose write starts a "+
++			"deployment of its own: deploy the change, then deploy again with %s",
++			strings.Join(given, " and "), strings.Join(given, " and "))
++	}
++	return nil
++}
++
++// errUnchanged stops a write of settings that are as asked already.
++var errUnchanged = errors.New("the deployment settings are as asked already")
++
++// changeSource changes the app's deployment settings as in asks: it reads them,
++// changes them and writes them back under their updateVer, so that a change
++// made meanwhile is not overwritten - it is read, and changed, once more. check
++// sees the settings about to be written, and whether they change. It answers
++// the deployment the write started; none when nothing was to change.
++func (a *App) changeSource(ctx context.Context, c *client.Client, sel *selection, in *sourceInput,
++	check func(*api.AppsettingsdtoUpdateAppDeploymentSettingsReq, bool) error,
++) (string, error) {
++	var current *api.AppsettingsdtoDeploymentSettingsResp
++	var lines []string
++	var written *api.AppsettingsdtoUpdateAppDeploymentSettingsReq
++	var deploymentID string
++	read := func(ctx context.Context) (*api.AppsettingsdtoDeploymentSettingsResp, error) {
+ 		resp, err := c.GetAppDeploymentSettingsWithResponse(ctx, sel.Project.Id, sel.Env, sel.App.Id)
+ 		if err = client.Check(resp, err); err != nil {
+-			return "", err
+-		}
+-		settings := resp.JSON200.Data
+-		// An app that has never been deployed has no method yet: --image gives it one.
+-		fresh := settings.ActiveMethod == ""
+-		if !fresh && (settings.ActiveMethod != api.DeploymentMethodImage || settings.ImageSource == nil) {
+-			return "", exitcode.New(exitcode.Invalid, "%s deploys from its %s, not an image: --image is for an app "+
+-				"that deploys one", sel.App.Name, methodName(settings.ActiveMethod))
++			return nil, err
+ 		}
+-		old := ""
+-		if settings.ImageSource != nil {
+-			old = settings.ImageSource.Image
++		current = &api.AppsettingsdtoDeploymentSettingsResp{}
++		if resp.JSON200 != nil && resp.JSON200.Data != nil {
++			current = resp.JSON200.Data
+ 		}
+-		if old == image {
+-			a.printer.Infof("Image: %s, unchanged", image)
+-			return "", nil
+-		}
+-		req, err := carry.DeploymentSettings(settings)
+-		if err != nil {
++		return current, nil
++	}
++	change := func(req *api.AppsettingsdtoUpdateAppDeploymentSettingsReq) (string, error) {
++		var err error
++		if lines, err = applySource(sel.App.Name, current, req, in); err != nil {
+ 			return "", err
+ 		}
+-		req.ActiveMethod = api.DeploymentMethodImage
+-		if req.ImageSource == nil {
+-			req.ImageSource = &api.AppsettingsdtoDeploymentImageSourceReq{}
+-		}
+-		req.ImageSource.Image = image
+-		if fresh && req.Notification == nil {
+-			// As the dashboard starts an app: its notices go where the project's do.
+-			req.Notification = &api.BasedtoBaseEventNotificationReq{SuccessUseDefault: true, FailureUseDefault: true}
+-		}
+-		update, err := c.UpdateAppDeploymentSettingsWithResponse(ctx, sel.Project.Id, sel.Env, sel.App.Id, *req)
+-		err = client.Check(update, err)
+-		var apiErr *client.APIError
+-		if attempt == 0 && errors.As(err, &apiErr) && apiErr.Info.Code == errUpdateVerMismatched {
+-			continue
++		if check != nil {
++			if err = check(req, len(lines) > 0); err != nil {
++				return "", err
++			}
+ 		}
+-		if err != nil {
+-			return "", err
++		if len(lines) == 0 {
++			return "", errUnchanged
+ 		}
+-		if fresh {
+-			a.printer.Infof("Image: %s", image)
+-		} else {
+-			a.printer.Infof("Image: %s", imageChange(old, image))
++		written = req
++		return "", nil
++	}
++	write := func(ctx context.Context, req *api.AppsettingsdtoUpdateAppDeploymentSettingsReq) error {
++		resp, err := c.UpdateAppDeploymentSettingsWithResponse(ctx, sel.Project.Id, sel.Env, sel.App.Id, *req)
++		if err = client.Check(resp, err); err != nil {
++			return err
+ 		}
+-		if update.JSON200 == nil || update.JSON200.Data == nil || update.JSON200.Data.DeploymentId == nil {
+-			return "", nil
++		if resp.JSON200 != nil && resp.JSON200.Data != nil && resp.JSON200.Data.DeploymentId != nil {
++			deploymentID = *resp.JSON200.Data.DeploymentId
+ 		}
+-		return *update.JSON200.Data.DeploymentId, nil
++		return nil
++	}
++	_, err := writeBack(ctx, read, carry.DeploymentSettings, change, write)
++	if errors.Is(err, errUnchanged) {
++		a.printer.Infof("The deployment settings are as asked already.")
++		return "", nil
++	}
++	if err != nil {
++		return "", err
++	}
++	for _, line := range lines {
++		a.printer.Infof("%s", line)
++	}
++	if repo := written.RepoSource; in.commit != nil && *in.commit != "" &&
++		written.ActiveMethod == api.DeploymentMethodRepo && repo != nil && autoDeploys(repo.AutoDeploy) {
++		a.printer.Warnf("%s also deploys each push to %s: this commit may be deployed twice, once by its push. "+
++			"--no-auto-deploy leaves deploying to this command.", sel.App.Name, refWords(repo.RepoRef))
+ 	}
++	return deploymentID, nil
+ }
+ 
+ func methodName(method api.BaseDeploymentMethod) string {
+diff --git a/internal/cmd/deploy_source_test.go b/internal/cmd/deploy_source_test.go
+new file mode 100644
+index 0000000..6f7e6a6
+--- /dev/null
++++ b/internal/cmd/deploy_source_test.go
+@@ -0,0 +1,174 @@
++package cmd
++
++import (
++	"net/http"
++	"os"
++	"path/filepath"
++	"testing"
++
++	"github.com/stretchr/testify/assert"
++	"github.com/stretchr/testify/require"
++
++	"github.com/hivepaas/hivepaas-cli/internal/exitcode"
++)
++
++// deployedBy answers what waiting for deployment id reads: it is done.
++func (f *fakeAPI) deployedBy(id string) {
++	f.json("GET "+appPath+"/deployments/"+id+"/status", http.StatusOK, `{"data":{"status":"done"}}`)
++	f.json("GET "+appPath+"/deployments/"+id, http.StatusOK, `{"data":{"id":"`+id+`","status":"done",
++		"startedAt":"2026-10-08T14:02:10Z","endedAt":"2026-10-08T14:02:34Z"}}`)
++	f.logs("GET "+appPath+"/deployments/"+id+"/logs", "Building")
++}
++
++func repoOf(t *testing.T, written map[string]any) map[string]any {
++	t.Helper()
++	repo, ok := written["repoSource"].(map[string]any)
++	require.True(t, ok, "a repository source is written: %v", written)
++	return repo
++}
++
++// One write of every change, which deploys them: the CLI waits for that
++// deployment, and starts no other.
++func TestDeployACommitOfAnotherRef(t *testing.T) {
++	quickly(t)
++	f := newFakeAPI(t)
++	f.json("GET "+appPath+"/deployment-settings", http.StatusOK, repoSettings)
++	f.json("PUT "+appPath+"/deployment-settings", http.StatusOK, `{"data":{"deploymentId":"D1","taskId":"T1"}}`)
++	f.deployedBy("D1")
++
++	r := f.run(args("deploy --ref release --commit " + sha + " --no-auto-deploy " + shopAPI)...)
++
++	require.Equal(t, exitcode.OK, r.code, r.stderr)
++	assert.Zero(t, f.called("POST "+appPath+"/deploy"))
++	assert.Equal(t, 1, f.called("PUT "+appPath+"/deployment-settings"))
++	written := f.body("PUT "+appPath+"/deployment-settings", 0)
++	repo := repoOf(t, written)
++	assert.Equal(t, "release", repo["repoRef"])
++	assert.Equal(t, sha, repo["commitHash"])
++	assert.Equal(t, false, repo["autoDeploy"])
++	assert.Equal(t, map[string]any{"id": "G1"}, repo["credentials"], "the rest as it was")
++	assert.Equal(t, "serve", written["command"])
++	assert.InDelta(t, 7, written["updateVer"], 0)
++	assert.Contains(t, r.stderr, "Ref: main -> release\nCommit: none -> "+sha+"\nAuto-deploy: on -> off\n")
++	assert.NotContains(t, r.stderr, "Warning")
++	assert.Contains(t, r.stderr, "Deployed in 24s.")
++}
++
++func TestDeployACommitThatAPushDeploysToo(t *testing.T) {
++	f := newFakeAPI(t)
++	f.json("GET "+appPath+"/deployment-settings", http.StatusOK, repoSettings)
++	f.json("PUT "+appPath+"/deployment-settings", http.StatusOK, `{"data":{"deploymentId":"D1"}}`)
++
++	r := f.run(args("deploy --commit " + sha + " --no-wait " + shopAPI)...)
++
++	require.Equal(t, exitcode.OK, r.code, r.stderr)
++	assert.Contains(t, r.stderr, "Warning: api also deploys each push to main: this commit may be deployed twice")
++}
++
++// Credentials are named as the dashboard lists them for the environment.
++func TestDeployNamesItsCredentials(t *testing.T) {
++	f := newFakeAPI(t)
++	f.json("GET "+appPath+"/deployment-settings", http.StatusOK, repoSettings)
++	f.json("PUT "+appPath+"/deployment-settings", http.StatusOK, `{"data":{"deploymentId":"D1"}}`)
++	f.json("GET /api/projects/P1/production/registry-auth", http.StatusOK, `{"data":[
++		{"id":"R1","name":"ghcr","kind":"generic","address":"ghcr.io"},
++		{"id":"R2","name":"Docker Hub","kind":"docker-hub","address":"docker.io"}]}`)
++	f.json("GET /api/projects/P1/production/git-credentials", http.StatusOK,
++		`{"data":[{"id":"G2","name":"deploy-key","kind":"ssh-key"}]}`)
++
++	r := f.run("deploy", "--push-to", "docker hub", "--git-credential", "deploy-key", "--no-wait",
++		"-p", "shop", "-e", "production", "-a", "api")
++
++	require.Equal(t, exitcode.OK, r.code, r.stderr)
++	repo := repoOf(t, f.body("PUT "+appPath+"/deployment-settings", 0))
++	assert.Equal(t, map[string]any{"id": "R2"}, repo["pushToRegistry"])
++	assert.Equal(t, map[string]any{"id": "G2"}, repo["credentials"])
++	assert.Contains(t, r.stderr, "Git credential: acme-app -> deploy-key\nPush to: ghcr -> Docker Hub\n")
++
++	r = f.run(args("deploy --push-to None --no-wait " + shopAPI)...)
++	require.Equal(t, exitcode.OK, r.code, r.stderr)
++	written := f.body("PUT "+appPath+"/deployment-settings", 1)
++	assert.Equal(t, map[string]any{"id": ""}, repoOf(t, written)["pushToRegistry"], "none, in any case, is none")
++
++	r = f.run(args("deploy --push-to nope --no-wait " + shopAPI)...)
++	assert.Equal(t, exitcode.NotFound, r.code)
++	assert.Contains(t, r.stderr, `no registry credential "nope" in shop / production. There: ghcr, Docker Hub`)
++	assert.Equal(t, 2, f.called("PUT "+appPath+"/deployment-settings"), "nothing written for a name not found")
++}
++
++// Settings as asked already are not written: the app is deployed as it is, with
++// the flags only that call takes.
++func TestDeployWithNothingToChange(t *testing.T) {
++	f := newFakeAPI(t)
++	f.json("GET "+appPath+"/deployment-settings", http.StatusOK, repoSettings)
++	f.json("POST "+appPath+"/deploy", http.StatusOK, `{"data":{"deploymentId":"D2","taskId":"T2"}}`)
++
++	r := f.run(args("deploy --ref main --no-cache --change-id pr-12 --no-wait " + shopAPI)...)
++
++	require.Equal(t, exitcode.OK, r.code, r.stderr)
++	assert.Zero(t, f.called("PUT "+appPath+"/deployment-settings"))
++	assert.Contains(t, r.stderr, "The deployment settings are as asked already.")
++	assert.Equal(t, map[string]any{"noCache": true, "changeId": "pr-12"}, f.body("POST "+appPath+"/deploy", 0))
++}
++
++// --no-cache and --change-id are the deploy call's: a change deploys without
++// them, so the two do not go together.
++func TestDeployRefusesNoCacheWithAChange(t *testing.T) {
++	f := newFakeAPI(t)
++	f.json("GET "+appPath+"/deployment-settings", http.StatusOK, repoSettings)
++
++	r := f.run(args("deploy --ref release --no-cache " + shopAPI)...)
++
++	assert.Equal(t, exitcode.Usage, r.code)
++	assert.Contains(t, r.stderr, "--no-cache cannot go with a change of the settings")
++	assert.Zero(t, f.called("PUT "+appPath+"/deployment-settings"))
++	assert.Zero(t, f.called("POST "+appPath+"/deploy"))
++}
++
++func TestDeployAnImageOnAnAppBuiltFromSource(t *testing.T) {
++	f := newFakeAPI(t)
++	f.json("GET "+appPath+"/deployment-settings", http.StatusOK, repoSettings)
++	f.json("PUT "+appPath+"/deployment-settings", http.StatusOK, `{"data":{"deploymentId":"D1"}}`)
++
++	r := f.run(args("deploy --image nginx:1.30 " + shopAPI)...)
++	assert.Equal(t, exitcode.Invalid, r.code)
++	assert.Contains(t, r.stderr, "--use image switches it")
++	assert.Zero(t, f.called("PUT "+appPath+"/deployment-settings"))
++
++	r = f.run(args("deploy --use image --image nginx:1.30 --no-wait " + shopAPI)...)
++	require.Equal(t, exitcode.OK, r.code, r.stderr)
++	written := f.body("PUT "+appPath+"/deployment-settings", 0)
++	assert.Equal(t, "image", written["activeMethod"])
++	assert.Equal(t, "https://github.com/acme/api.git", repoOf(t, written)["repoURL"], "the repository is kept")
++}
++
++func TestDeployADockerfileGivenInline(t *testing.T) {
++	f := newFakeAPI(t)
++	f.json("GET "+appPath+"/deployment-settings", http.StatusOK, repoSettings)
++	f.json("PUT "+appPath+"/deployment-settings", http.StatusOK, `{"data":{"deploymentId":"D1"}}`)
++	file := filepath.Join(t.TempDir(), "Dockerfile.prod")
++	require.NoError(t, os.WriteFile(file, []byte("FROM scratch\n"), 0o600))
++
++	r := f.run("deploy", "--dockerfile-inline", file, "--no-wait", "-p", "shop", "-e", "production", "-a", "api")
++
++	require.Equal(t, exitcode.OK, r.code, r.stderr)
++	assert.Equal(t, map[string]any{"source": "manual", "path": "Dockerfile", "content": "FROM scratch\n"},
++		repoOf(t, f.body("PUT "+appPath+"/deployment-settings", 0))["dockerfile"])
++
++	r = f.run(args("deploy --dockerfile-inline /nope/Dockerfile " + shopAPI)...)
++	assert.Equal(t, exitcode.Usage, r.code)
++}
++
++// Two credentials a name matches are told apart by id: they have no key.
++func TestDeployNamesOneCredentialOfTwo(t *testing.T) {
++	f := newFakeAPI(t)
++	f.json("GET "+appPath+"/deployment-settings", http.StatusOK, repoSettings)
++	f.json("GET /api/projects/P1/production/registry-auth", http.StatusOK, `{"data":[
++		{"id":"R1","name":"ghcr"},{"id":"R3","name":"GHCR"}]}`)
++
++	r := f.run(args("deploy --push-to Ghcr " + shopAPI)...)
++
++	assert.Equal(t, exitcode.Usage, r.code)
++	assert.Contains(t, r.stderr, `registry credential "Ghcr" in shop / production names more than one - give its id: `+
++		"ghcr R1, GHCR R3")
++}
+diff --git a/internal/cmd/source_flags.go b/internal/cmd/source_flags.go
+new file mode 100644
+index 0000000..5105382
+--- /dev/null
++++ b/internal/cmd/source_flags.go
+@@ -0,0 +1,208 @@
++package cmd
++
++import (
++	"context"
++	"fmt"
++	"io"
++	"os"
++	"strings"
++
++	"github.com/spf13/cobra"
++
++	"github.com/hivepaas/hivepaas-cli/internal/api"
++	"github.com/hivepaas/hivepaas-cli/internal/client"
++	"github.com/hivepaas/hivepaas-cli/internal/exitcode"
++	"github.com/hivepaas/hivepaas-cli/internal/resolve"
++)
++
++// The flags of each source, and of the container's commands.
++var (
++	imageFlagNames = []string{"image", "registry-auth"}
++	repoFlagNames  = []string{"repo", "ref", "commit", "git-credential", "dockerfile", "dockerfile-inline",
++		"dockerfile-auto", "scan-path", "submodules", "no-submodules", "lfs", "no-lfs", "push-to",
++		"auto-deploy", "no-auto-deploy"}
++	commandFlagNames = []string{"entrypoint", "command", "workdir", "pre-deploy", "post-deploy"}
++)
++
++// sourceFlags are the flags that change an app's deployment settings: its
++// source - an image, or a repository - and its container's commands.
++type sourceFlags struct {
++	cmd *cobra.Command
++
++	use, image, registryAuth                            string
++	repo, ref, commit, gitCredential, pushTo            string
++	dockerfile, dockerfileInline, scanPath              string
++	dockerfileAuto, submodules, noSubmodules, lfs       bool
++	noLFS, autoDeploy, noAutoDeploy                     bool
++	entrypoint, command, workdir, preDeploy, postDeploy string
++}
++
++func addSourceFlags(cmd *cobra.Command) *sourceFlags {
++	s := &sourceFlags{cmd: cmd}
++	f := cmd.Flags()
++	f.StringVar(&s.use, "use", "", "switch what the app deploys: image, or repo")
++	f.StringVar(&s.image, "image", "", "deploy this image: ghcr.io/acme/api:1.4.3")
++	f.StringVar(&s.registryAuth, "registry-auth", "", "pull the image with this registry credential; none for none")
++	f.StringVar(&s.repo, "repo", "", "build this git repository: https://github.com/acme/api.git")
++	f.StringVar(&s.ref, "ref", "", "the branch to build, or tags/NAME for a tag")
++	f.StringVar(&s.commit, "commit", "", "build this commit, its full SHA, and stay at it; none to follow the ref")
++	f.StringVar(&s.gitCredential, "git-credential", "", "clone with this git credential; none for none")
++	f.StringVar(&s.dockerfile, "dockerfile", "", "the Dockerfile's path in the repository")
++	f.StringVar(&s.dockerfileInline, "dockerfile-inline", "",
++		"use this local file as the Dockerfile, kept in the settings; - reads stdin")
++	f.BoolVar(&s.dockerfileAuto, "dockerfile-auto", false, "generate the Dockerfile from the source")
++	f.StringVar(&s.scanPath, "scan-path", "", "the directory a generated Dockerfile is made from")
++	f.BoolVar(&s.submodules, "submodules", false, "clone the git submodules")
++	f.BoolVar(&s.noSubmodules, "no-submodules", false, "do not clone the git submodules")
++	f.BoolVar(&s.lfs, "lfs", false, "fetch the Git LFS files")
++	f.BoolVar(&s.noLFS, "no-lfs", false, "do not fetch the Git LFS files")
++	f.StringVar(&s.pushTo, "push-to", "",
++		"push the built image to the registry of this credential; none keeps it on the node")
++	f.BoolVar(&s.autoDeploy, "auto-deploy", false, "deploy each push to the ref")
++	f.BoolVar(&s.noAutoDeploy, "no-auto-deploy", false, "do not deploy on push")
++	f.StringVar(&s.entrypoint, "entrypoint", "", `the container's entrypoint; "" for the image's`)
++	f.StringVar(&s.command, "command", "", `the container's command; "" for the image's`)
++	f.StringVar(&s.workdir, "workdir", "", `the container's working directory; "" for the image's`)
++	f.StringVar(&s.preDeploy, "pre-deploy", "", `a command run before each deployment; "" for none`)
++	f.StringVar(&s.postDeploy, "post-deploy", "", `a command run after each deployment; "" for none`)
++	for _, pair := range [][2]string{{"submodules", "no-submodules"}, {"lfs", "no-lfs"},
++		{"auto-deploy", "no-auto-deploy"}, {"dockerfile-auto", "dockerfile-inline"}} {
++		cmd.MarkFlagsMutuallyExclusive(pair[0], pair[1])
++	}
++	return s
++}
++
++// given are the flags of names the command line gives, as it gives them.
++func (s *sourceFlags) given(names []string) []string {
++	var out []string
++	for _, name := range names {
++		if s.cmd.Flags().Changed(name) {
++			out = append(out, "--"+name)
++		}
++	}
++	return out
++}
++
++// asked says whether the flags ask for a change of the deployment settings.
++func (s *sourceFlags) asked() bool {
++	return s.cmd.Flags().Changed("use") || len(s.given(imageFlagNames)) > 0 ||
++		len(s.given(repoFlagNames)) > 0 || len(s.given(commandFlagNames)) > 0
++}
++
++// input is what the flags ask, with the credentials they name found among the
++// environment's and the Dockerfile they name read.
++func (s *sourceFlags) input(ctx context.Context, c *client.Client, sel *selection, stdin io.Reader) (
++	*sourceInput, error,
++) {
++	in := &sourceInput{imageFlags: s.given(imageFlagNames), repoFlags: s.given(repoFlagNames)}
++	switch s.use {
++	case "":
++	case string(api.DeploymentMethodImage), string(api.DeploymentMethodRepo):
++		in.use = api.BaseDeploymentMethod(s.use)
++	default:
++		return nil, exitcode.New(exitcode.Usage, "--use takes image or repo, not %q", s.use)
++	}
++	changed := s.cmd.Flags().Changed
++	text := func(name, value string) *string {
++		if !changed(name) {
++			return nil
++		}
++		return &value
++	}
++	pair := func(on, off string) *bool {
++		switch {
++		case changed(on):
++			return ptr(true)
++		case changed(off):
++			return ptr(false)
++		}
++		return nil
++	}
++	in.image, in.repo, in.ref = text("image", s.image), text("repo", s.repo), text("ref", s.ref)
++	if in.commit = text("commit", s.commit); in.commit != nil && strings.EqualFold(*in.commit, none) {
++		in.commit = ptr("")
++	}
++	in.dockerfilePath, in.scanPath, in.dockerfileAuto = text("dockerfile", s.dockerfile),
++		text("scan-path", s.scanPath), s.dockerfileAuto
++	in.submodules, in.lfs = pair("submodules", "no-submodules"), pair("lfs", "no-lfs")
++	in.autoDeploy = pair("auto-deploy", "no-auto-deploy")
++	in.entrypoint, in.command, in.workingDir = text("entrypoint", s.entrypoint), text("command", s.command),
++		text("workdir", s.workdir)
++	in.preDeploy, in.postDeploy = text("pre-deploy", s.preDeploy), text("post-deploy", s.postDeploy)
++	if changed("dockerfile-inline") {
++		content, err := readInline(s.dockerfileInline, stdin)
++		if err != nil {
++			return nil, err
++		}
++		in.dockerfileContent = &content
++	}
++
++	r := resolve.New(c)
++	where := fmt.Sprintf(" in %s / %s", sel.Project.Name, sel.Env)
++	registry := func(input string) (*settingRef, error) {
++		if strings.EqualFold(input, none) {
++			return &settingRef{}, nil
++		}
++		auths, err := r.RegistryAuths(ctx, sel.Project.Id, sel.Env)
++		if err != nil {
++			return nil, err
++		}
++		auth, err := resolve.Credential("registry credential", input, where, auths,
++			func(a api.RegistryauthdtoRegistryAuthResp) (string, string) { return a.Id, a.Name })
++		if err != nil {
++			return nil, err
++		}
++		return &settingRef{ID: auth.Id, Name: auth.Name}, nil
++	}
++	var err error
++	if changed("registry-auth") {
++		if in.registryAuth, err = registry(s.registryAuth); err != nil {
++			return nil, err
++		}
++	}
++	if changed("push-to") {
++		if in.pushTo, err = registry(s.pushTo); err != nil {
++			return nil, err
++		}
++	}
++	if changed("git-credential") {
++		if in.gitCredential, err = gitCredential(ctx, r, sel, where, s.gitCredential); err != nil {
++			return nil, err
++		}
++	}
++	return in, nil
++}
++
++func gitCredential(ctx context.Context, r *resolve.Resolver, sel *selection, where, input string) (
++	*settingRef, error,
++) {
++	if strings.EqualFold(input, none) {
++		return &settingRef{}, nil
++	}
++	creds, err := r.GitCredentials(ctx, sel.Project.Id, sel.Env)
++	if err != nil {
++		return nil, err
++	}
++	cred, err := resolve.Credential("git credential", input, where, creds,
++		func(g api.GitcredentialdtoGitCredentialResp) (string, string) { return g.Id, g.Name })
++	if err != nil {
++		return nil, err
++	}
++	return &settingRef{ID: cred.Id, Name: cred.Name}, nil
++}
++
++// readInline is the content of a Dockerfile given by its local path, or - for
++// stdin.
++func readInline(path string, stdin io.Reader) (string, error) {
++	var data []byte
++	var err error
++	if path == "-" {
++		data, err = io.ReadAll(stdin)
++	} else {
++		data, err = os.ReadFile(path)
++	}
++	if err != nil {
++		return "", exitcode.New(exitcode.Usage, "--dockerfile-inline: %v", err)
++	}
++	return string(data), nil
++}
+diff --git a/internal/resolve/credentials.go b/internal/resolve/credentials.go
+new file mode 100644
+index 0000000..3b30219
+--- /dev/null
++++ b/internal/resolve/credentials.go
+@@ -0,0 +1,64 @@
++package resolve
++
++import (
++	"context"
++
++	"github.com/hivepaas/hivepaas-cli/internal/api"
++	"github.com/hivepaas/hivepaas-cli/internal/client"
++)
++
++// RegistryAuths are the registry credentials an environment's apps can use: its
++// own, and those its project and the installation share down to it - what the
++// dashboard's form lists.
++func (r *Resolver) RegistryAuths(ctx context.Context, projectID, env string) (
++	[]api.RegistryauthdtoRegistryAuthResp, error,
++) {
++	var all []api.RegistryauthdtoRegistryAuthResp
++	for offset := 0; ; offset += pageLimit {
++		resp, err := r.c.ListProjectEnvRegistryAuthWithResponse(ctx, projectID, env,
++			&api.ListProjectEnvRegistryAuthParams{PageOffset: ptr(offset), PageLimit: ptr(pageLimit)})
++		if err = client.Check(resp, err); err != nil {
++			return nil, err
++		}
++		if resp.JSON200 == nil {
++			return all, nil
++		}
++		page := Deref(resp.JSON200.Data)
++		all = append(all, page...)
++		if len(page) < pageLimit {
++			return all, nil
++		}
++	}
++}
++
++// GitCredentials are the git credentials an environment's apps can clone with,
++// found as RegistryAuths are.
++func (r *Resolver) GitCredentials(ctx context.Context, projectID, env string) (
++	[]api.GitcredentialdtoGitCredentialResp, error,
++) {
++	var all []api.GitcredentialdtoGitCredentialResp
++	for offset := 0; ; offset += pageLimit {
++		resp, err := r.c.ListProjectEnvGitCredentialsWithResponse(ctx, projectID, env,
++			&api.ListProjectEnvGitCredentialsParams{PageOffset: ptr(offset), PageLimit: ptr(pageLimit)})
++		if err = client.Check(resp, err); err != nil {
++			return nil, err
++		}
++		if resp.JSON200 == nil {
++			return all, nil
++		}
++		page := Deref(resp.JSON200.Data)
++		all = append(all, page...)
++		if len(page) < pageLimit {
++			return all, nil
++		}
++	}
++}
++
++// Credential is the credential of items input names: by id or name exactly, else
++// by name ignoring case. what is its kind, as the errors say it.
++func Credential[T any](what, input, where string, items []T, idName func(T) (string, string)) (T, error) {
++	return pick(what, input, where, items, func(item T) named {
++		id, name := idName(item)
++		return named{id, name, name}
++	})
++}
+diff --git a/internal/resolve/resolve.go b/internal/resolve/resolve.go
+index f9a1c04..73fecc2 100644
+--- a/internal/resolve/resolve.go
++++ b/internal/resolve/resolve.go
+@@ -219,12 +219,18 @@ func pick[T any](what, input, where string, items []T, name func(T) named) (T, e
+ 		return zero, exitcode.New(exitcode.NotFound, "no %s %q%s. There: %s", what, input, where, list(labels))
+ 	default:
+ 		labels := make([]string, 0, len(matches))
++		keyed := false
+ 		for _, item := range matches {
+ 			n := name(item)
+ 			labels = append(labels, n.label()+" "+n.id)
++			keyed = keyed || n.key != n.name
+ 		}
+-		return zero, exitcode.New(exitcode.Usage, "%s %q%s names more than one - give its key or id: %s",
+-			what, input, where, list(labels))
++		give := "its id"
++		if keyed {
++			give = "its key or id"
++		}
++		return zero, exitcode.New(exitcode.Usage, "%s %q%s names more than one - give %s: %s",
++			what, input, where, give, list(labels))
+ 	}
+ }
+ 

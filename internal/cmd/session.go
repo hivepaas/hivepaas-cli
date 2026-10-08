@@ -22,7 +22,19 @@ func (a *App) loginCmd() *cobra.Command {
 		Short: "Log in to an installation with an API key",
 		Long: "Log in to an installation with an API key, made in its dashboard under Settings, API keys, " +
 			"with the actions the commands need: read, execute for deploy and restart, write for changes.\n\n" +
-			"The secret goes to the OS keychain. In CI, set HIVEPAAS_URL and HIVEPAAS_API_KEY instead.",
+			"The secret is typed at the prompt, where it does not show, or read from stdin with\n" +
+			"--with-secret - never given as an argument, which the shell's history keeps and other\n" +
+			"users of the machine see in its list of processes. It goes to the OS keychain.\n\n" +
+			"In CI nothing is stored: set HIVEPAAS_URL, and HIVEPAAS_API_KEY to <key id>:<secret> from\n" +
+			"the CI's secrets.",
+		Example: "  # At a terminal: the key id and the secret are asked for\n" +
+			"  hivepaas login https://paas.example.com\n\n" +
+			"  # From a file, or a password manager\n" +
+			"  hivepaas login https://paas.example.com --key-id 8b87cd98... --with-secret < hivepaas-key.txt\n" +
+			"  op read op://dev/hivepaas/secret | hivepaas login https://paas.example.com --key-id 8b87cd98... " +
+			"--with-secret\n\n" +
+			"  # A local installation, over http\n" +
+			"  hivepaas login localhost:10000",
 		Args: usageArgs(cobra.MaximumNArgs(1)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var rawURL, secret string

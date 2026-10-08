@@ -403,12 +403,14 @@ Exit codes:
 
 ## 8. Knowing the server, and what it takes from the CLI
 
-**The API level** is a number the server's spec carries, raised whenever a
-request it accepts changes: a field added to a body, a parameter added to an
-operation. `make gen-swag` computes a fingerprint of every request in the spec,
-and raises the level when the fingerprint changes; CI fails when the committed
-level is behind the spec. Descriptions and responses do not move it, so a release
-that only fixes things does not ask anything of the CLI.
+**The API level** is a number the server's spec carries, raised whenever the
+request of a write operation that already existed changes: a field added to its
+body, a parameter added. `make gen-swag` keeps a fingerprint of each write
+operation's request in `docs/openapi/api-level.json` and raises the level when
+one of them changes; CI fails when the committed level is behind the spec. New
+operations, responses and descriptions do not move it, so a release that only
+adds or fixes things asks nothing of the CLI. (hivepaas `ea89ac59`; the level
+started at 1.)
 
 **The CLI says what it is.** Every request carries
 `HivePaaS-CLI: <cli version>; api-level=<level of the spec it was built from>`,
@@ -438,8 +440,8 @@ its spec was pinned from, and the current context's server version and level.
 
 | | Change |
 |---|---|
-| B0 | `GET /sessions/me` answers `server: {version, apiLevel, minCliApiLevel}`. `GET /system/hivepaas/release-info` is for an admin with Write on the System module, which a developer's key is not. |
-| B1 | The API level: computed by `make gen-swag` from the requests in the spec, kept in the spec's `info` (`x-api-level`), checked in CI. A middleware answers 426 to a write from a CLI whose level is below it. |
+| B0 (done, `ea89ac59`) | `GET /sessions/me` answers `server: {version, apiLevel, minCliApiLevel}`. `GET /system/hivepaas/release-info` is for an admin with Write on the System module, which a developer's key is not. |
+| B1 (done, `ea89ac59`) | The API level: computed by `make gen-swag` from the write requests in the spec, kept in the spec's `info` (`x-api-level`) and `base.APILevel`, checked in CI. `middleware/clilevel` answers 426 (`ERR_CLI_OUTDATED`) to a write from a CLI whose level is below it, and tells every CLI request the server's level in `HivePaaS-API-Level`. |
 
 Nothing else: the CLI writes through the endpoints the dashboard uses.
 

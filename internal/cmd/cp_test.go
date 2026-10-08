@@ -3,6 +3,7 @@ package cmd
 import (
 	"archive/tar"
 	"bytes"
+	"compress/gzip"
 	"io"
 	"net/http"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -115,7 +117,9 @@ func (f *fakeAPI) uploads(pattern string) *[]upload {
 	return got
 }
 
-func TestCpUploads(t *testing.T) {
+// A server without the stream takes the form, as before, and the CLI says
+// what that means.
+func TestCpUploadsByTheFormToAServerWithoutTheStream(t *testing.T) {
 	f := newFakeAPI(t)
 	got := f.uploads("POST " + appPath + "/container/file-upload")
 	f.json("GET "+appPath+"/service-tasks", http.StatusOK, serviceTasksBody)
@@ -133,6 +137,7 @@ func TestCpUploads(t *testing.T) {
 		"a file landing on a directory is refused, not let replace it and all it holds")
 	assert.Equal(t, "config.yaml", (*got)[0].fileName)
 	assert.Equal(t, "a: 1\n", string((*got)[0].file))
+	assert.Contains(t, r.stderr, "cuts an upload after 60 seconds")
 
 	r = f.run("cp", site, "api:/usr/share/nginx/html", "-p", "shop", "-e", "production", "--replica", "2")
 	require.Equal(t, exitcode.OK, r.code, r.stderr)
@@ -264,4 +269,73 @@ func TestCpOfAFileNotReadable(t *testing.T) {
 	assert.Equal(t, exitcode.Failure, r.code)
 	assert.Contains(t, r.stderr, "reading "+file)
 	assert.NotContains(t, r.stderr, "reaching the server")
+}
+
+// streamed is what the server got over the upload's stream.
+type streamed struct {
+	query   map[string]string
+	content []byte
+}
+
+func (f *fakeAPI) streams(pattern string) *[]streamed {
+	got := &[]streamed{}
+	f.handle(pattern, func(w http.ResponseWriter, r *http.Request, _ int) {
+		s := streamed{query: map[string]string{}}
+		for key, values := range r.URL.Query() {
+			s.query[key] = values[0]
+		}
+		conn, err := (&websocket.Upgrader{}).Upgrade(w, r, nil)
+		if err != nil {
+			return
+		}
+		defer conn.Close()
+		var content bytes.Buffer
+		for {
+			kind, message, err := conn.ReadMessage()
+			if err != nil {
+				return
+			}
+			if kind == websocket.TextMessage {
+				break
+			}
+			content.Write(message)
+		}
+		s.content = content.Bytes()
+		*got = append(*got, s)
+		_ = conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"done","data":{"path":"x","message":"ok"}}`))
+	})
+	return got
+}
+
+// An upload goes over the stream, which no timeout cuts; a directory gzipped.
+func TestCpUploadsOverTheStream(t *testing.T) {
+	f := newFakeAPI(t)
+	got := f.streams("GET " + appPath + "/container/file-upload/stream")
+	f.json("GET "+appPath+"/service-tasks", http.StatusOK, serviceTasksBody)
+	dir := t.TempDir()
+	conf := filepath.Join(dir, "config.yaml")
+	require.NoError(t, os.WriteFile(conf, []byte("a: 1\n"), 0o600))
+	site := filepath.Join(dir, "site")
+	require.NoError(t, os.MkdirAll(site, 0o755))
+	require.NoError(t, os.WriteFile(filepath.Join(site, "index.html"), []byte("hi"), 0o600))
+
+	r := f.run("cp", conf, ":/app/config.yaml", "-p", "shop", "-e", "production", "-a", "api")
+	require.Equal(t, exitcode.OK, r.code, r.stderr)
+	require.Len(t, *got, 1)
+	assert.Equal(t, map[string]string{"path": "/app/config.yaml", "overwrite": "false", "fileName": "config.yaml",
+		"fileSize": "5"}, (*got)[0].query)
+	assert.Equal(t, "a: 1\n", string((*got)[0].content))
+	assert.NotContains(t, r.stderr, "60 seconds")
+
+	r = f.run("cp", site, "api:/srv", "-p", "shop", "-e", "production", "--replica", "2")
+	require.Equal(t, exitcode.OK, r.code, r.stderr)
+	require.Len(t, *got, 2)
+	assert.Equal(t, map[string]string{"path": "/srv", "overwrite": "false", "extract": "true",
+		"compressionFormat": "gzip", "fileName": "site.tar.gz", "nodeId": "swarm-n2",
+		"containerId": "c2c2c2c2c2c2c2c2"}, (*got)[1].query)
+	plain, err := gzip.NewReader(bytes.NewReader((*got)[1].content))
+	require.NoError(t, err)
+	tarred, err := io.ReadAll(plain)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"site/", "site/index.html"}, tarNames(t, tarred))
 }

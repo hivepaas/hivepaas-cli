@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"archive/tar"
+	"compress/gzip"
 	"context"
 	"errors"
 	"fmt"
@@ -9,9 +10,11 @@ import (
 	"io/fs"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -20,6 +23,7 @@ import (
 	"github.com/hivepaas/hivepaas-cli/internal/api"
 	"github.com/hivepaas/hivepaas-cli/internal/client"
 	"github.com/hivepaas/hivepaas-cli/internal/exitcode"
+	"github.com/hivepaas/hivepaas-cli/internal/stream"
 )
 
 // defaultCopyTimeout is how long a copy may take: a directory can be large.
@@ -133,7 +137,8 @@ func (a *App) copyTarget(ctx context.Context, c *client.Client, sel *selection, 
 }
 
 // upload copies a local file, or a directory as a tar the server extracts, to
-// path in the container.
+// path in the container: over the stream, which no timeout cuts, or by the form
+// to a server without it.
 func (a *App) upload(ctx context.Context, c *client.Client, sel *selection, target copyTarget,
 	local, remotePath string,
 ) error {
@@ -142,10 +147,97 @@ func (a *App) upload(ctx context.Context, c *client.Client, sel *selection, targ
 	if err != nil {
 		return exitcode.New(exitcode.Usage, "%s: %v", local, err)
 	}
-	body, writer := io.Pipe()
-	form := multipart.NewWriter(writer)
 	// Without overwrite=false the server lets a file replace a directory it
 	// lands on, and all that directory holds.
+	query := url.Values{"path": {remotePath}, "overwrite": {"false"}}
+	if target.containerID != "" {
+		query.Set("nodeId", target.nodeID)
+		query.Set("containerId", target.containerID)
+	}
+	if info.IsDir() {
+		query.Set("extract", "true")
+		query.Set("compressionFormat", "gzip")
+		query.Set("fileName", info.Name()+".tar.gz")
+	} else {
+		query.Set("fileName", info.Name())
+		query.Set("fileSize", strconv.FormatInt(info.Size(), 10))
+	}
+	u := &stream.Upload{
+		URL: fmt.Sprintf("%s/projects/%s/%s/apps/%s/container/file-upload/stream", c.BaseURL, sel.Project.Id,
+			sel.Env, sel.App.Id),
+		Query:  query,
+		Header: client.Headers(c.Target),
+	}
+	err = u.Open(ctx)
+	var apiErr *client.APIError
+	if errors.As(err, &apiErr) && apiErr.Status == http.StatusNotFound && apiErr.Info.Code == "" {
+		a.printer.Warnf("this server takes an upload in one request, and its proxy cuts an upload after 60 " +
+			"seconds: a large one may fail")
+		return a.uploadForm(ctx, c, sel, target, local, remotePath, info, contentsOnly)
+	}
+	if err != nil {
+		return err
+	}
+	content, stop := uploadContent(local, info, contentsOnly)
+	defer stop()
+	total := info.Size()
+	if info.IsDir() {
+		total = 0
+	}
+	progress, done := a.progress(content, total)
+	err = u.Send(ctx, progress)
+	done()
+	var source *stream.SourceError
+	switch {
+	case errors.As(err, &source):
+		return exitcode.New(exitcode.Failure, "reading %s: %v", local, source.Err)
+	case errors.Is(err, context.Canceled) && ctx.Err() != nil:
+		return exitcode.Reported(exitcode.Interrupted)
+	case err != nil:
+		return err
+	}
+	a.printer.Successf("Copied %s to %s:%s.", local, sel.App.Name, remotePath)
+	return nil
+}
+
+// uploadContent is what an upload sends: the file, or a directory as a gzipped
+// tar - as itself, or what is in it with contentsOnly. stop ends the reading.
+func uploadContent(local string, info fs.FileInfo, contentsOnly bool) (io.Reader, func()) {
+	if !info.IsDir() {
+		f, err := os.Open(local)
+		if err != nil {
+			return failingReader{err}, func() {}
+		}
+		return f, func() { _ = f.Close() }
+	}
+	pr, pw := io.Pipe()
+	go func() {
+		prefix := info.Name()
+		if contentsOnly {
+			prefix = ""
+		}
+		zw := gzip.NewWriter(pw)
+		err := writeTar(zw, local, prefix)
+		if err == nil {
+			err = zw.Close()
+		}
+		_ = pw.CloseWithError(err)
+	}()
+	return pr, func() { _ = pr.CloseWithError(io.ErrClosedPipe) }
+}
+
+// failingReader is a file that could not be opened: its reading fails.
+type failingReader struct{ err error }
+
+func (r failingReader) Read([]byte) (int, error) { return 0, r.err }
+
+// uploadForm copies by the form, in one request: what a server without the
+// stream takes.
+func (a *App) uploadForm(ctx context.Context, c *client.Client, sel *selection, target copyTarget,
+	local, remotePath string, info fs.FileInfo, contentsOnly bool,
+) error {
+	body, writer := io.Pipe()
+	form := multipart.NewWriter(writer)
 	fields := map[string]string{"path": remotePath, "overwrite": "false", "nodeId": target.nodeID,
 		"containerId": target.containerID}
 	if info.IsDir() {
@@ -288,10 +380,12 @@ func (a *App) download(ctx context.Context, c *client.Client, sel *selection, ta
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, maxErrorBody))
 		return client.CheckStatus(resp.StatusCode, body)
 	}
+	body, done := a.progress(resp.Body, resp.ContentLength)
+	defer done()
 	if strings.HasPrefix(resp.Header.Get("Content-Type"), tarContentType) {
 		// Into DST when it is there, as DST when it is not: as docker cp does.
 		_, statErr := os.Stat(local)
-		files, skipped, err := extractTar(resp.Body, local, os.IsNotExist(statErr))
+		files, skipped, err := extractTar(body, local, os.IsNotExist(statErr))
 		if err != nil {
 			return exitcode.New(exitcode.Failure, "extracting into %s: %v", local, err)
 		}
@@ -309,7 +403,7 @@ func (a *App) download(ctx context.Context, c *client.Client, sel *selection, ta
 	if err != nil {
 		return exitcode.New(exitcode.Failure, "%v", err)
 	}
-	if _, err = io.Copy(out, resp.Body); err != nil {
+	if _, err = io.Copy(out, body); err != nil {
 		_ = out.Close()
 		return exitcode.New(exitcode.Failure, "writing %s: %v", file, err)
 	}

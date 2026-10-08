@@ -47,9 +47,14 @@ drive, not an app.
   upload with its own error (exit 1), not as a server that could not be reached.
 - **Which container.** The server picks a running one. `--replica N` picks the
   running task of slot N from `ps`, and sends its node and container.
-- **Size and time.** The server sets no size limit, but ends a request after 180
-  seconds (its read and write timeouts): a copy larger than that window allows
-  fails. `--timeout` is the CLI's own wait, 30 minutes by default.
+- **Size and time.** An upload goes over the upload stream
+  (`GET .../container/file-upload/stream`, a websocket), which neither the
+  server's timeouts nor Traefik's 60-second read timeout cut, in messages of
+  256 KiB; a directory goes gzipped. A server without the stream takes the form,
+  and the CLI says that its proxy cuts an upload after 60 seconds. A download
+  is not cut while its bytes flow. Progress - MB and rate - goes to stderr at a
+  terminal. `--timeout` is the CLI's own wait, 30 minutes by default. See the
+  server's [container file transfer design](https://github.com/hivepaas/hivepaas/blob/main/docs/superpowers/specs/2026-10-09-container-file-transfer-design.md).
 
 ## job and task
 
@@ -135,7 +140,9 @@ the app inherits gets an app's own of that name, not a change of the project's.
 - The spec types `POST .../tasks/{id}/cancel` and `GET .../tasks/{id}/logs` as
   their requests (`taskdto.CancelTaskReq`, `GetTaskLogsReq`); the CLI reads the
   cancel's `{data:{canceled}}` itself.
-- The 180-second read and write timeouts end large container copies.
+- The 180-second read and write timeouts, and Traefik's 60-second read timeout,
+  ended large container copies: the server's upload stream and its download's
+  moving deadline lift them.
 - A container file download of a symlink (nginx's `access.log -> /dev/stdout`)
   answers an empty file; a directory download cut short after its headers is
   not told from a whole one, the server's copy errors being dropped.

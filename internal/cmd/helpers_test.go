@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"bytes"
+	"context"
 	"net/url"
 	"testing"
 
@@ -88,4 +90,29 @@ func TestEnvRows(t *testing.T) {
 		{"runtime", "HIVEPAAS_PROJECT_NAME", "shop", "inherited"},
 		{"build", "NODE_ENV", "production", "app"},
 	}, envRows(vars, "", true))
+}
+
+// A read the terminal never answers ends with Ctrl-C: it does not hold the CLI.
+func TestAReadEndsWithCtrlC(t *testing.T) {
+	var stderr bytes.Buffer
+	a := &App{stderr: &stderr}
+	ctx, cancel := context.WithCancel(context.Background())
+	never := make(chan struct{})
+	defer close(never)
+	restored := false
+	go cancel()
+
+	_, err := a.read(ctx, func() (string, error) { <-never; return "", nil }, func() { restored = true })
+
+	assert.Equal(t, exitcode.Interrupted, exitcode.Of(err))
+	assert.True(t, exitcode.IsReported(err), "nothing more to say than the new line")
+	assert.True(t, restored, "the terminal is put back as it was")
+	assert.Equal(t, "\n", stderr.String())
+}
+
+func TestAReadThatIsAnswered(t *testing.T) {
+	a := &App{stderr: &bytes.Buffer{}}
+	got, err := a.read(context.Background(), func() (string, error) { return "shop\n", nil }, nil)
+	require.NoError(t, err)
+	assert.Equal(t, "shop\n", got)
 }

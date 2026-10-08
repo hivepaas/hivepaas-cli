@@ -247,7 +247,7 @@ func (in *paramInputs) defaultVolume(ctx context.Context, def api.Apptemplatedto
 		return "", exitcode.New(exitcode.Usage, "which volume for %s (%s)? Give %s%s=NAME, of: %s", def.Name,
 			def.Title, flag, def.Name, firstOf(strings.Join(names, ", "), "the project has none"))
 	}
-	choice, err := in.a.choose("volume for "+def.Name, flag+def.Name, names)
+	choice, err := in.a.choose(ctx, "volume for "+def.Name, flag+def.Name, names)
 	if err != nil {
 		return "", err
 	}
@@ -344,7 +344,7 @@ func (a *App) preflight(ctx context.Context, c *client.Client, sel *selection,
 		return nil, exitcode.New(exitcode.Invalid, "give --keep-storage to start on that data, or --reset-storage "+
 			"to delete it first")
 	}
-	answer, err := a.prompt("Keep it, reset it, or cancel? [k/r/c] ", "--keep-storage or --reset-storage")
+	answer, err := a.prompt(ctx, "Keep it, reset it, or cancel? [k/r/c] ", "--keep-storage or --reset-storage")
 	if err != nil {
 		return nil, err
 	}

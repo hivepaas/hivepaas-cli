@@ -378,6 +378,10 @@ pick it up again: `hivepaas logs --deployment <id> -f` to follow it, and
 `hivepaas deploy cancel <id>` to cancel it. Cancelling is a decision of its own,
 never a side effect of an interrupted terminal or a CI job that timed out.
 
+Ctrl-C works the same in every command: the first asks it to stop - a question it
+was asking is dropped, a stream closed, the terminal's echo turned back on - and
+exits 130; a second ends the CLI at once, whatever it is waiting for.
+
 With `-o json`, stdout carries only the finished deployment
 (`GET .../deployments/{id}`), so a pipeline can read its id and status.
 

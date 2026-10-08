@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -42,7 +43,7 @@ func (a *App) apiCmd() *cobra.Command {
 				return exitcode.New(exitcode.Usage, "%s is not an HTTP method: %s", args[0],
 					strings.Join(apiMethods, ", "))
 			}
-			body, err := a.apiBody(data)
+			body, err := a.apiBody(cmd.Context(), data)
 			if err != nil {
 				return err
 			}
@@ -77,16 +78,16 @@ func (a *App) apiCmd() *cobra.Command {
 }
 
 // apiBody is the body -d gives: none, the text itself, a file's or stdin's.
-func (a *App) apiBody(data string) (io.Reader, error) {
+func (a *App) apiBody(ctx context.Context, data string) (io.Reader, error) {
 	switch {
 	case data == "":
 		return nil, nil
 	case data == "@-":
-		content, err := io.ReadAll(a.stdin)
+		content, err := a.readStdin(ctx, "the body")
 		if err != nil {
-			return nil, fmt.Errorf("reading the body from stdin: %w", err)
+			return nil, err
 		}
-		return bytes.NewReader(content), nil
+		return strings.NewReader(content), nil
 	case strings.HasPrefix(data, "@"):
 		content, err := os.ReadFile(data[1:])
 		if err != nil {

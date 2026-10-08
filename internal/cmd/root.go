@@ -52,6 +52,13 @@ type App struct {
 func Execute() int {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	// The first Ctrl-C asks the command to stop, and to say what it leaves going -
+	// a deployment that goes on on the server. The next one is the shell's again,
+	// and ends the CLI at once, whatever it is waiting for.
+	go func() {
+		<-ctx.Done()
+		stop()
+	}()
 	app := &App{stdin: os.Stdin, stdout: os.Stdout, stderr: os.Stderr, getenv: os.Getenv}
 	return app.Run(ctx, os.Args[1:])
 }

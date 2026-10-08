@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/url"
 	"strings"
 
@@ -30,21 +29,22 @@ func (a *App) loginCmd() *cobra.Command {
 			var err error
 			if len(args) == 1 {
 				rawURL = args[0]
-			} else if rawURL, err = a.prompt("URL: ", "the URL"); err != nil {
+			} else if rawURL, err = a.prompt(cmd.Context(), "URL: ", "the URL"); err != nil {
 				return err
 			}
 			if keyID == "" {
-				if keyID, err = a.prompt("API key ID: ", "--key-id"); err != nil {
+				if keyID, err = a.prompt(cmd.Context(), "API key ID: ", "--key-id"); err != nil {
 					return err
 				}
 			}
 			if withSecret {
-				data, readErr := io.ReadAll(a.stdin)
+				data, readErr := a.readStdin(cmd.Context(), "the secret")
 				if readErr != nil {
-					return fmt.Errorf("reading the secret: %w", readErr)
+					return readErr
 				}
-				secret = strings.TrimSpace(string(data))
-			} else if secret, err = a.promptSecret("API key secret: ", "--with-secret and the secret on stdin"); err != nil {
+				secret = strings.TrimSpace(data)
+			} else if secret, err = a.promptSecret(cmd.Context(), "API key secret: ",
+				"--with-secret and the secret on stdin"); err != nil {
 				return err
 			}
 			return a.login(cmd.Context(), config.NormalizeURL(rawURL), keyID, secret, name, insecure)

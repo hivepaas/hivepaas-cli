@@ -90,7 +90,7 @@ func (a *App) selectTarget(ctx context.Context, c *client.Client, need scope) (*
 	if need == scopeProject {
 		return sel, nil
 	}
-	if sel.Env, err = a.selectEnv(sel.Project, in.env); err != nil {
+	if sel.Env, err = a.selectEnv(ctx, sel.Project, in.env); err != nil {
 		return nil, err
 	}
 	if need == scopeEnv {
@@ -148,7 +148,7 @@ func (a *App) targetInputs(c *client.Client) (targetInputs, error) {
 	return in, nil
 }
 
-func (a *App) selectEnv(project *api.ProjectdtoProjectResp, input string) (string, error) {
+func (a *App) selectEnv(ctx context.Context, project *api.ProjectdtoProjectResp, input string) (string, error) {
 	if input == "" {
 		envs := resolve.Deref(project.Envs)
 		names := make([]string, 0, len(envs))
@@ -156,7 +156,7 @@ func (a *App) selectEnv(project *api.ProjectdtoProjectResp, input string) (strin
 			names = append(names, env.Name)
 		}
 		var err error
-		if input, err = a.choose("environment", "-e", names); err != nil {
+		if input, err = a.choose(ctx, "environment", "-e", names); err != nil {
 			return "", err
 		}
 	}
@@ -175,7 +175,7 @@ func (a *App) selectApp(ctx context.Context, r *resolve.Resolver, sel *selection
 		for _, app := range apps {
 			names = append(names, app.Name)
 		}
-		if input, err = a.choose("app", "-a", names); err != nil {
+		if input, err = a.choose(ctx, "app", "-a", names); err != nil {
 			return nil, err
 		}
 	}
@@ -213,11 +213,11 @@ func (a *App) chooseProject(ctx context.Context, r *resolve.Resolver) (string, e
 	for _, project := range projects {
 		names = append(names, project.Name)
 	}
-	return a.choose("project", "-p", names)
+	return a.choose(ctx, "project", "-p", names)
 }
 
 // choose asks which of options, when it may: there is no choosing for a script.
-func (a *App) choose(what, flag string, options []string) (string, error) {
+func (a *App) choose(ctx context.Context, what, flag string, options []string) (string, error) {
 	if len(options) == 1 && what == "environment" {
 		return options[0], nil // the one environment is the one meant
 	}
@@ -230,7 +230,7 @@ func (a *App) choose(what, flag string, options []string) (string, error) {
 	for i, option := range options {
 		fmt.Fprintf(a.stderr, "  %d) %s\n", i+1, option)
 	}
-	answer, err := a.prompt(fmt.Sprintf("Which %s? [1-%d] ", what, len(options)), flag)
+	answer, err := a.prompt(ctx, fmt.Sprintf("Which %s? [1-%d] ", what, len(options)), flag)
 	if err != nil {
 		return "", err
 	}

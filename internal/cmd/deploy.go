@@ -57,7 +57,7 @@ func (a *App) deployCmd() *cobra.Command {
 		"what the deployment is for: pr-12 has its result commented on that pull request")
 	cmd.Flags().BoolVar(&flags.noWait, "no-wait", false, "start the deployment and return")
 	cmd.Flags().DurationVar(&flags.timeout, "timeout", defaultDeployTimeout, "how long to wait for the deployment")
-	cmd.AddCommand(a.deployCancelCmd(), a.deployLsCmd(), a.deployGetCmd())
+	cmd.AddCommand(a.deployCancelCmd(), a.deployLsCmd(), a.deployGetCmd(), a.deploySettingsCmd())
 	return cmd
 }
 

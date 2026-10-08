@@ -8,6 +8,7 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/oapi-codegen/runtime v1.7.0
 	github.com/spf13/cobra v1.10.2
+	github.com/spf13/pflag v1.0.9
 	github.com/stretchr/testify v1.12.1
 	github.com/zalando/go-keyring v0.2.8
 	golang.org/x/term v0.46.0
@@ -30,7 +31,6 @@ require (
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2 // indirect
 	github.com/speakeasy-api/jsonpath v0.6.3 // indirect
 	github.com/speakeasy-api/openapi v1.24.0 // indirect
-	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/vmware-labs/yaml-jsonpath v0.3.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/mod v0.38.0 // indirect

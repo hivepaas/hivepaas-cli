@@ -2,11 +2,13 @@ package cmd
 
 import (
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/hivepaas/hivepaas-cli/internal/api"
 	"github.com/hivepaas/hivepaas-cli/internal/exitcode"
 )
 
@@ -96,4 +98,88 @@ func TestScale(t *testing.T) {
 	require.Equal(t, exitcode.OK, r.code, r.stderr)
 	assert.Equal(t, "api (shop / production)\nReplicas:  3 now, autoscaled between 2 and 6, on CPU at 70%\n"+
 		"Limits:    memory 256MB, each\n", r.stdout)
+}
+
+func TestAppCreateWithAnImage(t *testing.T) {
+	quickly(t)
+	f := newFakeAPI(t)
+	web := "/api/projects/P1/production/apps/A9"
+	f.json("POST /api/projects/P1/production/apps", http.StatusCreated, `{"data":{"id":"A9"}}`)
+	f.json("GET "+web, http.StatusOK, `{"data":{"id":"A9","key":"web","name":"web"}}`)
+	f.json("GET "+web+"/env-vars", http.StatusOK, `{"data":{"runtimeEnvVars":[],"updateVer":0}}`)
+	f.json("PUT "+web+"/env-vars", http.StatusOK, `{"meta":null}`)
+	f.json("GET "+web+"/routing-settings", http.StatusOK, `{"data":{"port":0,"domains":[],"updateVer":0}}`)
+	f.json("PUT "+web+"/routing-settings", http.StatusOK, `{"meta":null}`)
+	f.json("GET "+web+"/deployment-settings", http.StatusOK, `{"data":{"activeMethod":"","updateVer":0}}`)
+	f.json("PUT "+web+"/deployment-settings", http.StatusOK, `{"data":{"deploymentId":"D9"}}`)
+	f.json("GET "+web+"/deployments/D9/status", http.StatusOK, `{"data":{"status":"done"}}`)
+	f.json("GET "+web+"/deployments/D9", http.StatusOK, `{"data":{"id":"D9","status":"done",
+		"startedAt":"2026-10-08T14:00:00Z","endedAt":"2026-10-08T14:00:03Z"}}`)
+	f.logs("GET " + web + "/deployments/D9/logs")
+
+	r := f.run(args("app create web -p shop -e production --image nginx:1.30 --port 80 --var MODE=test")...)
+
+	require.Equal(t, exitcode.OK, r.code, r.stderr)
+	assert.Equal(t, map[string]any{"name": "web", "note": "", "status": "active", "tags": []any{}},
+		f.body("POST /api/projects/P1/production/apps", 0))
+	assert.Equal(t, []any{map[string]any{"key": "MODE", "value": "test", "isLiteral": false}},
+		f.body("PUT "+web+"/env-vars", 0)["runtimeEnvVars"])
+	assert.InDelta(t, 80, f.body("PUT "+web+"/routing-settings", 0)["port"], 0)
+	deploy := f.body("PUT "+web+"/deployment-settings", 0)
+	assert.Equal(t, "image", deploy["activeMethod"], "a fresh app is given its method")
+	assert.Equal(t, "nginx:1.30", deploy["imageSource"].(map[string]any)["image"])
+	assert.Equal(t, true, deploy["notification"].(map[string]any)["successUseDefault"],
+		"its notices go where the project's do, as the dashboard starts an app")
+	f.mu.Lock()
+	var order []string
+	for _, call := range f.calls {
+		if strings.HasPrefix(call, "PUT ") {
+			order = append(order, call)
+		}
+	}
+	f.mu.Unlock()
+	assert.Equal(t, []string{"PUT " + web + "/env-vars", "PUT " + web + "/routing-settings",
+		"PUT " + web + "/deployment-settings"}, order, "the variables and the port before the image, which deploys")
+	assert.Contains(t, r.stderr, "Deployed in 3s.")
+}
+
+func TestAppCreateThatFailsHalfWay(t *testing.T) {
+	f := newFakeAPI(t)
+	web := "/api/projects/P1/production/apps/A9"
+	f.json("POST /api/projects/P1/production/apps", http.StatusCreated, `{"data":{"id":"A9"}}`)
+	f.json("GET "+web, http.StatusOK, `{"data":{"id":"A9","key":"web","name":"web"}}`)
+	f.json("GET "+web+"/deployment-settings", http.StatusOK, `{"data":{"activeMethod":"","updateVer":0}}`)
+	f.json("PUT "+web+"/deployment-settings", http.StatusUnprocessableEntity,
+		`{"status":422,"code":"ERR_VALIDATION","detail":"the image is not valid"}`)
+
+	r := f.run(args("app create web -p shop -e production --image NOT/VALID")...)
+
+	assert.Equal(t, exitcode.Invalid, r.code)
+	assert.Contains(t, r.stderr,
+		"web exists; deploy it with hivepaas deploy --image NOT/VALID -p shop -e production -a web")
+}
+
+func TestAppDelete(t *testing.T) {
+	f := newFakeAPI(t)
+	f.handle("DELETE "+appPath, func(w http.ResponseWriter, r *http.Request, _ int) {
+		assert.Equal(t, "true", r.URL.Query().Get("removeStorage"))
+		_, _ = w.Write([]byte(`{"meta":null}`))
+	})
+
+	r := f.run(args("app delete --remove-storage " + shopAPI)...)
+	assert.Equal(t, exitcode.Usage, r.code, "a script says --yes")
+	assert.Zero(t, f.called("DELETE "+appPath))
+
+	r = f.run(args("app delete --remove-storage --yes " + shopAPI)...)
+	require.Equal(t, exitcode.OK, r.code, r.stderr)
+	assert.Contains(t, r.stderr, "Deleted api (shop / production), and its data on the volumes.")
+}
+
+func TestGoingWith(t *testing.T) {
+	app := api.AppdtoAppResp{Name: "directus",
+		LogicalChildApps: &[]api.AppdtoAppResp{{Name: "directus-db"}},
+		ChildApps: &[]api.AppdtoAppResp{{Name: "directus-pr-12",
+			LogicalChildApps: &[]api.AppdtoAppResp{{Name: "directus-pr-12-db"}}}},
+	}
+	assert.Equal(t, []string{"directus-pr-12", "directus-pr-12-db", "directus-db"}, goingWith(app))
 }

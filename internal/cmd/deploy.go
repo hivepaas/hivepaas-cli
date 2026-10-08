@@ -116,11 +116,16 @@ func (a *App) setImage(ctx context.Context, c *client.Client, sel *selection, im
 			return "", err
 		}
 		settings := resp.JSON200.Data
-		if settings.ActiveMethod != api.DeploymentMethodImage || settings.ImageSource == nil {
+		// An app that has never been deployed has no method yet: --image gives it one.
+		fresh := settings.ActiveMethod == ""
+		if !fresh && (settings.ActiveMethod != api.DeploymentMethodImage || settings.ImageSource == nil) {
 			return "", exitcode.New(exitcode.Invalid, "%s deploys from its %s, not an image: --image is for an app "+
 				"that deploys one", sel.App.Name, methodName(settings.ActiveMethod))
 		}
-		old := settings.ImageSource.Image
+		old := ""
+		if settings.ImageSource != nil {
+			old = settings.ImageSource.Image
+		}
 		if old == image {
 			a.printer.Infof("Image: %s, unchanged", image)
 			return "", nil
@@ -129,7 +134,15 @@ func (a *App) setImage(ctx context.Context, c *client.Client, sel *selection, im
 		if err != nil {
 			return "", err
 		}
+		req.ActiveMethod = api.DeploymentMethodImage
+		if req.ImageSource == nil {
+			req.ImageSource = &api.AppsettingsdtoDeploymentImageSourceReq{}
+		}
 		req.ImageSource.Image = image
+		if fresh && req.Notification == nil {
+			// As the dashboard starts an app: its notices go where the project's do.
+			req.Notification = &api.BasedtoBaseEventNotificationReq{SuccessUseDefault: true, FailureUseDefault: true}
+		}
 		update, err := c.UpdateAppDeploymentSettingsWithResponse(ctx, sel.Project.Id, sel.Env, sel.App.Id, *req)
 		err = client.Check(update, err)
 		var apiErr *client.APIError
@@ -139,7 +152,11 @@ func (a *App) setImage(ctx context.Context, c *client.Client, sel *selection, im
 		if err != nil {
 			return "", err
 		}
-		a.printer.Infof("Image: %s", imageChange(old, image))
+		if fresh {
+			a.printer.Infof("Image: %s", image)
+		} else {
+			a.printer.Infof("Image: %s", imageChange(old, image))
+		}
 		if update.JSON200 == nil || update.JSON200.Data == nil || update.JSON200.Data.DeploymentId == nil {
 			return "", nil
 		}

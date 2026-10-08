@@ -6,6 +6,8 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -115,4 +117,18 @@ func TestAReadThatIsAnswered(t *testing.T) {
 	got, err := a.read(context.Background(), func() (string, error) { return "shop\n", nil }, nil)
 	require.NoError(t, err)
 	assert.Equal(t, "shop\n", got)
+}
+
+// No command takes a flag of its own named as a global one: it would hide the
+// global, and -p, -e or -a would stop working for that command alone.
+func TestNoFlagHidesAGlobalOne(t *testing.T) {
+	a := &App{}
+	root := a.rootCmd()
+	globals := map[string]bool{}
+	root.PersistentFlags().VisitAll(func(f *pflag.Flag) { globals[f.Name] = true })
+	walk(root, func(cmd *cobra.Command) {
+		cmd.LocalNonPersistentFlags().VisitAll(func(f *pflag.Flag) {
+			assert.False(t, globals[f.Name], "%s --%s hides the global --%s", cmd.CommandPath(), f.Name, f.Name)
+		})
+	})
 }

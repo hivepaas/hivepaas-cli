@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -151,17 +152,24 @@ func (a *App) target() (*config.Target, error) {
 
 // client is a client of the installation the command talks to.
 func (a *App) client() (*client.Client, error) {
+	return a.clientWithTimeout(0)
+}
+
+// clientWithTimeout is a client whose requests may take timeout: a deletion
+// the server does whole before it answers.
+func (a *App) clientWithTimeout(timeout time.Duration) (*client.Client, error) {
 	target, err := a.target()
 	if err != nil {
 		return nil, err
 	}
-	return a.clientOf(target)
+	return a.clientOf(target, timeout)
 }
 
-func (a *App) clientOf(target *config.Target) (*client.Client, error) {
+func (a *App) clientOf(target *config.Target, timeout time.Duration) (*client.Client, error) {
 	opts := client.Options{
 		Warn:          func(message string) { a.printer.Warnf("%s", message) },
 		UpdateCommand: a.updateCommand(),
+		Timeout:       timeout,
 	}
 	if a.debug {
 		opts.Debug = a.stderr

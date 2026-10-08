@@ -53,6 +53,8 @@ type Options struct {
 	Warn func(message string)
 	// UpdateCommand is what updates this CLI, for that warning.
 	UpdateCommand string
+	// Timeout is how long a request may take: a minute when zero.
+	Timeout time.Duration
 }
 
 // New is a client of target.
@@ -64,7 +66,11 @@ func New(target *config.Target, opts Options) (*Client, error) {
 		warn:   opts.Warn,
 		update: firstNonEmpty(opts.UpdateCommand, "hivepaas update"),
 	}
-	httpClient := &http.Client{Transport: transport, Timeout: requestTimeout}
+	timeout := opts.Timeout
+	if timeout <= 0 {
+		timeout = requestTimeout
+	}
+	httpClient := &http.Client{Transport: transport, Timeout: timeout}
 	baseURL := target.URL + apiPath
 	generated, err := api.NewClientWithResponses(baseURL+"/", api.WithHTTPClient(httpClient))
 	if err != nil {

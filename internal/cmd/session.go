@@ -72,7 +72,7 @@ func (a *App) loginCmd() *cobra.Command {
 
 func (a *App) login(ctx context.Context, baseURL, keyID, secret, name string, insecure bool) error {
 	target := &config.Target{URL: baseURL, KeyID: keyID, Secret: secret}
-	c, err := a.clientOf(target)
+	c, err := a.clientOf(target, 0)
 	if err != nil {
 		return err
 	}

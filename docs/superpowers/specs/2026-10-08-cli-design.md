@@ -64,6 +64,7 @@ needs for it. Later phases are listed at the end.
 | `exec [APP]` (alias `ssh`) | a shell in one of the app's containers, over the terminal websocket |
 | `domain ls\|add\|rm` | the domains an app is served on |
 | `app scale` | an app's replicas, its autoscale, and each replica's CPU and memory limits |
+| `app create NAME [--image]`, `app delete` | create an app, its variables and port set before the image deploys it; delete one with what goes with it |
 | `template ls`, `template deploy` | the template store |
 | `api METHOD PATH` | any endpoint, authenticated, JSON in and out |
 | `version`, `completion` | the CLI's version and shell completion |
@@ -274,6 +275,8 @@ execute, write and delete actions, never beyond its owner's permissions):
 | `exec` | `GET .../apps/{appID}/terminal` over websocket | execute |
 | `domain add`, `domain rm` | `GET` then `PUT .../routing-settings` | write |
 | `app scale` | `GET` then `PUT .../autoscale`, `.../service-settings`, `.../resource-settings` | write |
+| `app create` | `POST .../apps`, then `env-vars`, `routing-settings`, `deployment-settings` | write |
+| `app delete` | `DELETE .../apps/{appID}` (`removeStorage`) | delete |
 | `env ls` | `GET .../apps/{appID}/env-vars` | read |
 | `env set`, `env unset` | `GET` then `PUT .../apps/{appID}/env-vars` | write |
 | `template ls` | `GET /app-templates` (`--sort name\|popular\|trending\|new`, `--category`, `--search`) | read |

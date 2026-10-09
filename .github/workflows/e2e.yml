@@ -1,0 +1,83 @@
+name: E2E
+
+# The CLI against a throwaway HivePaaS (docs/superpowers/specs/2026-10-09-cli-e2e-design.md):
+# the dashboard's e2e/env/up.sh builds the backend - checked out beside it, with
+# app-templates - and runs it inside dind on the runner. On each push and pull
+# request, and every night, when the backend and the dashboard may have moved.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 19 * * *" # 02:00 in Vietnam
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: The CLI against a throwaway installation
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: hivepaas-cli
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: hivepaas/hivepaas-dashboard
+          path: hivepaas-dashboard
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: hivepaas/hivepaas
+          path: hivepaas
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: hivepaas/app-templates
+          path: app-templates
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: hivepaas/go.mod
+          cache-dependency-path: |
+            hivepaas/go.sum
+            hivepaas-cli/go.sum
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          # The release image builds the dashboard on node:26.
+          node-version: "26"
+          cache: yarn
+          cache-dependency-path: hivepaas-dashboard/yarn.lock
+
+      - name: The backend's devtools image, which migrates the database
+        working-directory: hivepaas
+        run: make init
+      - name: The dashboard's packages, which up.sh builds it with
+        working-directory: hivepaas-dashboard
+        run: yarn install --frozen-lockfile
+      - name: A throwaway HivePaaS
+        working-directory: hivepaas-dashboard/e2e
+        run: ./env/up.sh
+
+      - name: The CLI's end-to-end tests
+        working-directory: hivepaas-cli
+        env:
+          HP_E2E_BASE_URL: http://localhost:10100
+        run: make e2e
+
+      - name: What the backend and its agent logged
+        if: failure()
+        run: |
+          docker exec hp-e2e-dind tail -n 400 /hp/app.log || true
+          docker exec hp-e2e-dind tail -n 100 /hp/agent.log || true
+      - name: Down
+        if: always()
+        working-directory: hivepaas-dashboard/e2e
+        run: ./env/down.sh

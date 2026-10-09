@@ -20,6 +20,10 @@ the apps' domains at `127.0.0.1:10180` (HTTP) and `:10443` (HTTPS).
   dashboard's names for the same things.
 - The local backend, port 10000, is refused: these tests make, deploy and
   remove things, and that one holds a developer's own data.
+- CI runs them too (`.github/workflows/e2e.yml`), on each push and pull request
+  and every night: the dashboard, the backend and app-templates checked out
+  beside the CLI, as up.sh expects them, and the installation it makes inside
+  dind on the runner.
 
 ## How
 

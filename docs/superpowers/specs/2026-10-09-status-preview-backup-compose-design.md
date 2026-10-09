@@ -74,15 +74,19 @@ import does.
 1. **The file:** `-f`, else `compose.yaml`, `compose.yml`, `docker-compose.yaml`
    or `docker-compose.yml` here; the `.env` beside it, or `--env-file`.
 2. **What it reads:** the server says the files the compose file needs (an
-   `env_file`, a config, an `include`); they are read from beside the file and
-   sent with it. One missing stops it, named.
+   `env_file`, a config, a mounted file, an `include`); they are read from
+   beside the file and sent with it - a mounted directory's files when they fit
+   what the server takes (100 files, 5 MB, 500 KB each), said otherwise. An
+   included compose file missing stops it, named; another is said and left out.
 3. **Its variables:** `--var K=V` gives one; a required one with no value is
    asked at a terminal - hidden when the server takes it for a secret - and
    refused elsewhere, all of them named.
 4. **Where:** without `-p`, a new project, named `--name` or as the file names
    it; with `-p`, its environment `-e` (production by default), made when
-   missing. `--profile P` adds a profile's services. `--volume V` puts the
-   services' data on a cluster volume.
+   missing. Only `-p` names a project here: a directory's link or
+   `HIVEPAAS_PROJECT` does not, so that `compose up` never adds to a project it
+   was not told of. `--profile P` adds a profile's services. The services' data
+   goes on the project's own volume, as the server picks it.
 5. **The plan,** shown before anything is made: each service as the app it
    becomes, its image or build, its ports - how each is reached, at which
    domain - and what is dropped; then the plan's issues by severity. A

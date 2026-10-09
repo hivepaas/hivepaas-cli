@@ -20,6 +20,10 @@ bin/hivepaas job run migrate                   # a scheduled job, now, waited fo
 bin/hivepaas cp ./config.yaml :/app/config.yaml
 bin/hivepaas secret set STRIPE_KEY             # the value asked for, not on the command line
 bin/hivepaas logs -f --since 10m
+bin/hivepaas status                            # what needs attention on the installation
+bin/hivepaas backup ls && bin/hivepaas backup restore a1b2c3d4 --stop-app
+bin/hivepaas preview create --ref feature/checkout
+bin/hivepaas compose up -p shop -e staging     # a compose file's services as apps
 bin/hivepaas env set LOG_LEVEL=debug
 bin/hivepaas update                # a newer release, checked against a list signed offline
 ```

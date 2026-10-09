@@ -122,6 +122,12 @@ func (f *fakeAPI) run(args ...string) result {
 // runWithStdin runs the CLI as run does, with stdin giving what a pipe would.
 func (f *fakeAPI) runWithStdin(stdin string, args ...string) result {
 	f.t.Helper()
+	return f.runIn(context.Background(), stdin, args...)
+}
+
+// runIn runs the CLI as runWithStdin does, in ctx: its cancel is a Ctrl-C.
+func (f *fakeAPI) runIn(ctx context.Context, stdin string, args ...string) result {
+	f.t.Helper()
 	env := map[string]string{
 		"HIVEPAAS_CONFIG_DIR": f.t.TempDir(),
 		"HIVEPAAS_URL":        f.srv.URL,
@@ -132,7 +138,7 @@ func (f *fakeAPI) runWithStdin(stdin string, args ...string) result {
 		stdin: strings.NewReader(stdin), stdout: &stdout, stderr: &stderr,
 		getenv: func(k string) string { return env[k] },
 	}
-	code := a.Run(context.Background(), args)
+	code := a.Run(ctx, args)
 	return result{stdout.String(), stderr.String(), code}
 }
 

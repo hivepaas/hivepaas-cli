@@ -77,5 +77,23 @@ func Entrypoint(runtime string, files []File) string {
 	return ""
 }
 
+// MissingEntrypoint is the handler's file - entry, else the runtime's default -
+// when files do not have it; empty when they do, or for Go, whose entrypoint is
+// a package.
+func MissingEntrypoint(runtime, entry string, files []File) string {
+	if runtime == Go127 {
+		return ""
+	}
+	if entry == "" {
+		entry = defaultEntrypoints[runtime]
+	}
+	for _, f := range files {
+		if f.Path == entry {
+			return ""
+		}
+	}
+	return entry
+}
+
 // DefaultEntrypoint is the runtime's handler file when a function names none.
 func DefaultEntrypoint(runtime string) string { return defaultEntrypoints[runtime] }

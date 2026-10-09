@@ -28,8 +28,8 @@ func ParseIgnore(text string) *Ignore {
 		var r ignoreRule
 		if strings.HasPrefix(line, "!") {
 			r.negate, line = true, line[1:]
-		} else if strings.HasPrefix(line, `\`) {
-			line = line[1:] // \# and \! are the characters themselves
+		} else if strings.HasPrefix(line, `\#`) || strings.HasPrefix(line, `\!`) {
+			line = line[1:] // the characters themselves; other escapes are the glob's
 		}
 		if strings.HasSuffix(line, "/") {
 			r.dirOnly, line = true, strings.TrimRight(line, "/")

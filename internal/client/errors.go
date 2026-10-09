@@ -157,6 +157,9 @@ func leadingErrorInfo(body []byte) api.HperrorsErrorInfo {
 	return info
 }
 
+// Unreachable is a request the server never answered, as Check says it.
+func Unreachable(err error) error { return unreachable(err) }
+
 func unreachable(err error) error {
 	var exitErr *exitcode.Error
 	if errors.As(err, &exitErr) {

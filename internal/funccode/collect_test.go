@@ -91,3 +91,21 @@ func TestCollectRefusesWhatTheServerWould(t *testing.T) {
 	_, err = Collect(filepath.Join(t.TempDir(), "missing"))
 	assert.Equal(t, exitcode.Usage, exitcode.Of(err))
 }
+
+// A file with a NUL byte is not text, as the server takes it; a .env is not
+// code - a function's variables are its app's - and is left out, said.
+func TestCollectLeavesOutDotEnvAndRefusesNUL(t *testing.T) {
+	dir := t.TempDir()
+	write(t, dir, map[string]string{"index.js": "x", ".env": "SECRET=1", ".env.local": "SECRET=2",
+		"lib/.env": "SECRET=3"})
+	code, err := Collect(dir)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"index.js"}, paths(code.Files))
+	assert.Equal(t, []string{".env", ".env.local", "lib/.env"}, code.LeftOut)
+
+	nul := t.TempDir()
+	write(t, nul, map[string]string{"index.js": "x", "data.txt": "a\x00b"})
+	_, err = Collect(nul)
+	assert.Equal(t, exitcode.Invalid, exitcode.Of(err))
+	assert.ErrorContains(t, err, "data.txt is not text")
+}

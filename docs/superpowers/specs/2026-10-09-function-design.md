@@ -37,11 +37,16 @@ given, as the API takes it: its files, by path, as text.
   repository: `#` comments, `!` negation, a trailing `/` for directories, a
   slash elsewhere anchoring to the directory, `*`, `?`, `[...]` and `**`.
   `.gitignore` files below it, and the repository's, are not read.
+- **Not code:** `.env` and `.env.*` - a function's variables are its app's,
+  `hivepaas env set`, `hivepaas secret set` - left out and said.
 - **Checked before anything is sent,** as the server would refuse it:
   at most 100 files and 1 MB in all - the error names the largest - every file
-  text (UTF-8), every path spelled plainly (`A-Z a-z 0-9 . _ / -`, at most 255
-  characters). A link is left out and said.
-- **`--list`** shows the files that would go and their size, and sends nothing.
+  text (UTF-8, no NUL), every path spelled plainly (`A-Z a-z 0-9 . _ / -`, at
+  most 255 characters), and the handler's file among the files - the one
+  `--entrypoint` names, else the function's, else the runtime's default; a Go
+  function's is a package. A link is left out and said.
+- **`--list`** shows the files that would go and their size, and sends nothing;
+  for a repository's code there is no list, and it is refused.
 
 ## init
 
@@ -107,13 +112,15 @@ or deployed, in a throwaway container on a build node with the function's
 variables and secrets - the dashboard's Test run.
 
 - **The request:** `--method GET`, `--path /`, `--query K=V` and `--header 'K: V'`
-  (each repeatable), `--data TEXT`, `@FILE`, or `@-` for stdin; at most 1 MB.
+  (each repeatable), `--data TEXT`, `@FILE`, or `@-` for stdin; at most 1 MB,
+  and text: the API takes the body as text, and other bytes would arrive
+  changed.
 - **What it answered:** the body on stdout, as it is, for a pipe; on stderr the
   status, how long it took, then what the function logged - a message logged
   with the context's logger as its text, what it printed as it is, the
   runtime's line of the call left out. The libraries the
-  run installed first are said, their log with `--debug`. A body or a log cut at
-  1 MB is said.
+  run installed first are said, their log with `--debug`; when they could not be
+  installed, the end of their log is. A body or a log cut at 1 MB is said.
 - **Exit:** 0 when the function answered, whatever its status - as `curl`;
   with `--fail`, 8 for a status of 400 or more. 8 when it did not answer: an
   error, a timeout, libraries that failed to install, a handler that is not

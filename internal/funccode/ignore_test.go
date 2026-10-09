@@ -39,3 +39,10 @@ func TestIgnoreOfNothingIgnoresNothing(t *testing.T) {
 	var ig *Ignore
 	assert.False(t, ig.Match("index.js", false))
 }
+
+// A backslash makes the character after it itself: \*.txt is the file *.txt.
+func TestIgnoreEscapes(t *testing.T) {
+	ig := ParseIgnore("\\*.txt\n")
+	assert.True(t, ig.Match("*.txt", false))
+	assert.False(t, ig.Match("a.txt", false))
+}

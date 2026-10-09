@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -80,11 +81,24 @@ func (a *App) functionDeploy(ctx context.Context, args []string, flags functionD
 		return err
 	}
 	use, code, err := a.deployedCode(sel, settings, args, flags)
-	if err != nil || (code != nil && flags.list) {
-		if err == nil {
-			err = a.listCode(code)
-		}
+	if err != nil {
 		return err
+	}
+	if flags.list {
+		if code == nil {
+			return exitcode.New(exitcode.Usage, "--list is for a directory's code, and %s's is a repository's",
+				sel.App.Name)
+		}
+		return a.listCode(code)
+	}
+	if code != nil {
+		entry := flags.entrypoint
+		if stored := settings.FunctionSource.Entrypoint; !flags.changed("entrypoint") && stored != nil {
+			entry = stored.File
+		}
+		if err = checkEntrypoint(dirArg(args), string(settings.FunctionSource.Runtime), entry, code); err != nil {
+			return err
+		}
 	}
 	refs, err := flags.refs(ctx, c, sel)
 	if err != nil {
@@ -130,7 +144,7 @@ func (a *App) deployedCode(sel *selection, settings *api.AppsettingsdtoDeploymen
 	use := flags.use
 	if use == "" {
 		use = codeInline
-		if repoOfFunction(settings.FunctionSource) != nil || flags.changed(flagRepo) {
+		if repoOfFunction(settings.FunctionSource) != nil {
 			use = codeRepo
 		}
 	}
@@ -142,8 +156,12 @@ func (a *App) deployedCode(sel *selection, settings *api.AppsettingsdtoDeploymen
 		return use, nil, nil
 	}
 	if given := flags.repoGiven(); len(given) > 0 {
+		if flags.use == codeInline {
+			return "", nil, exitcode.New(exitcode.Usage, "%s %s for a repository's code, and --use inline sends a "+
+				"directory's", strings.Join(given, " and "), isOrAre(len(given)))
+		}
 		return "", nil, exitcode.New(exitcode.Usage, "%s's code is inline: --use repo --repo URL builds it from a "+
-			"repository", sel.App.Name)
+			"repository instead", sel.App.Name)
 	}
 	code, err := a.collectCode(dirArg(args))
 	return use, code, err

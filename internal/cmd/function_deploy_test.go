@@ -130,3 +130,16 @@ func TestFunctionDeployAndDeployPointAtEachOther(t *testing.T) {
 	assert.Equal(t, exitcode.Invalid, r.code)
 	assert.Contains(t, r.stderr, "hivepaas function deploy")
 }
+
+// A function with inline code is not switched to a repository unless asked:
+// the code kept on the server may be the only copy.
+func TestFunctionDeploySwitchesOnlyWhenAsked(t *testing.T) {
+	f := newFakeAPI(t)
+	f.json("GET "+appPath+"/deployment-settings", http.StatusOK, fnSettings)
+
+	r := f.run(args("function deploy --repo https://github.com/acme/fns.git " + shopAPI)...)
+
+	assert.Equal(t, exitcode.Usage, r.code)
+	assert.Contains(t, r.stderr, "--use repo")
+	assert.Zero(t, f.called("PUT "+appPath+"/deployment-settings"))
+}

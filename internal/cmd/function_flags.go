@@ -276,6 +276,14 @@ func applyInline(code *api.AppsettingsdtoFunctionCodeReq, files []funccode.File,
 	code.Repo, code.Dir = nil, ""
 }
 
+// isOrAre is the verb of n things given.
+func isOrAre(n int) string {
+	if n > 1 {
+		return "are"
+	}
+	return "is"
+}
+
 // pathsShown is how many paths a change names before it counts the rest.
 const pathsShown = 5
 

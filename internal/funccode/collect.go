@@ -46,6 +46,8 @@ type Code struct {
 	Files []File
 	Size  int64
 	Links []string
+	// LeftOut are files that are not code, which a function never sends.
+	LeftOut []string
 }
 
 // Never sent: libraries, git's, HivePaaS's own - .hivepaas is its directory in
@@ -88,6 +90,9 @@ func Collect(dir string) (*Code, error) {
 			}
 			return nil
 		case slices.Contains(skippedFiles, entry.Name()) || ig.Match(rel, false):
+			return nil
+		case entry.Name() == ".env" || strings.HasPrefix(entry.Name(), ".env."):
+			code.LeftOut = append(code.LeftOut, rel)
 			return nil
 		case entry.Type()&fs.ModeSymlink != 0:
 			code.Links = append(code.Links, rel)
@@ -135,7 +140,7 @@ func check(dir string, code *Code) error {
 			errs = append(errs, fmt.Errorf("%q: a path is spelled with A-Z a-z 0-9 . _ / - only, "+
 				"in at most %d characters", f.Path, MaxPathLen))
 		}
-		if !utf8.ValidString(f.Content) {
+		if !utf8.ValidString(f.Content) || strings.ContainsRune(f.Content, 0) {
 			errs = append(errs, fmt.Errorf("%s is not text: a function's code is sent as text", f.Path))
 		}
 	}

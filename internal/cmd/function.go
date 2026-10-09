@@ -157,7 +157,25 @@ func (a *App) collectCode(dir string) (*funccode.Code, error) {
 	for _, l := range code.Links {
 		a.printer.Warnf("%s is a link: left out", l)
 	}
+	for _, f := range code.LeftOut {
+		a.printer.Warnf("%s left out: a function's variables are its app's - hivepaas env set, hivepaas secret set", f)
+	}
 	return code, nil
+}
+
+// checkEntrypoint refuses code without the handler's file: the deployment would
+// fail on it. A file there that the .gitignore left out is said.
+func checkEntrypoint(dir, runtime, entry string, code *funccode.Code) error {
+	missing := funccode.MissingEntrypoint(runtime, entry, code.Files)
+	if missing == "" {
+		return nil
+	}
+	if _, err := os.Stat(filepath.Join(dir, filepath.FromSlash(missing))); err == nil {
+		return exitcode.New(exitcode.Invalid, "%s is the handler's file, and %s's .gitignore leaves it out",
+			missing, dirWords(dir))
+	}
+	return exitcode.New(exitcode.Invalid, "%s has no %s, the handler's file: --entrypoint names another",
+		dirWords(dir), missing)
 }
 
 // listCode shows the files a command would send, and their size.

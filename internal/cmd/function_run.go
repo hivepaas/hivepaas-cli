@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -21,11 +23,21 @@ import (
 )
 
 // runTimeout is how long a test run may take: a call may take 15 minutes, and
-// the libraries are installed first.
-const runTimeout = 20 * time.Minute
+// the libraries are installed first. A variable for the tests.
+var runTimeout = 20 * time.Minute
 
-// outcomeOK is a test run's outcome when the function answered.
-const outcomeOK = "ok"
+// A test run's outcomes the CLI tells apart: the function answered, its
+// libraries could not be installed.
+const (
+	outcomeOK              = "ok"
+	outcomeLibrariesFailed = "libraries-failed"
+)
+
+// runBodyMax is the largest request body a run takes.
+const runBodyMax = 1 << 20
+
+// librariesLogShown is how many of a failed install's last lines are said.
+const librariesLogShown = 30
 
 type functionRunFlags struct {
 	method, path, data string
@@ -123,12 +135,12 @@ func (a *App) functionRun(ctx context.Context, args []string, flags functionRunF
 		Code: &api.AppsettingsdtoFunctionInlineCodeReq{Files: &files}, Request: request,
 	})
 	if err != nil {
-		return client.Check(&struct{ HTTPResponse *http.Response }{}, err)
+		return a.runStopped(ctx, err)
 	}
 	defer resp.Body.Close()
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return exitcode.Wrap(exitcode.Server, fmt.Errorf("reading the run's answer: %w", err))
+		return a.runStopped(ctx, err)
 	}
 	if err = client.CheckStatus(resp.StatusCode, data); err != nil {
 		return err
@@ -140,6 +152,21 @@ func (a *App) functionRun(ctx context.Context, args []string, flags functionRunF
 		return exitcode.New(exitcode.Server, "the server answered no run")
 	}
 	return a.ranWith(answer.Data, dir, flags)
+}
+
+// runStopped is a run the CLI stopped waiting for: Ctrl-C, its timeout, or a
+// server that went away.
+func (a *App) runStopped(ctx context.Context, err error) error {
+	var netErr net.Error
+	switch {
+	case ctx.Err() != nil:
+		a.printer.Infof("")
+		a.printer.Infof("Stopped waiting for the run.")
+		return exitcode.Reported(exitcode.Interrupted)
+	case errors.Is(err, context.DeadlineExceeded) || (errors.As(err, &netErr) && netErr.Timeout()):
+		return exitcode.New(exitcode.Timeout, "the run took more than %s", runTimeout)
+	}
+	return client.Unreachable(err)
 }
 
 // request is the request the flags give.
@@ -170,22 +197,28 @@ func (flags functionRunFlags) request(stdin io.Reader) (*api.AppdtoTestRunReques
 		}
 		req.Headers = &headers
 	}
+	body := []byte(flags.data)
 	switch {
 	case flags.data == "@-":
-		body, err := io.ReadAll(stdin)
-		if err != nil {
+		var err error
+		if body, err = io.ReadAll(stdin); err != nil {
 			return nil, fmt.Errorf("reading stdin: %w", err)
 		}
-		req.Body = string(body)
 	case strings.HasPrefix(flags.data, "@"):
-		body, err := os.ReadFile(flags.data[1:])
-		if err != nil {
+		var err error
+		if body, err = os.ReadFile(flags.data[1:]); err != nil {
 			return nil, exitcode.New(exitcode.Usage, "--data: %v", err)
 		}
-		req.Body = string(body)
-	default:
-		req.Body = flags.data
 	}
+	// The API takes the body as text: other bytes would arrive changed.
+	if !utf8.Valid(body) {
+		return nil, exitcode.New(exitcode.Usage, "--data is not text: a run's request body is sent as text")
+	}
+	if len(body) > runBodyMax {
+		return nil, exitcode.New(exitcode.Usage, "--data is %s, more than the 1 MB a run's request takes",
+			sizeOf(int64(len(body))))
+	}
+	req.Body = string(body)
 	return req, nil
 }
 
@@ -197,7 +230,12 @@ func (a *App) ranWith(run *testRunAnswer, dir string, flags functionRunFlags) er
 			return err
 		}
 	}
-	if run.LibrariesBuilt {
+	switch {
+	case run.Outcome == outcomeLibrariesFailed:
+		a.printer.Errorf("Its libraries could not be installed:")
+		lines := strings.Split(strings.TrimRight(run.LibrariesLog, "\n"), "\n")
+		a.printer.Infof("%s", strings.Join(lines[max(0, len(lines)-librariesLogShown):], "\n"))
+	case run.LibrariesBuilt:
 		a.printer.Infof("Installed its libraries first.")
 		if a.debug && run.LibrariesLog != "" {
 			a.printer.Infof("%s", strings.TrimRight(run.LibrariesLog, "\n"))
@@ -309,6 +347,9 @@ type runtimeLine struct {
 // logLines are a run's logs as they are said: the handler's messages, its own
 // lines as they are, and not the line of the call, whose status is said.
 func logLines(logs string) []string {
+	if strings.TrimSpace(logs) == "" {
+		return nil
+	}
 	var lines []string
 	for line := range strings.SplitSeq(strings.TrimRight(logs, "\n"), "\n") {
 		var rt runtimeLine

@@ -3,7 +3,6 @@ package cmd
 import (
 	"encoding/json"
 	"net/http"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -139,12 +138,57 @@ func TestFunctionListShowsTheFiles(t *testing.T) {
 	assert.Contains(t, r.stdout, "index.js")
 	assert.Contains(t, r.stdout, "lib/a.js")
 	assert.NotContains(t, r.stdout, "dist/x.js")
-	assert.Zero(t, f.called("POST "+fnCreatePath))
-	assert.Equal(t, filepath.Base(dir), filepath.Base(dir))
+	assert.Empty(t, f.calls, "--list asks the server nothing")
 
 	r = f.run(append(args("function create hello -p shop -e production --runtime node24 --list -o json"), dir)...)
 	require.Equal(t, exitcode.OK, r.code, r.stderr)
 	var listed []map[string]any
 	require.NoError(t, json.Unmarshal([]byte(r.stdout), &listed))
 	assert.Len(t, listed, 3)
+}
+
+// --list is for a directory's code: with a repository's it is refused, and
+// nothing is made.
+func TestFunctionListOfARepositorysCodeIsRefused(t *testing.T) {
+	f := newFakeAPI(t)
+	fakeCreatedFunction(f)
+	f.json("GET "+appPath+"/deployment-settings", http.StatusOK, fnRepoSettings)
+
+	r := f.run(args("function create x -p shop -e production --repo https://github.com/acme/fns.git --list")...)
+	assert.Equal(t, exitcode.Usage, r.code)
+	assert.Zero(t, f.called("POST "+fnCreatePath))
+
+	r = f.run(args("function deploy --list " + shopAPI)...)
+	assert.Equal(t, exitcode.Usage, r.code)
+	assert.Zero(t, f.called("PUT "+appPath+"/deployment-settings"))
+	assert.Zero(t, f.called("POST "+appPath+"/deploy"))
+}
+
+// The handler's file is among the files sent, or nothing is: the deployment
+// would fail on it.
+func TestFunctionCodeWithoutItsEntrypointIsRefused(t *testing.T) {
+	f := newFakeAPI(t)
+	fakeCreatedFunction(f)
+	f.json("GET "+appPath+"/deployment-settings", http.StatusOK, fnSettings)
+
+	py := dirWith(t, map[string]string{"app.py": "def handler(req, ctx): pass"})
+	r := f.run(append(args("function create x -p shop -e production --runtime python313"), py)...)
+	assert.Equal(t, exitcode.Invalid, r.code)
+	assert.Contains(t, r.stderr, "main.py")
+
+	typo := dirWith(t, map[string]string{"index.js": "x"})
+	r = f.run(append(args("function create x -p shop -e production --runtime node24 --entrypoint indx.js"), typo)...)
+	assert.Equal(t, exitcode.Invalid, r.code)
+	assert.Contains(t, r.stderr, "indx.js")
+
+	ignored := dirWith(t, map[string]string{"index.js": "x", ".gitignore": "index.js\n"})
+	r = f.run(append(args("function create x -p shop -e production --runtime node24"), ignored)...)
+	assert.Equal(t, exitcode.Invalid, r.code)
+	assert.Contains(t, r.stderr, ".gitignore")
+	assert.Zero(t, f.called("POST "+fnCreatePath))
+
+	renamed := dirWith(t, map[string]string{"main.js": "x"})
+	r = f.run(append(args("function deploy "+shopAPI), renamed)...)
+	assert.Equal(t, exitcode.Invalid, r.code, "the stored entrypoint, index.js")
+	assert.Zero(t, f.called("PUT "+appPath+"/deployment-settings"))
 }

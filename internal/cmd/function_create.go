@@ -72,7 +72,7 @@ func (flags functionCreateFlags) checkSource(args []string) error {
 	}
 	if given := flags.repoGiven(); len(given) > 0 {
 		return exitcode.New(exitcode.Usage, "%s %s for a function built from a repository: give --repo",
-			strings.Join(given, " and "), map[bool]string{true: "are", false: "is"}[len(given) > 1])
+			strings.Join(given, " and "), isOrAre(len(given)))
 	}
 	return nil
 }
@@ -82,18 +82,31 @@ func (a *App) functionCreate(ctx context.Context, name string, args []string, fl
 		return err
 	}
 	fromRepo := flags.changed(flagRepo)
-	runtime, err := a.runtimeOf(ctx, flags.runtime)
-	if err != nil {
-		return err
+	if fromRepo && flags.list {
+		return exitcode.New(exitcode.Usage, "--list is for a directory's code, and this function's is a repository's")
 	}
 	dir := dirArg(args)
 	var code *funccode.Code
+	var err error
 	if !fromRepo {
 		if code, err = a.collectCode(dir); err != nil {
 			return err
 		}
 		if flags.list {
 			return a.listCode(code)
+		}
+	}
+	runtime, err := a.runtimeOf(ctx, flags.runtime)
+	if err != nil {
+		return err
+	}
+	if !fromRepo {
+		entry := flags.entrypoint
+		if !flags.changed("entrypoint") {
+			entry = funccode.Entrypoint(runtime, code.Files)
+		}
+		if err = checkEntrypoint(dir, runtime, entry, code); err != nil {
+			return err
 		}
 		if err = a.linkFromDir(dir); err != nil {
 			return err

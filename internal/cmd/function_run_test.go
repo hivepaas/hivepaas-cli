@@ -1,10 +1,13 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
+	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -109,4 +112,85 @@ func TestDurationWords(t *testing.T) {
 	assert.Equal(t, "0.4 ms", durationWords(0.435))
 	assert.Equal(t, "12 ms", durationWords(12.4))
 	assert.Equal(t, "1.25s", durationWords(1250))
+}
+
+// A body that is not text is refused: the API's body is text, and its bytes
+// would arrive changed.
+func TestFunctionRunRefusesABodyThatIsNotText(t *testing.T) {
+	f := newFakeAPI(t)
+	dir := dirWith(t, map[string]string{"index.js": "x", "photo.bin": "x"})
+	photo := filepath.Join(dir, "photo.bin")
+	require.NoError(t, os.WriteFile(photo, []byte{0xff, 0xd8, 0xff}, 0o644))
+	code := dirWith(t, map[string]string{"index.js": "x"})
+
+	r := f.run(append(args("function run --data @"+photo+" "+shopAPI), code)...)
+
+	assert.Equal(t, exitcode.Usage, r.code)
+	assert.Contains(t, r.stderr, "not text")
+	assert.Zero(t, f.called("POST "+testRunPath))
+}
+
+// Ctrl-C stops waiting for a run, and a run past its time is a timeout: 130
+// and 9, as for every command.
+func TestFunctionRunInterruptedOrTimedOut(t *testing.T) {
+	f := newFakeAPI(t)
+	f.handle("POST "+testRunPath, func(w http.ResponseWriter, r *http.Request, _ int) {
+		select {
+		case <-r.Context().Done():
+		case <-time.After(5 * time.Second):
+		}
+	})
+	dir := dirWith(t, map[string]string{"index.js": "x"})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	time.AfterFunc(100*time.Millisecond, cancel)
+	r := f.runIn(ctx, "", append(args("function run "+shopAPI), dir)...)
+	assert.Equal(t, exitcode.Interrupted, r.code, r.stderr)
+
+	limit := runTimeout
+	runTimeout = 100 * time.Millisecond
+	t.Cleanup(func() { runTimeout = limit })
+	r = f.run(append(args("function run "+shopAPI), dir)...)
+	assert.Equal(t, exitcode.Timeout, r.code, r.stderr)
+}
+
+// A run with nothing logged says no logs; one whose libraries failed to
+// install says why.
+func TestFunctionRunSaysWhatItHas(t *testing.T) {
+	f := newFakeAPI(t)
+	f.handle("POST "+testRunPath, func(w http.ResponseWriter, _ *http.Request, n int) {
+		_, _ = w.Write([]byte([]string{
+			`{"data":{"outcome":"ok","status":204,"body":"","logs":"","exitCode":0,"librariesBuilt":false}}`,
+			`{"data":{"outcome":"libraries-failed","logs":"","exitCode":1,"librariesBuilt":true,
+				"librariesLog":"npm ERR! 404 Not Found - GET https://registry.npmjs.org/no-such-package\n"}}`,
+		}[min(n, 1)]))
+	})
+	dir := dirWith(t, map[string]string{"index.js": "x"})
+
+	r := f.run(append(args("function run "+shopAPI), dir)...)
+	require.Equal(t, exitcode.OK, r.code, r.stderr)
+	assert.NotContains(t, r.stderr, "Logs:")
+
+	r = f.run(append(args("function run "+shopAPI), dir)...)
+	assert.Equal(t, exitcode.Deployment, r.code)
+	assert.Contains(t, r.stderr, "npm ERR! 404 Not Found")
+	assert.NotContains(t, r.stderr, "Installed its libraries")
+}
+
+// -o json gives a body that is not text as base64; --save-lock overwrites a
+// lock file there.
+func TestFunctionRunBinaryBodyAndLockOverwrite(t *testing.T) {
+	f := newFakeAPI(t)
+	f.json("POST "+testRunPath, http.StatusOK, `{"data":{"outcome":"ok","status":200,"body":"/9j/","logs":"",
+		"exitCode":0,"librariesBuilt":false,"lockFiles":[{"path":"package-lock.json","content":"new"}]}}`)
+	dir := dirWith(t, map[string]string{"index.js": "x", "package-lock.json": "old"})
+
+	r := f.run(append(args("function run -o json --save-lock "+shopAPI), dir)...)
+
+	require.Equal(t, exitcode.OK, r.code, r.stderr)
+	var out map[string]any
+	require.NoError(t, json.Unmarshal([]byte(r.stdout), &out))
+	assert.Nil(t, out["body"])
+	assert.Equal(t, "/9j/", out["bodyBase64"])
+	assert.Equal(t, "new", readFile(t, filepath.Join(dir, "package-lock.json")))
 }

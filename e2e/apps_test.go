@@ -76,6 +76,9 @@ func TestAnAppFromAnImage(t *testing.T) {
 	app := jsonOf[map[string]any](t, web.must("app", "get", "-o", "json"))
 	assert.Equal(t, "web", app["name"], "%v", app)
 	assert.Contains(t, web.must("deploy", "ls").stdout, "done")
+	assert.Contains(t, web.must("deploy", "settings").stdout, busybox)
+	routing := jsonOf[map[string]any](t, web.must("api", "GET", "/projects/{project}/{env}/apps/{app}/routing-settings"))
+	assert.Contains(t, fmt.Sprint(routing), domain)
 }
 
 // contains says what is missing when text does not hold want.

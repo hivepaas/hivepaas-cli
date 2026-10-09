@@ -42,13 +42,20 @@ the apps' domains at `127.0.0.1:10180` (HTTP) and `:10443` (HTTPS).
 
 | Test | Commands |
 |---|---|
-| An app from an image | `project create`, `app create --image`, `ps`, `logs`, `env ls/set`, `domain add` then a request to it, `cp` in and out, `exec` piped, `app scale`, `app stop/start`, `restart`, `app get -o json`, `deploy ls` |
+| An app from an image | `project create`, `app create --image`, `ps`, `logs`, `env ls/set`, `domain add` then a request to it, `cp` in and out, `exec` piped, `app scale`, `app stop/start`, `restart`, `app get -o json`, `deploy ls`, `deploy settings`, `api` |
 | Secrets and config files | `secret set` from stdin, `secret ls` hiding the value, a variable naming `${secrets.KEY}` seen in the container, `config-file push/pull/ls/rm` |
 | A job | `job ls`, `job run` following its log, a run that fails exits 8, `task ls`, `logs --task` |
-| A function | `function init`, `function run`, `function create --domain` then a request to it, `function ls`, `function pull` giving back the files |
+| A function | `function init`, `function run`, `function create --domain` then a request to it, `function ls`, `function get`, `function metrics`, `function pull` giving back the files |
 | A compose file | `compose up` refusing a missing variable without a terminal, then making the project with `--var` and deploying; `app ls` |
 | A data backup | `backup run`, `backup ls`, `backup files`, `backup download -O -`, `backup restore --yes` and the app finding its data again, `backup rm` |
 | Asking and failing | `whoami`, `version`, `status`; exit codes - 2 for a usage error and a command that would ask with no terminal, 5 for what is not there |
+| A template | `template ls --search`, `template deploy` with a volume parameter, its app running |
+| A linked directory | `link`, then `deploy`, `logs` and `deploy settings` without flags, here and below; `unlink` |
+| Taking away | `env unset`, `env pull`, `secret set --file`, `secret rm`, `config-file rm`, `open --print`, `domain rm`, `project env add/rm`, `app delete --remove-storage` |
+| Following, waiting, canceling | `logs -f` until Ctrl-C (130); a deployment held by its pre-deployment command, `deploy cancel`, `deploy get`; `job run --timeout` exiting 9, `task cancel`, `task get` |
+| An app from a repository | `app create --repo --ref --commit`, `deploy --commit none` to follow the branch, `deploy --ref`; each deployment's commit |
+| A preview | refused while previews are off; `preview create` building the app's branch, `preview ls`, `preview rm` |
 
-Previews are left out: one needs an app that builds from a git repository the
-installation can clone.
+The repository is the one the dashboard's env/up.sh serves inside dind, at
+git://127.0.0.1/e2e/shop.git: two commits on main, each a Dockerfile printing
+which it is, and develop at the first.

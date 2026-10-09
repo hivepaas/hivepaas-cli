@@ -16,7 +16,7 @@ func TestAJob(t *testing.T) {
 	t.Parallel()
 	p := project(t, "jobs")
 	worker := p.app("worker")
-	p.must("app", "create", "worker", "--image", busybox, "--command", "sleep 3600")
+	p.must("app", "create", "worker", "--image", busybox, "--command", "sh -c 'echo ready; exec sleep 3600'")
 	path := worker.appPath()
 	said := "said-" + runID
 	for name, command := range map[string]string{"say": "echo " + said, "fail": "sh -c 'echo failing; exit 3'"} {
@@ -24,8 +24,9 @@ func TestAJob(t *testing.T) {
 			"app": map[string]string{"id": pathpkg.Base(path)}, "command": map[string]string{"command": command}}, nil)
 	}
 
-	// The command runs in the app's running container.
-	eventually(t, deployWithin, func() error { return running(worker, 1) })
+	// The command runs in the app's running container: the deployed one, not
+	// the placeholder it replaces, which runs while the image is pulled.
+	eventually(t, deployWithin, func() error { return contains(worker.run("logs", "--tail", "50").stdout, "ready") })
 	ls := worker.must("job", "ls").stdout
 	assert.Contains(t, ls, "say")
 	assert.Contains(t, ls, "fail")

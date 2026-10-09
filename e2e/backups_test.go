@@ -51,7 +51,9 @@ func TestADataBackup(t *testing.T) {
 	mark := "mark-" + runID
 	keeper.must("deploy", "--image", busybox, "--command",
 		fmt.Sprintf(`sh -c 'echo %s > /data/mark; echo ready; exec sleep 3600'`, mark))
-	eventually(t, deployWithin, func() error { return running(keeper, 1) })
+	// The deployed container, not the placeholder it replaces, has written the
+	// mark.
+	eventually(t, deployWithin, func() error { return contains(keeper.run("logs", "--tail", "50").stdout, "ready") })
 
 	var mounts struct {
 		Data struct {

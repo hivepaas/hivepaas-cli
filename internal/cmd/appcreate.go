@@ -213,6 +213,12 @@ func (a *App) appDelete(ctx context.Context, removeStorage, yes bool) error {
 	if err != nil {
 		return err
 	}
+	return a.deleteApp(ctx, c, sel, removeStorage, yes)
+}
+
+// deleteApp deletes the selected app, and the apps that go with it: asked at a
+// terminal, given yes elsewhere.
+func (a *App) deleteApp(ctx context.Context, c *client.Client, sel *selection, removeStorage, yes bool) error {
 	with := goingWith(*sel.App)
 	what := sel.where()
 	if len(with) > 0 {

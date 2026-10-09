@@ -193,7 +193,7 @@ func (a *App) listCode(code *funccode.Code) error {
 	if a.printer.Structured() {
 		return a.printer.Data(out)
 	}
-	if err := a.printer.Table([]string{"PATH", "SIZE"}, rows); err != nil {
+	if err := a.printer.Table([]string{"PATH", colSize}, rows); err != nil {
 		return err
 	}
 	a.printer.Infof("%d files, %s.", len(code.Files), sizeOf(code.Size))

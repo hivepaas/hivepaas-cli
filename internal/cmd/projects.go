@@ -86,6 +86,7 @@ const (
 	colType    = "TYPE"
 	colStatus  = "STATUS"
 	colUpdated = "UPDATED"
+	colSize    = "SIZE"
 )
 
 func envNames(envs *[]api.ProjectdtoProjectEnvResp) string {

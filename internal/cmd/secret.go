@@ -343,7 +343,7 @@ func changeWords(changed, added []string) string {
 // storedColumns head a list of what HivePaaS keeps for an app: its secrets, its
 // config files.
 func storedColumns(first string) []string {
-	return []string{first, "SIZE", colType, "PREVIEWS", "OF", colUpdated}
+	return []string{first, colSize, colType, "PREVIEWS", "OF", colUpdated}
 }
 
 func storedRow(name string, size *int, isBase64, inheritable bool, inherited *bool, updatedAt string,

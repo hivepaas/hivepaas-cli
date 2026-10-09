@@ -30,7 +30,8 @@ request, each an app of its own.
   one, as the dashboard's form does: first the server says what it can do
   (`prepare`) - previews off for the app is refused, with Feature Settings
   named; the secrets a preview is not given are said - then it is made.
-  `--ref` is the branch to build, the app's own when not given; `--no-db` does
+  `--ref` is the branch to build, the one the app deploys from when not given
+  (an app that deploys from no branch needs it); `--no-db` does
   not clone the databases the app uses. The server answers the task that makes
   the preview - clones the app, deploys it - and the command waits for it,
   following its log, as `job run` does (`--no-wait`, `--timeout`).
@@ -44,25 +45,28 @@ request, each an app of its own.
 An app's data backups: snapshots of its volumes, made by its data backup jobs.
 
 - `backup ls [--repo R]`: the snapshots the app sees - time, id, what was backed
-  up (volume and path), size, the job that made it, tags; the newest first.
+  up (volume and path), size, the job that made it, tags; the newest 100 first,
+  with how many there are when there are more. `--repo` is the server's filter.
 - `backup run [JOB]`: runs a data backup job now and waits for it, as `job run`
   does; the app's one data backup job when there is one, else it is named.
 - `backup files SNAPSHOT [PATH]`: what a snapshot holds, at PATH.
 - `backup download SNAPSHOT PATH [-O FILE]`: one file of a snapshot, to FILE -
-  PATH's last part by default - or `-` for stdout.
+  PATH's last part by default - or `-` for stdout. A FILE that is there is
+  replaced with `--force` alone, and only once the whole file has come.
 - `backup restore SNAPSHOT`: writes a snapshot into the app's volume and waits
   for the task, following its log. `--volume V` and `--subpath S` - where in
   the volume - default to where the snapshot's job backed up, when the data
-  goes back into the app it came from;
+  goes back into the app it came from (in the job's own volume, its subpath);
   `--path P` (a directory of the snapshot alone), `--mode replace|overwrite`
-  (replace by default: the directory as it was, the old one kept aside;
-  overwrite writes over what is there), `--stop-app` (stopped during it,
-  started after), `--to APP` (another app of the environment). It changes data:
+  (replace by default: the directory as it was, the old one kept aside, the
+  app stopped during it, as the server has it; overwrite writes over what is
+  there), `--stop-app` (an overwrite stopped during it, started after), `--to APP` (another app of the environment). It changes data:
   asked at a terminal, `--yes` elsewhere.
 - `backup rm SNAPSHOT`: deletes a snapshot from its repository; asked, or
   `--yes`.
 
-A snapshot is given by its id or short id, as `ls` shows them. Restoring a
+A snapshot is given by its id or short id, as `ls` shows them, however old:
+the server looks for it. Restoring a
 command's snapshot (a database dump fed to a command) is the dashboard's.
 
 ## compose up
@@ -76,8 +80,10 @@ import does.
 2. **What it reads:** the server says the files the compose file needs (an
    `env_file`, a config, a mounted file, an `include`); they are read from
    beside the file and sent with it - a mounted directory's files when they fit
-   what the server takes (100 files, 5 MB, 500 KB each), said otherwise. An
-   included compose file missing stops it, named; another is said and left out.
+   what the server takes (100 files, 5 MB, 500 KB each), said otherwise - and
+   the review is asked again until it has a plan and nothing more to give. A
+   path out of the compose file's directory is not read. An included compose
+   file missing stops it, named; another is said and left out.
 3. **Its variables:** `--var K=V` gives one; a required one with no value is
    asked at a terminal - hidden when the server takes it for a secret - and
    refused elsewhere, all of them named.

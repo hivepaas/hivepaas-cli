@@ -85,3 +85,31 @@ func TestPreviewRm(t *testing.T) {
 	require.Equal(t, exitcode.OK, r.code, r.stderr)
 	assert.Equal(t, 1, f.called("DELETE /api/projects/P1/production/apps/V1"))
 }
+
+// Without --ref the preview builds the branch the app deploys from; an app
+// with none needs --ref.
+func TestPreviewCreateBuildsTheAppsBranch(t *testing.T) {
+	quickly(t)
+	f := newFakeAPI(t)
+	f.json("POST "+appPath+"/previews/prepare", http.StatusOK, `{"data":{"enabled":true,"canCloneDbApps":true,
+		"canSkipCloningDbApps":true,"repoURL":"https://github.com/acme/api.git"}}`)
+	f.handle("GET "+appPath+"/deployment-settings", func(w http.ResponseWriter, _ *http.Request, n int) {
+		if n == 0 {
+			_, _ = w.Write([]byte(`{"data":{"activeMethod":"repo","repoSource":{"repoType":"github",
+				"repoURL":"https://github.com/acme/api.git","repoRef":"main"}}}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"data":{"activeMethod":"image"}}`))
+	})
+	f.json("POST "+appPath+"/previews", http.StatusCreated, `{"data":{"id":"T5"}}`)
+	fakeDoneTask(f, "T5", "Created preview api-main")
+
+	r := f.run(args("preview create " + shopAPI)...)
+	require.Equal(t, exitcode.OK, r.code, r.stderr)
+	assert.Equal(t, "main", f.body("POST "+appPath+"/previews", 0)["repoRef"])
+
+	r = f.run(args("preview create " + shopAPI)...)
+	assert.Equal(t, exitcode.Usage, r.code)
+	assert.Contains(t, r.stderr, "--ref")
+	assert.Equal(t, 1, f.called("POST "+appPath+"/previews"))
+}

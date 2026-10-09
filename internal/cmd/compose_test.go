@@ -3,6 +3,7 @@ package cmd
 import (
 	"net/http"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -144,4 +145,48 @@ func TestComposeUpIntoAProject(t *testing.T) {
 	assert.Equal(t, "staging", project["env"])
 	assert.Equal(t, true, project["newEnv"])
 	assert.Equal(t, false, f.body("POST /api/projects/P1/from-compose/apply", 0)["deploy"])
+}
+
+// A plan can come while files the compose file reads are not given yet: they
+// are sent, and the plan asked for again, before it is shown.
+func TestComposeUpSendsTheFilesAPlanReads(t *testing.T) {
+	f := newFakeAPI(t)
+	unread := strings.Replace(composePlanned, `"given":true}],"profiles"`, `"given":false}],"profiles"`, 1)
+	f.handle("POST /api/projects/from-compose/validate", func(w http.ResponseWriter, _ *http.Request, n int) {
+		_, _ = w.Write([]byte([]string{unread, composePlanned}[min(n, 1)]))
+	})
+	f.json("POST /api/projects/from-compose/apply", http.StatusOK, `{"data":{"project":{"id":"P9"},"apps":[],
+		"deployments":[]}}`)
+	dir := dirWith(t, map[string]string{"compose.yaml": composeFile, "app.env": "LOG_LEVEL=info\n"})
+
+	r := f.run("compose", "up", "-f", filepath.Join(dir, "compose.yaml"), "--var", "DB_PASSWORD=x", "--yes")
+
+	require.Equal(t, exitcode.OK, r.code, r.stderr)
+	assert.Equal(t, 2, f.called("POST /api/projects/from-compose/validate"))
+	assert.Contains(t, f.body("POST /api/projects/from-compose/apply", 0)["files"], "app.env")
+}
+
+// What the server would refuse is not sent, and said: a path out of the
+// compose file's directory, an absolute one, a file over 500 KB.
+func TestComposeUpLeavesOutWhatTheServerRefuses(t *testing.T) {
+	f := newFakeAPI(t)
+	f.json("POST /api/projects/from-compose/validate", http.StatusOK, `{"data":{"project":{"name":"x",
+		"env":"production","newEnv":true},"services":[],"variables":[],"profiles":[],
+		"needs":[{"path":"../outside.txt","as":"config","by":["web"],"given":false},
+			{"path":"/etc/hosts","as":"bind","by":["web"],"given":false},
+			{"path":"big.bin","as":"bind","by":["web"],"given":false}],
+		"plan":{"planHash":"H4","summary":{},"bundle":{},"nodes":[]}}}`)
+	f.json("POST /api/projects/from-compose/apply", http.StatusOK, `{"data":{"project":{"id":"P9"},"apps":[],
+		"deployments":[]}}`)
+	root := dirWith(t, map[string]string{"outside.txt": "secret", "stack/compose.yaml": "services: {}\n",
+		"stack/big.bin": strings.Repeat("x", 600<<10)})
+
+	r := f.run("compose", "up", "-f", filepath.Join(root, "stack", "compose.yaml"), "--no-deploy", "--yes")
+
+	require.Equal(t, exitcode.OK, r.code, r.stderr)
+	assert.Equal(t, 1, f.called("POST /api/projects/from-compose/validate"), "nothing more to give")
+	assert.Empty(t, f.body("POST /api/projects/from-compose/apply", 0)["files"])
+	for _, want := range []string{"../outside.txt", "/etc/hosts", "big.bin"} {
+		assert.Contains(t, r.stderr, want)
+	}
 }

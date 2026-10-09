@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -91,11 +92,13 @@ func (a *App) composeUpCmd() *cobra.Command {
 }
 
 // composeInput is what a review is asked with, and the files that can give
-// what it needs.
+// what it needs: their size in all, and the needs already given or left out.
 type composeInput struct {
 	dir   string
 	body  api.SpecdtoValidateComposeReq
 	files map[string][]int
+	size  int
+	tried map[string]bool
 	vars  map[string]api.SpecdtoComposeVariableReq
 }
 
@@ -177,7 +180,8 @@ func readCompose(flags composeFlags) (*composeInput, error) {
 	if err != nil {
 		return nil, err
 	}
-	in := &composeInput{dir: dir, files: map[string][]int{}, vars: map[string]api.SpecdtoComposeVariableReq{}}
+	in := &composeInput{dir: dir, files: map[string][]int{}, tried: map[string]bool{},
+		vars: map[string]api.SpecdtoComposeVariableReq{}}
 	for _, pair := range pairs {
 		in.vars[pair[0]] = api.SpecdtoComposeVariableReq{Value: ptr(pair[1])}
 	}
@@ -189,7 +193,7 @@ func readCompose(flags composeFlags) (*composeInput, error) {
 
 // composeReview asks the server what the compose file would make, round after
 // round - each giving the files and the variables the last one asked for -
-// until it answers a plan.
+// until it answers a plan with nothing more to give.
 func (a *App) composeReview(ctx context.Context, c *client.Client, project *api.ProjectdtoProjectResp,
 	in *composeInput,
 ) (*api.SpecdtoValidateComposeData, error) {
@@ -198,16 +202,18 @@ func (a *App) composeReview(ctx context.Context, c *client.Client, project *api.
 		if err != nil {
 			return nil, err
 		}
-		if review.Plan != nil {
-			return review, nil
-		}
 		added, err := in.giveFiles(review, a)
 		if err != nil {
 			return nil, err
 		}
-		given, err := a.giveVariables(ctx, review, in)
-		if err != nil {
-			return nil, err
+		if review.Plan != nil && !added {
+			return review, nil
+		}
+		given := false
+		if review.Plan == nil {
+			if given, err = a.giveVariables(ctx, review, in); err != nil {
+				return nil, err
+			}
 		}
 		if !added && !given {
 			return nil, exitcode.New(exitcode.Invalid, "the server makes no plan of the compose file, and says "+
@@ -236,48 +242,76 @@ func composeValidate(ctx context.Context, c *client.Client, project *api.Project
 }
 
 // giveFiles reads, from beside the compose file, the files the review says it
-// reads and were not given; a directory's files when they fit. A compose file
-// an include reads, missing, stops it.
+// reads and were not given; a directory's files when they fit. What the server
+// would refuse - a path out of the compose file's directory, more than it takes
+// - is left out, said; a compose file an include reads stops it.
 func (in *composeInput) giveFiles(review *api.SpecdtoValidateComposeData, a *App) (bool, error) {
 	added := false
 	for _, need := range resolve.Deref(review.Needs) {
-		if need.Given {
+		if need.Given || in.tried[need.Path] {
 			continue
 		}
-		local := filepath.Join(in.dir, filepath.FromSlash(need.Path))
-		if need.As == needDirectory {
-			if in.giveDirectory(need.Path, local, a) {
-				added = true
-			}
-			continue
-		}
-		if _, there := in.files[need.Path]; there {
-			continue
-		}
-		data, err := os.ReadFile(local) //nolint:gosec // a file the compose file reads, beside it
-		if err != nil {
+		in.tried[need.Path] = true
+		leaveOut := func(why string) error {
 			if need.As == needCompose {
-				return false, exitcode.New(exitcode.Usage, "%s, which the compose file includes, is not there: %v",
-					need.Path, err)
+				return exitcode.New(exitcode.Usage, "%s, which the compose file includes, %s", need.Path, why)
 			}
-			a.printer.Warnf("%s, which %s reads, is not there: it is left out", need.Path,
-				strings.Join(resolve.Deref(need.By), ", "))
+			a.printer.Warnf("%s, which %s reads, %s: it is left out", need.Path,
+				strings.Join(resolve.Deref(need.By), ", "), why)
+			return nil
+		}
+		clean, ok := cleanPath(need.Path)
+		if !ok {
+			if err := leaveOut("is not under the compose file's directory"); err != nil {
+				return false, err
+			}
 			continue
 		}
-		in.files[need.Path] = bytesOf(data)
-		added = true
+		local := filepath.Join(in.dir, filepath.FromSlash(clean))
+		var files map[string][]int
+		var why string
+		if need.As == needDirectory {
+			files, why = in.readDirectory(local)
+		} else {
+			files, why = in.readFile(need.Path, local)
+		}
+		if why != "" {
+			if err := leaveOut(why); err != nil {
+				return false, err
+			}
+			continue
+		}
+		for name, data := range files {
+			in.files[name] = data
+			in.size += len(data)
+		}
+		added = added || len(files) > 0
 	}
 	return added, nil
 }
 
-// giveDirectory gives the files under a directory a service mounts, when they
-// fit what the server takes; it says so when they do not.
-func (in *composeInput) giveDirectory(path, local string, a *App) bool {
+// tooMuch is why files are left out that are more than the server takes.
+var tooMuch = fmt.Sprintf("is more than the server takes (%d files, %s in all, %s a file)", composeFilesMax,
+	sizeOf(composeFilesMaxSize), sizeOf(composeFileMaxSize))
+
+// readFile reads a file a compose file needs, as name; why it is not given
+// otherwise.
+func (in *composeInput) readFile(name, local string) (map[string][]int, string) {
+	data, err := os.ReadFile(local) //nolint:gosec // a file the compose file reads, under its directory
+	if err != nil {
+		return nil, "is not there"
+	}
+	if !in.fits(1, len(data)) || len(data) > composeFileMaxSize {
+		return nil, tooMuch
+	}
+	return map[string][]int{name: bytesOf(data)}, ""
+}
+
+// readDirectory reads the files under a directory a service mounts, when they
+// fit what the server takes; why they are not given otherwise.
+func (in *composeInput) readDirectory(local string) (map[string][]int, string) {
 	files := map[string][]int{}
 	size := 0
-	for _, f := range in.files {
-		size += len(f)
-	}
 	fits := true
 	err := filepath.WalkDir(local, func(p string, entry fs.DirEntry, err error) error {
 		if err != nil || entry.IsDir() || !entry.Type().IsRegular() {
@@ -292,24 +326,42 @@ func (in *composeInput) giveDirectory(path, local string, a *App) bool {
 			return err //nolint:wrapcheck // said below
 		}
 		size += len(data)
-		if len(data) > composeFileMaxSize || size > composeFilesMaxSize ||
-			len(in.files)+len(files) >= composeFilesMax {
+		if len(data) > composeFileMaxSize || !in.fits(len(files)+1, size) {
 			fits = false
 			return filepath.SkipAll
 		}
 		files[filepath.ToSlash(rel)] = bytesOf(data)
 		return nil
 	})
-	if err != nil || !fits || len(files) == 0 {
-		if err == nil && !fits {
-			a.printer.Warnf("the files under %s are more than the server takes: they are left out", path)
-		}
-		return false
+	switch {
+	case errors.Is(err, fs.ErrNotExist):
+		return nil, "is not there"
+	case err != nil:
+		return nil, "cannot be read"
+	case !fits:
+		return nil, tooMuch
 	}
-	for name, data := range files {
-		in.files[name] = data
+	return files, ""
+}
+
+// fits says n more files of size bytes in all fit, with those given, what the
+// server takes.
+func (in *composeInput) fits(n, size int) bool {
+	return len(in.files)+n <= composeFilesMax && in.size+size <= composeFilesMaxSize
+}
+
+// cleanPath is a path a compose file reads, relative to it, as the server takes
+// one; false for one that is absolute or leaves its directory.
+func cleanPath(p string) (string, bool) {
+	p = filepath.ToSlash(strings.TrimSpace(p))
+	if p == "" || path.IsAbs(p) || filepath.IsAbs(p) {
+		return "", false
 	}
-	return true
+	cleaned := path.Clean(p)
+	if cleaned == ".." || strings.HasPrefix(cleaned, "../") {
+		return "", false
+	}
+	return cleaned, true
 }
 
 // countOf is n things, said: 1 app, 2 apps.

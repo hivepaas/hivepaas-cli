@@ -136,3 +136,127 @@ func TestBackupRun(t *testing.T) {
 	assert.Contains(t, r.stderr, "backup-data")
 	assert.Contains(t, r.stderr, "backup-db")
 }
+
+const snapshotS1 = `{"data":[{"id":"S1","shortId":"a1b2c3d4","snapshotId":"a1b2c3d4e5f6",
+	"time":"2026-10-09T10:00:00Z","sizeBytes":2097152,"paths":["/data"],"repo":{"id":"R1","name":"nightly"},
+	"app":{"id":"A1","name":"api"}}],"meta":{"page":{"offset":0,"limit":100,"total":250}},
+	"repos":[{"id":"R1","name":"nightly"},{"id":"R2","name":"offsite"}]}`
+
+// A snapshot is found however old it is: the server looks for it, by its short
+// id - the start of the repository's id - or the record's id.
+func TestBackupFindsAnOldSnapshot(t *testing.T) {
+	f := newFakeAPI(t)
+	f.handle("GET "+appPath+"/backup-snapshots", func(w http.ResponseWriter, r *http.Request, _ int) {
+		if r.URL.Query().Get("search") == "e5f6a7b8" {
+			_, _ = w.Write([]byte(snapshotsBody))
+			return
+		}
+		_, _ = w.Write([]byte(snapshotS1))
+	})
+	f.json("GET "+appPath+"/backup-snapshots/S2", http.StatusOK, `{"data":{"id":"S2","shortId":"e5f6a7b8",
+		"snapshotId":"e5f6a7b8c9d0","time":"2026-10-08T10:00:00Z","app":{"id":"A1","name":"api"}}}`)
+	f.json("DELETE "+appPath+"/backup-snapshots/S2", http.StatusOK, `{}`)
+
+	for i, id := range []string{"e5f6a7b8", "e5f6a7b8c9d0", "S2"} {
+		r := f.run(args("backup rm " + id + " --yes " + shopAPI)...)
+		require.Equal(t, exitcode.OK, r.code, r.stderr)
+		assert.Equal(t, i+1, f.called("DELETE "+appPath+"/backup-snapshots/S2"), id)
+	}
+	assert.Equal(t, exitcode.NotFound, f.run(args("backup rm 0badc0de --yes "+shopAPI)...).code)
+}
+
+// ls says when it shows the newest only, and --repo is the server's filter.
+func TestBackupLsSaysWhatItLeavesOut(t *testing.T) {
+	f := newFakeAPI(t)
+	f.handle("GET "+appPath+"/backup-snapshots", func(w http.ResponseWriter, r *http.Request, _ int) {
+		if r.URL.Query().Get("repo") == "R2" {
+			_, _ = w.Write([]byte(`{"data":[{"id":"S2","shortId":"e5f6a7b8","time":"2026-01-08T10:00:00Z",
+				"repo":{"id":"R2","name":"offsite"}}],"meta":{"page":{"total":1}},
+				"repos":[{"id":"R1","name":"nightly"},{"id":"R2","name":"offsite"}]}`))
+			return
+		}
+		_, _ = w.Write([]byte(snapshotS1))
+	})
+
+	r := f.run(args("backup ls " + shopAPI)...)
+	require.Equal(t, exitcode.OK, r.code, r.stderr)
+	assert.Contains(t, r.stderr, "the newest 1 of 250")
+
+	r = f.run(args("backup ls --repo offsite " + shopAPI)...)
+	require.Equal(t, exitcode.OK, r.code, r.stderr)
+	assert.Contains(t, r.stdout, "e5f6a7b8")
+	assert.NotContains(t, r.stderr, "newest")
+}
+
+// download writes over no file that is there unless --force, and leaves none
+// behind when the file does not all come.
+func TestBackupDownloadKeepsWhatIsThere(t *testing.T) {
+	f := newFakeAPI(t)
+	f.json("GET "+appPath+"/backup-snapshots", http.StatusOK, snapshotsBody)
+	f.handle("GET "+appPath+"/backup-snapshots/S1/download", func(w http.ResponseWriter, r *http.Request, _ int) {
+		w.Header().Set("Content-Type", "application/octet-stream")
+		if r.URL.Query().Get("path") == "cut.bin" {
+			w.Header().Set("Content-Length", "100")
+			_, _ = w.Write([]byte("PART"))
+			return
+		}
+		_, _ = w.Write([]byte("PNGDATA"))
+	})
+	dir := dirWith(t, map[string]string{"logo.png": "OLD", "cut.bin": "OLD"})
+	logo, cut := filepath.Join(dir, "logo.png"), filepath.Join(dir, "cut.bin")
+
+	r := f.run(append(args("backup download a1b2c3d4 logo.png "+shopAPI+" -O"), logo)...)
+	assert.Equal(t, exitcode.Usage, r.code)
+	assert.Contains(t, r.stderr, "--force")
+	assert.Equal(t, "OLD", readFile(t, logo))
+
+	r = f.run(append(args("backup download a1b2c3d4 logo.png --force "+shopAPI+" -O"), logo)...)
+	require.Equal(t, exitcode.OK, r.code, r.stderr)
+	assert.Equal(t, "PNGDATA", readFile(t, logo))
+
+	r = f.run(append(args("backup download a1b2c3d4 cut.bin --force "+shopAPI+" -O"), cut)...)
+	assert.NotEqual(t, exitcode.OK, r.code)
+	assert.Equal(t, "OLD", readFile(t, cut))
+	entries, err := os.ReadDir(dir)
+	require.NoError(t, err)
+	assert.Len(t, entries, 2, "nothing left behind")
+}
+
+// replace stops the app during it, as the server has it; overwrite does so
+// when asked.
+func TestBackupRestoreReplaceStopsTheApp(t *testing.T) {
+	quickly(t)
+	f := newFakeAPI(t)
+	f.json("GET "+appPath+"/backup-snapshots", http.StatusOK, snapshotsBody)
+	f.json("POST "+appPath+"/backup-snapshots/S1/restore", http.StatusOK, `{"data":{"task":{"id":"T7"}}}`)
+	fakeDoneTask(f, "T7", "restored")
+
+	r := f.run(args("backup restore a1b2c3d4 --yes " + shopAPI)...)
+	require.Equal(t, exitcode.OK, r.code, r.stderr)
+	assert.Equal(t, true, f.body("POST "+appPath+"/backup-snapshots/S1/restore", 0)["stopApp"])
+
+	r = f.run(args("backup restore a1b2c3d4 --mode overwrite --yes " + shopAPI)...)
+	require.Equal(t, exitcode.OK, r.code, r.stderr)
+	assert.Equal(t, false, f.body("POST "+appPath+"/backup-snapshots/S1/restore", 1)["stopApp"])
+}
+
+// --volume naming the job's own volume keeps where in it the job backed up.
+func TestBackupRestoreIntoTheJobsVolume(t *testing.T) {
+	quickly(t)
+	f := newFakeAPI(t)
+	f.json("GET "+appPath+"/backup-snapshots", http.StatusOK, snapshotsBody)
+	f.json("GET /api/projects/P1/cluster-volumes", http.StatusOK,
+		`{"data":[{"id":"V2","name":"data"},{"id":"V3","name":"other"}]}`)
+	f.json("POST "+appPath+"/backup-snapshots/S1/restore", http.StatusOK, `{"data":{"task":{"id":"T7"}}}`)
+	fakeDoneTask(f, "T7", "restored")
+
+	r := f.run(args("backup restore a1b2c3d4 --volume data --yes " + shopAPI)...)
+	require.Equal(t, exitcode.OK, r.code, r.stderr)
+	body := f.body("POST "+appPath+"/backup-snapshots/S1/restore", 0)
+	assert.Equal(t, map[string]any{"id": "V2"}, body["volume"])
+	assert.Equal(t, "uploads", body["subpath"])
+
+	r = f.run(args("backup restore a1b2c3d4 --volume data --subpath media --yes " + shopAPI)...)
+	require.Equal(t, exitcode.OK, r.code, r.stderr)
+	assert.Equal(t, "media", f.body("POST "+appPath+"/backup-snapshots/S1/restore", 1)["subpath"])
+}

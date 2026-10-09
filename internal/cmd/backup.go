@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"slices"
 	"strings"
 	"time"
@@ -38,45 +40,78 @@ func (a *App) backupCmd() *cobra.Command {
 	return cmd
 }
 
-// snapshots are the snapshots the selected app sees, the newest first, and the
-// repositories they are in.
-func snapshots(ctx context.Context, c *client.Client, sel *selection, search string) (
-	[]api.BackupsnapshotdtoBackupSnapshotResp, []api.SettingsBaseSettingResp, error,
-) {
+// snapshotList is a page of the snapshots the selected app sees, the newest
+// first, of total; and the repositories they are in.
+type snapshotList struct {
+	items []api.BackupsnapshotdtoBackupSnapshotResp
+	repos []api.SettingsBaseSettingResp
+	total int
+}
+
+// snapshots are the newest of the snapshots the selected app sees: those
+// search finds - by short id or description - in repo, when given.
+func snapshots(ctx context.Context, c *client.Client, sel *selection, search, repo string) (*snapshotList, error) {
 	params := &api.ListAppBackupSnapshotParams{PageLimit: ptr(snapshotsListed)}
 	if search != "" {
 		params.Search = &search
 	}
+	if repo != "" {
+		params.Repo = &[]string{repo}
+	}
 	resp, err := c.ListAppBackupSnapshotWithResponse(ctx, sel.Project.Id, sel.Env, sel.App.Id, params)
 	if err = client.Check(resp, err); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
+	list := &snapshotList{}
 	if resp.JSON200 == nil {
-		return nil, nil, nil
+		return list, nil
 	}
-	list := resolve.Deref(resp.JSON200.Data)
-	slices.SortStableFunc(list, func(x, y api.BackupsnapshotdtoBackupSnapshotResp) int {
+	list.items, list.repos = resolve.Deref(resp.JSON200.Data), resolve.Deref(resp.JSON200.Repos)
+	slices.SortStableFunc(list.items, func(x, y api.BackupsnapshotdtoBackupSnapshotResp) int {
 		return strings.Compare(y.Time, x.Time)
 	})
-	return list, resolve.Deref(resp.JSON200.Repos), nil
+	list.total = len(list.items)
+	if m := resp.JSON200.Meta; m != nil && m.Page != nil {
+		list.total = max(list.total, m.Page.Total)
+	}
+	return list, nil
 }
 
-// snapshot is the snapshot of the selected app input names: its id, short id,
-// or the repository's id of it.
+// shortIDLen is how long a snapshot's short id is: the start of the
+// repository's id of it.
+const shortIDLen = 8
+
+// snapshot is the snapshot of the selected app input names, however old: its
+// short id or the repository's id of it, which the server looks for, or the
+// record's id.
 func snapshot(ctx context.Context, c *client.Client, sel *selection, input string) (
 	*api.BackupsnapshotdtoBackupSnapshotResp, error,
 ) {
-	list, _, err := snapshots(ctx, c, sel, "")
-	if err != nil {
-		return nil, err
+	searches := []string{input}
+	if len(input) > shortIDLen {
+		searches = append(searches, input[:shortIDLen])
 	}
-	for i := range list {
-		if s := &list[i]; s.Id == input || s.ShortId == input || s.SnapshotId == input {
-			return s, nil
+	for _, search := range searches {
+		list, err := snapshots(ctx, c, sel, search, "")
+		if err != nil {
+			return nil, err
+		}
+		for i := range list.items {
+			if s := &list.items[i]; s.Id == input || s.ShortId == input || s.SnapshotId == input {
+				return s, nil
+			}
 		}
 	}
-	return nil, exitcode.New(exitcode.NotFound, "%s has no snapshot %s: hivepaas backup ls%s lists them",
+	notFound := exitcode.New(exitcode.NotFound, "%s has no snapshot %s: hivepaas backup ls%s lists them",
 		sel.App.Name, input, sel.flags())
+	resp, err := c.GetAppBackupSnapshotWithResponse(ctx, sel.Project.Id, sel.Env, sel.App.Id, input)
+	if err != nil {
+		return nil, client.Unreachable(err)
+	}
+	if resp.StatusCode() != http.StatusOK || resp.JSON200 == nil || resp.JSON200.Data == nil {
+		return nil, notFound
+	}
+	return resp.JSON200.Data, nil
 }
 
 func (a *App) backupLsCmd() *cobra.Command {
@@ -94,21 +129,28 @@ func (a *App) backupLsCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			list, repos, err := snapshots(cmd.Context(), c, sel, "")
+			list, err := snapshots(cmd.Context(), c, sel, "", "")
 			if err != nil {
 				return err
 			}
 			if repo != "" {
-				found, err := resolve.Setting("backup repository", repo, " of "+sel.App.Name, repos,
+				found, err := resolve.Setting("backup repository", repo, " of "+sel.App.Name, list.repos,
 					func(r api.SettingsBaseSettingResp) (string, string) { return r.Id, r.Name })
 				if err != nil {
 					return err
 				}
-				list = slices.DeleteFunc(list, func(s api.BackupsnapshotdtoBackupSnapshotResp) bool {
+				if list, err = snapshots(cmd.Context(), c, sel, "", found.Id); err != nil {
+					return err
+				}
+				list.items = slices.DeleteFunc(list.items, func(s api.BackupsnapshotdtoBackupSnapshotResp) bool {
 					return s.Repo == nil || s.Repo.Id != found.Id
 				})
 			}
-			return a.showSnapshots(list)
+			if list.total > len(list.items) {
+				a.printer.Infof("Showing the newest %d of %d snapshots; --repo narrows them.", len(list.items),
+					list.total)
+			}
+			return a.showSnapshots(list.items)
 		},
 	}
 	cmd.Flags().StringVar(&repo, "repo", "", "only the snapshots of this backup repository")
@@ -245,21 +287,29 @@ const downloadTimeout = 2 * time.Hour
 
 func (a *App) backupDownloadCmd() *cobra.Command {
 	var to string
+	var force bool
 	cmd := &cobra.Command{
 		Use:   "download SNAPSHOT PATH",
 		Short: "Write one file of a snapshot to a local file, or stdout",
 		Long: "Write the file at PATH of a snapshot to -O FILE - by default PATH's last part, here - or with\n" +
-			"-O - to stdout.",
+			"-O - to stdout. A file that is there is replaced with --force alone, once the whole file has come.",
 		Args: usageArgs(cobra.ExactArgs(2)), //nolint:mnd // the snapshot and the path
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return a.backupDownload(cmd.Context(), args[0], args[1], to)
+			return a.backupDownload(cmd.Context(), args[0], args[1], to, force)
 		},
 	}
 	cmd.Flags().StringVarP(&to, "output-file", "O", "", "the file to write; - for stdout")
+	cmd.Flags().BoolVar(&force, "force", false, "replace the file when it exists")
 	return cmd
 }
 
-func (a *App) backupDownload(ctx context.Context, id, file, to string) error {
+func (a *App) backupDownload(ctx context.Context, id, file, to string, force bool) error {
+	if to == "" {
+		to = path.Base(file)
+	}
+	if _, err := os.Lstat(to); err == nil && to != "-" && !force {
+		return exitcode.New(exitcode.Usage, "%s exists: give --force to replace it", to)
+	}
 	c, err := a.clientWithTimeout(downloadTimeout)
 	if err != nil {
 		return err
@@ -282,26 +332,39 @@ func (a *App) backupDownload(ctx context.Context, id, file, to string) error {
 		body, _ := io.ReadAll(resp.Body)
 		return client.CheckStatus(resp.StatusCode, body)
 	}
-	var out = a.stdout
-	if to != "-" {
-		if to == "" {
-			to = path.Base(file)
+	if to == "-" {
+		if _, err = io.Copy(a.stdout, resp.Body); err != nil {
+			return fmt.Errorf("downloading %s: %w", file, err)
 		}
-		f, err := os.Create(to) //nolint:gosec // the file the command line names
-		if err != nil {
-			return fmt.Errorf("writing %s: %w", to, err)
-		}
-		defer f.Close()
-		out = f
+		return nil
 	}
-	n, err := io.Copy(out, resp.Body)
+	n, err := writeWhole(to, resp.Body)
 	if err != nil {
-		return fmt.Errorf("downloading %s: %w", file, err)
+		return fmt.Errorf("downloading %s to %s: %w", file, to, err)
 	}
-	if to != "-" {
-		a.printer.Successf("Wrote %s, %s.", to, sizeOf(n))
-	}
+	a.printer.Successf("Wrote %s, %s.", to, sizeOf(n))
 	return nil
+}
+
+// writeWhole writes what r gives to name once all of it has come: into a file
+// beside it first, which takes its place; nothing is left when r fails.
+func writeWhole(name string, r io.Reader) (int64, error) {
+	tmp, err := os.CreateTemp(filepath.Dir(name), "."+filepath.Base(name)+".*")
+	if err != nil {
+		return 0, err //nolint:wrapcheck // said by the caller
+	}
+	n, err := io.Copy(tmp, r)
+	if closeErr := tmp.Close(); err == nil {
+		err = closeErr
+	}
+	if err == nil {
+		err = os.Rename(tmp.Name(), name)
+	}
+	if err != nil {
+		_ = os.Remove(tmp.Name())
+		return 0, err //nolint:wrapcheck // said by the caller
+	}
+	return n, nil
 }
 
 type backupRestoreFlags struct {
@@ -317,9 +380,9 @@ func (a *App) backupRestoreCmd() *cobra.Command {
 		Short: "Write a snapshot back into an app's volume, and wait for it",
 		Long: "Write a snapshot back into an app's volume - where its job backed it up, when the data goes\n" +
 			"back into the app it came from - and wait for the task, following its log. replace, the mode by\n" +
-			"default, makes the directory what it was, the old one kept aside; overwrite writes over what is\n" +
-			"there. It changes data: asked at a terminal, --yes elsewhere.",
-		Example: "  hivepaas backup restore a1b2c3d4 --stop-app\n" +
+			"default, makes the directory what it was, the old one kept aside, the app stopped during it;\n" +
+			"overwrite writes over what is there. It changes data: asked at a terminal, --yes elsewhere.",
+		Example: "  hivepaas backup restore a1b2c3d4\n" +
 			"  hivepaas backup restore a1b2c3d4 --to api-staging --volume data --subpath uploads --yes",
 		Args: usageArgs(cobra.ExactArgs(1)),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -332,7 +395,7 @@ func (a *App) backupRestoreCmd() *cobra.Command {
 	f.StringVar(&flags.path, "path", "", "a directory of the snapshot to restore alone")
 	f.StringVar(&flags.mode, "mode", string(api.BackupRestoreModeReplace), "replace or overwrite")
 	f.StringVar(&flags.to, "to", "", "another app of the environment to write into")
-	f.BoolVar(&flags.stopApp, "stop-app", false, "stop the app during the restore, and start it after")
+	f.BoolVar(&flags.stopApp, "stop-app", false, "stop the app during an overwrite, start it after; replace always does")
 	f.BoolVarP(&flags.yes, "yes", "y", false, "do not ask: for a script")
 	f.BoolVar(&flags.noWait, "no-wait", false, "start the restore and return")
 	f.DurationVar(&flags.timeout, "timeout", defaultRestoreTimeout, "how long to wait for it")
@@ -364,7 +427,10 @@ func (a *App) backupRestore(ctx context.Context, id string, flags backupRestoreF
 		}
 		target = &selection{Project: sel.Project, Env: sel.Env, App: app}
 	}
-	req := api.BackupsnapshotdtoRestoreBackupSnapshotReq{Mode: mode, SnapshotPath: flags.path, StopApp: flags.stopApp,
+	// replace moves the directory aside: the app is stopped for it, as the
+	// server has it.
+	stopApp := flags.stopApp || mode == api.BackupRestoreModeReplace
+	req := api.BackupsnapshotdtoRestoreBackupSnapshotReq{Mode: mode, SnapshotPath: flags.path, StopApp: stopApp,
 		TargetApp: api.BasedtoObjectIDReq{Id: target.App.Id}, Subpath: flags.subpath}
 	volumeName, err := restoreVolume(ctx, c, sel, target, s, flags, &req)
 	if err != nil {
@@ -377,7 +443,11 @@ func (a *App) backupRestore(ctx context.Context, id string, flags backupRestoreF
 			what += " at " + req.Subpath
 		}
 	}
-	what += " (" + string(mode) + ")"
+	what += " (" + string(mode)
+	if stopApp {
+		what += ", the app stopped during it"
+	}
+	what += ")"
 	if err = a.confirm(ctx, "restoring "+what, target.App.Name, flags.yes); err != nil {
 		return err
 	}
@@ -395,14 +465,18 @@ func (a *App) backupRestore(ctx context.Context, id string, flags backupRestoreF
 
 // restoreVolume sets the volume a restore writes into, and answers its name:
 // the one --volume names, else where the snapshot's job backed up when the data
-// goes back into its app; none otherwise, the server's to refuse.
+// goes back into its app; none otherwise, the server's to refuse. In the job's
+// own volume, the subpath is the job's unless --subpath says another.
 func restoreVolume(ctx context.Context, c *client.Client, sel, target *selection,
 	s *api.BackupsnapshotdtoBackupSnapshotResp, flags backupRestoreFlags,
 	req *api.BackupsnapshotdtoRestoreBackupSnapshotReq,
 ) (string, error) {
-	r := resolve.New(c)
+	fromJob := s.Job != nil && s.App != nil && s.App.Id == target.App.Id
+	if flags.volume == "" && !fromJob {
+		return "", nil
+	}
+	volumes, err := resolve.New(c).Volumes(ctx, sel.Project.Id)
 	if flags.volume != "" {
-		volumes, err := r.Volumes(ctx, sel.Project.Id)
 		if err != nil {
 			return "", err
 		}
@@ -411,21 +485,16 @@ func restoreVolume(ctx context.Context, c *client.Client, sel, target *selection
 			return "", err
 		}
 		req.Volume.Id = v.Id
-		return v.Name, nil
+	} else {
+		req.Volume.Id = textOf(s.Job.SourceVolumeId)
 	}
-	if s.Job == nil || s.App == nil || s.App.Id != target.App.Id {
-		return "", nil
-	}
-	req.Volume.Id = textOf(s.Job.SourceVolumeId)
-	if flags.subpath == "" {
+	if fromJob && flags.subpath == "" && req.Volume.Id == textOf(s.Job.SourceVolumeId) {
 		req.Subpath = textOf(s.Job.SourceVolumeSubpath)
 	}
 	// Said by its name when it is found.
-	if volumes, err := r.Volumes(ctx, sel.Project.Id); err == nil {
-		for _, v := range volumes {
-			if v.Id == req.Volume.Id {
-				return v.Name, nil
-			}
+	for _, v := range volumes {
+		if v.Id == req.Volume.Id {
+			return v.Name, nil
 		}
 	}
 	return req.Volume.Id, nil

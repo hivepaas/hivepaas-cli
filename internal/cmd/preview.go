@@ -99,7 +99,7 @@ func (a *App) previewCreateCmd() *cobra.Command {
 		},
 	}
 	f := cmd.Flags()
-	f.StringVar(&flags.ref, "ref", "", "the branch to build; the app's own when not given")
+	f.StringVar(&flags.ref, "ref", "", "the branch to build; the one the app deploys from when not given")
 	f.StringVar(&flags.subdomain, "subdomain", "", "the preview's subdomain; one is made when not given")
 	f.BoolVar(&flags.noDB, "no-db", false, "do not clone the databases the app uses")
 	f.BoolVar(&flags.noStart, "no-start", false, "make it, and do not start it")
@@ -127,11 +127,15 @@ func (a *App) previewCreate(ctx context.Context, flags previewCreateFlags) error
 		return exitcode.New(exitcode.Invalid, "previews of %s are off: its Feature Settings turn them on",
 			sel.App.Name)
 	}
+	repoRef, err := previewRef(ctx, c, sel, flags.ref)
+	if err != nil {
+		return err
+	}
 	for _, s := range resolve.Deref(can.WithheldSecrets) {
 		a.printer.Warnf("the preview is not given the secret %s (%s)", s.Name,
 			strings.Join(resolve.Deref(s.EnvVars), ", "))
 	}
-	req := api.ApppreviewdtoCreatePreviewReq{RepoRef: flags.ref, CustomSubdomain: flags.subdomain,
+	req := api.ApppreviewdtoCreatePreviewReq{RepoRef: repoRef, CustomSubdomain: flags.subdomain,
 		NoStart: flags.noStart}
 	if flags.noDB {
 		req.CloneDbApps = ptr(false)
@@ -146,6 +150,22 @@ func (a *App) previewCreate(ctx context.Context, flags previewCreateFlags) error
 	ref := taskRef{sel: sel, id: resp.JSON201.Data.Id}
 	a.printer.Infof("Making a preview of %s, task %s", sel.where(), ref.id)
 	return a.awaitTask(ctx, c, ref, flags.noWait, flags.timeout)
+}
+
+// previewRef is the branch a preview builds: ref, else the one the app deploys
+// from.
+func previewRef(ctx context.Context, c *client.Client, sel *selection, ref string) (string, error) {
+	if ref != "" {
+		return ref, nil
+	}
+	resp, err := c.GetAppDeploymentSettingsWithResponse(ctx, sel.Project.Id, sel.Env, sel.App.Id)
+	if err = client.Check(resp, err); err != nil {
+		return "", err
+	}
+	if d := resp.JSON200; d != nil && d.Data != nil && d.Data.RepoSource != nil && d.Data.RepoSource.RepoRef != "" {
+		return d.Data.RepoSource.RepoRef, nil
+	}
+	return "", exitcode.New(exitcode.Usage, "%s deploys from no repository branch: give --ref", sel.App.Name)
 }
 
 // awaitTask waits for a task as job run does - following its log, up to

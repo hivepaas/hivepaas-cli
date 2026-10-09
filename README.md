@@ -63,6 +63,7 @@ cd hello
 | `make spec-check SPEC=<file>` | build and test against another spec, as hivepaas's CI does for every change of its API |
 | `make release-manifest TAG=<tag>` | add a release to `release.json`, the list `hivepaas update` installs from: [docs/RELEASING.md](docs/RELEASING.md) |
 | `make keys-check RELEASEKEYS=<dir>` | the CLI trusts the release keys hivepaas signs with |
+| `make e2e` | the built CLI against a throwaway installation: the dashboard's `e2e/env/up.sh` first, then `HP_E2E_BASE_URL=http://localhost:10100`; [the design](docs/superpowers/specs/2026-10-09-cli-e2e-design.md) |
 
 A command that writes an object back - the deployment settings, the environment
 variables - carries every field of it through `internal/carry`, whose tests fail on

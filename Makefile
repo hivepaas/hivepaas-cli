@@ -1,7 +1,7 @@
 VERSION ?= dev
 LDFLAGS := -s -w -X github.com/hivepaas/hivepaas-cli/internal/version.Version=$(VERSION)
 
-.PHONY: build test lint gen update-spec spec-check release-manifest keys-check
+.PHONY: build test lint e2e gen update-spec spec-check release-manifest keys-check
 
 build:
 	go build -ldflags "$(LDFLAGS)" -o bin/hivepaas ./cmd/hivepaas
@@ -11,6 +11,11 @@ test:
 
 lint:
 	golangci-lint run ./...
+
+# The built CLI against a throwaway installation - the dashboard's e2e/env/up.sh -
+# at HP_E2E_BASE_URL. The build tag keeps these out of `make test`.
+e2e:
+	go test -tags e2e -count=1 -timeout 30m ./e2e/...
 
 # The client, from the pinned spec.
 gen:

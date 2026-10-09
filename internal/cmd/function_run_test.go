@@ -85,3 +85,28 @@ func TestFunctionRunAsJSON(t *testing.T) {
 	assert.Equal(t, `{"hello":"Ada"}`, out["body"])
 	assert.Equal(t, "ok", out["outcome"])
 }
+
+// The runtime's log lines are read: what the handler logged is its message,
+// and the line of the call itself is the status said already.
+func TestFunctionRunReadsTheRuntimesLogLines(t *testing.T) {
+	f := newFakeAPI(t)
+	f.json("POST "+testRunPath, http.StatusOK, `{"data":{"outcome":"ok","status":200,"body":"","durationMs":0.4,
+		"logs":"{\"hp\":\"log\",\"requestId\":\"r1\",\"msg\":\"GET /hello\"}\nprinted as it is\n`+
+		`{\"hp\":\"invocation\",\"requestId\":\"r1\",\"method\":\"GET\",\"path\":\"/\",\"status\":200}\n",
+		"exitCode":0,"librariesBuilt":false}}`)
+	dir := dirWith(t, map[string]string{"index.js": "x"})
+
+	r := f.run(append(args("function run "+shopAPI), dir)...)
+
+	require.Equal(t, exitcode.OK, r.code, r.stderr)
+	assert.Contains(t, r.stderr, "200 OK in 0.4 ms")
+	assert.Contains(t, r.stderr, "GET /hello\n")
+	assert.Contains(t, r.stderr, "printed as it is")
+	assert.NotContains(t, r.stderr, `"hp"`)
+}
+
+func TestDurationWords(t *testing.T) {
+	assert.Equal(t, "0.4 ms", durationWords(0.435))
+	assert.Equal(t, "12 ms", durationWords(12.4))
+	assert.Equal(t, "1.25s", durationWords(1250))
+}

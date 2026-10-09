@@ -1,13 +1,13 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -118,7 +118,7 @@ func (a *App) functionRun(ctx context.Context, args []string, flags functionRunF
 	for _, f := range code.Files {
 		files = append(files, api.AppsettingsdtoFunctionFileReq{Path: f.Path, Content: f.Content})
 	}
-	a.printer.Infof("Running %s with %s's code, %d files ...", sel.App.Name, dir, len(files))
+	a.printer.Infof("Running %s with the code in %s, %d files ...", sel.App.Name, dirWords(dir), len(files))
 	resp, err := c.TestRunFunction(ctx, sel.Project.Id, sel.Env, sel.App.Id, api.AppdtoTestRunFunctionReq{
 		Code: &api.AppsettingsdtoFunctionInlineCodeReq{Files: &files}, Request: request,
 	})
@@ -207,15 +207,20 @@ func (a *App) ranWith(run *testRunAnswer, dir string, flags functionRunFlags) er
 	if answered {
 		a.printer.Infof("%d %s in %s", run.Status, http.StatusText(run.Status), durationWords(run.DurationMs))
 	}
-	if logs := strings.TrimRight(run.Logs, "\n"); logs != "" {
+	if lines := logLines(run.Logs); len(lines) > 0 {
 		a.printer.Infof("%s", a.printer.DimErr("Logs:"))
-		a.printer.Infof("%s", logs)
+		a.printer.Infof("%s", strings.Join(lines, "\n"))
 		if run.LogsTruncated {
 			a.printer.Warnf("its logs were cut at 1 MB")
 		}
 	}
 	if !a.printer.Structured() && answered {
-		if _, err := a.stdout.Write(run.Body); err != nil {
+		body := run.Body
+		// At a terminal what follows on stderr starts a line of its own.
+		if len(body) > 0 && !bytes.HasSuffix(body, []byte("\n")) && isTerminal(a.stdout) {
+			body = append(body, '\n')
+		}
+		if _, err := a.stdout.Write(body); err != nil {
 			return fmt.Errorf("writing the body: %w", err)
 		}
 		if run.BodyTruncated {
@@ -251,7 +256,7 @@ func (a *App) lockFiles(files []funccodeFile, dir string, save bool) error {
 	}
 	if !save {
 		a.printer.Infof("The run made %s: --save-lock writes it into %s, so that each deployment installs the "+
-			"same versions.", strings.Join(paths, " and "), dir)
+			"same versions.", strings.Join(paths, " and "), dirWords(dir))
 		return nil
 	}
 	code := make([]funccode.File, 0, len(files))
@@ -261,7 +266,7 @@ func (a *App) lockFiles(files []funccodeFile, dir string, save bool) error {
 	if err := writeCode(dir, code, true); err != nil {
 		return err
 	}
-	a.printer.Successf("Wrote %s into %s.", strings.Join(paths, " and "), filepath.Clean(dir))
+	a.printer.Successf("Wrote %s into %s.", strings.Join(paths, " and "), dirWords(dir))
 	return nil
 }
 
@@ -282,7 +287,41 @@ func runOutput(run *testRunAnswer) any {
 	return out
 }
 
-// durationWords is how long a call took, as people say it.
+// durationWords is how long a call took, as people say it: 0.4 ms, 12 ms, 1.25s.
 func durationWords(ms float64) string {
-	return (time.Duration(ms * float64(time.Millisecond))).Round(time.Millisecond).String()
+	const second, precision = 1000, 10 * time.Millisecond
+	switch {
+	case ms < 1:
+		return fmt.Sprintf("%.1f ms", ms)
+	case ms < second:
+		return fmt.Sprintf("%.0f ms", ms)
+	}
+	return time.Duration(ms * float64(time.Millisecond)).Round(precision).String()
+}
+
+// runtimeLine is a line the runtime writes of a call: a message the handler
+// logged ("log"), or the call itself ("invocation").
+type runtimeLine struct {
+	HP  string `json:"hp"`
+	Msg string `json:"msg"`
+}
+
+// logLines are a run's logs as they are said: the handler's messages, its own
+// lines as they are, and not the line of the call, whose status is said.
+func logLines(logs string) []string {
+	var lines []string
+	for line := range strings.SplitSeq(strings.TrimRight(logs, "\n"), "\n") {
+		var rt runtimeLine
+		if strings.HasPrefix(line, `{"hp":`) && json.Unmarshal([]byte(line), &rt) == nil {
+			switch rt.HP {
+			case "log":
+				lines = append(lines, rt.Msg)
+				continue
+			case "invocation":
+				continue
+			}
+		}
+		lines = append(lines, line)
+	}
+	return lines
 }

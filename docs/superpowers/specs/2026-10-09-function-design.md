@@ -109,7 +109,9 @@ variables and secrets - the dashboard's Test run.
 - **The request:** `--method GET`, `--path /`, `--query K=V` and `--header 'K: V'`
   (each repeatable), `--data TEXT`, `@FILE`, or `@-` for stdin; at most 1 MB.
 - **What it answered:** the body on stdout, as it is, for a pipe; on stderr the
-  status, how long it took, then what the function logged. The libraries the
+  status, how long it took, then what the function logged - a message logged
+  with the context's logger as its text, what it printed as it is, the
+  runtime's line of the call left out. The libraries the
   run installed first are said, their log with `--debug`. A body or a log cut at
   1 MB is said.
 - **Exit:** 0 when the function answered, whatever its status - as `curl`;
@@ -127,6 +129,10 @@ variables and secrets - the dashboard's Test run.
 
 The API types the answer's body as an array of numbers; it is JSON's base64. The
 CLI reads the answer itself rather than through the generated client.
+
+A directory given to `deploy`, `run` or `pull` is where the target's link is
+looked for first; with none there, the working directory's link is, as for
+every command.
 
 ## pull
 

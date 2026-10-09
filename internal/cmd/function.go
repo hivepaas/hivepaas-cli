@@ -39,6 +39,14 @@ func (a *App) functionCmd() *cobra.Command {
 	return cmd
 }
 
+// dirWords is a directory as a message says it: this directory, for ".".
+func dirWords(dir string) string {
+	if filepath.Clean(dir) == "." {
+		return "this directory"
+	}
+	return dir
+}
+
 // dirArg is the directory a command's argument names, "." when none.
 func dirArg(args []string) string {
 	if len(args) == 0 {

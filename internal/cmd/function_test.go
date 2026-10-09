@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/hivepaas/hivepaas-cli/internal/exitcode"
+	"github.com/hivepaas/hivepaas-cli/internal/link"
 )
 
 // fnSettings are the deployment settings of api, a function with inline code.
@@ -165,4 +166,20 @@ func TestFunctionMetrics(t *testing.T) {
 	r = f.run(args("function metrics --range 1h " + shopAPI)...)
 	require.Equal(t, exitcode.OK, r.code, r.stderr)
 	assert.Contains(t, r.stderr, "no-metrics-backend")
+}
+
+// A directory with no link of its own leaves the target to the working
+// directory's link, as every command: pull writes into a new directory.
+func TestFunctionPullIntoANewDirectoryReadsTheWorkingDirectorysLink(t *testing.T) {
+	f := newFakeAPI(t)
+	f.json("GET "+appPath+"/deployment-settings", http.StatusOK, fnSettings)
+	linked := t.TempDir()
+	_, err := link.Write(linked, &link.Link{URL: f.srv.URL, Project: link.Named{ID: "P1", Name: "shop"},
+		Env: "production", App: link.Named{ID: "A1", Name: "api"}})
+	require.NoError(t, err)
+	t.Chdir(linked)
+
+	r := f.run("function", "pull", filepath.Join(t.TempDir(), "new"))
+
+	require.Equal(t, exitcode.OK, r.code, r.stderr)
 }

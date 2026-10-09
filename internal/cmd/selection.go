@@ -195,7 +195,11 @@ func (a *App) findLink() (*link.Link, error) {
 		return nil, nil
 	}
 	if a.linkFrom != "" {
-		return link.Find(a.linkFrom)
+		// The directory a command was given, else - with no link there - the
+		// working directory's, as for every command.
+		if l, err := link.Find(a.linkFrom); err != nil || l != nil {
+			return l, err
+		}
 	}
 	wd, err := os.Getwd()
 	if err != nil {

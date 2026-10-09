@@ -46,7 +46,9 @@ func (a *App) cpCmd() *cobra.Command {
 			"for the app -a names or the directory's link, or APP:PATH. A directory is copied as itself,\n" +
 			"into DST; SRC/. copies what is in it instead. A file to a PATH ending in / keeps its name;\n" +
 			"a file never replaces a directory of that name in the container.\n\n" +
-			"The copy goes to a running container of the app: --replica picks which.",
+			"The copy goes to a running container of the app: --replica picks which. A copy into it that\n" +
+			"stops part way - Ctrl-C, a cut connection - leaves there what reached it: a file partly\n" +
+			"written, some of a directory's files.",
 		Example: "  hivepaas cp ./config.yaml :/app/config.yaml\n" +
 			"  hivepaas cp ./site/. :/usr/share/nginx/html\n" +
 			"  hivepaas cp api:/var/log/app.log .\n" +
@@ -187,6 +189,9 @@ func (a *App) upload(ctx context.Context, c *client.Client, sel *selection, targ
 	progress, done := a.progress(content, total)
 	err = u.Send(ctx, progress)
 	done()
+	if err != nil {
+		a.partlyCopied(sel.App.Name, local, remotePath, info)
+	}
 	var source *stream.SourceError
 	switch {
 	case errors.As(err, &source):
@@ -198,6 +203,20 @@ func (a *App) upload(ctx context.Context, c *client.Client, sel *selection, targ
 	}
 	a.printer.Successf("Copied %s to %s:%s.", local, sel.App.Name, remotePath)
 	return nil
+}
+
+// partlyCopied says what an upload that stopped part way may have left in the
+// container: what reached it stays there, written as far as it came.
+func (a *App) partlyCopied(app, local, remotePath string, info fs.FileInfo) {
+	if info.IsDir() {
+		a.printer.Warnf("the copy stopped part way: some of %s may be in %s:%s already", local, app, remotePath)
+		return
+	}
+	dest := remotePath
+	if strings.HasSuffix(dest, "/") {
+		dest = path.Join(dest, info.Name())
+	}
+	a.printer.Warnf("the copy stopped part way: %s:%s may be partly written", app, dest)
 }
 
 // uploadContent is what an upload sends: the file, or a directory as a gzipped

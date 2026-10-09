@@ -326,6 +326,7 @@ func TestCpUploadsOverTheStream(t *testing.T) {
 		"fileSize": "5"}, (*got)[0].query)
 	assert.Equal(t, "a: 1\n", string((*got)[0].content))
 	assert.NotContains(t, r.stderr, "60 seconds")
+	assert.NotContains(t, r.stderr, "part way")
 
 	r = f.run("cp", site, "api:/srv", "-p", "shop", "-e", "production", "--replica", "2")
 	require.Equal(t, exitcode.OK, r.code, r.stderr)
@@ -338,4 +339,32 @@ func TestCpUploadsOverTheStream(t *testing.T) {
 	tarred, err := io.ReadAll(plain)
 	require.NoError(t, err)
 	assert.Equal(t, []string{"site/", "site/index.html"}, tarNames(t, tarred))
+}
+
+// An upload that stops part way says what may be left in the container: what
+// reached it stays there.
+func TestCpUploadThatStopsPartWay(t *testing.T) {
+	f := newFakeAPI(t)
+	f.handle("GET "+appPath+"/container/file-upload/stream", func(w http.ResponseWriter, r *http.Request, _ int) {
+		conn, err := (&websocket.Upgrader{}).Upgrade(w, r, nil)
+		if err != nil {
+			return
+		}
+		_, _, _ = conn.ReadMessage()
+		_ = conn.Close() // cut, with no answer
+	})
+	dir := t.TempDir()
+	conf := filepath.Join(dir, "config.yaml")
+	require.NoError(t, os.WriteFile(conf, []byte("a: 1\n"), 0o600))
+	site := filepath.Join(dir, "site")
+	require.NoError(t, os.MkdirAll(site, 0o755))
+	require.NoError(t, os.WriteFile(filepath.Join(site, "index.html"), []byte("hi"), 0o600))
+
+	r := f.run("cp", conf, ":/app/", "-p", "shop", "-e", "production", "-a", "api")
+	assert.Equal(t, exitcode.Server, r.code, r.stderr)
+	assert.Contains(t, r.stderr, "api:/app/config.yaml may be partly written")
+
+	r = f.run("cp", site, ":/srv", "-p", "shop", "-e", "production", "-a", "api")
+	assert.Equal(t, exitcode.Server, r.code, r.stderr)
+	assert.Contains(t, r.stderr, "some of "+site+" may be in api:/srv already")
 }

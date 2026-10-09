@@ -67,9 +67,7 @@ func (c cli) run(args ...string) result {
 	if cmd.Dir == "" {
 		cmd.Dir = c.t.TempDir()
 	}
-	cmd.Env = append(os.Environ(), "HIVEPAAS_URL="+env.baseURL, "HIVEPAAS_API_KEY="+apiKey,
-		"HIVEPAAS_CONFIG_DIR="+c.t.TempDir(), "HIVEPAAS_NO_UPDATE_NOTIFIER=1", "NO_COLOR=1",
-		"HIVEPAAS_PROJECT=", "HIVEPAAS_ENV=", "HIVEPAAS_APP=", "HIVEPAAS_CONTEXT=")
+	cmd.Env = c.environ()
 	cmd.Stdin = strings.NewReader(c.stdin)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
@@ -84,6 +82,43 @@ func (c cli) run(args ...string) result {
 	}
 	c.t.Logf("hivepaas %s: exit %d", strings.Join(args, " "), r.code)
 	return r
+}
+
+// interrupted runs the CLI as run does, and sends it Ctrl-C - SIGINT - after
+// the time given: what a command that goes on until stopped is ended by.
+func (c cli) interrupted(after time.Duration, args ...string) result {
+	c.t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), after)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, binary, append(args, c.flags...)...)
+	cmd.Cancel = func() error { return cmd.Process.Signal(os.Interrupt) }
+	cmd.WaitDelay = 30 * time.Second
+	cmd.Dir = c.dir
+	if cmd.Dir == "" {
+		cmd.Dir = c.t.TempDir()
+	}
+	cmd.Env = c.environ()
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &stdout, &stderr
+	err := cmd.Run()
+	r := result{stdout: stdout.String(), stderr: stderr.String()}
+	var exitErr *exec.ExitError
+	switch {
+	case errors.As(err, &exitErr):
+		r.code = exitErr.ExitCode()
+	case err != nil:
+		c.t.Fatalf("running hivepaas %s: %v", strings.Join(args, " "), err)
+	}
+	c.t.Logf("hivepaas %s, interrupted after %s: exit %d", strings.Join(args, " "), after, r.code)
+	return r
+}
+
+// environ is the environment the CLI runs in: the run's key, a config
+// directory of its own, nothing else of the person's that selects or asks.
+func (c cli) environ() []string {
+	return append(os.Environ(), "HIVEPAAS_URL="+env.baseURL, "HIVEPAAS_API_KEY="+apiKey,
+		"HIVEPAAS_CONFIG_DIR="+c.t.TempDir(), "HIVEPAAS_NO_UPDATE_NOTIFIER=1", "NO_COLOR=1",
+		"HIVEPAAS_PROJECT=", "HIVEPAAS_ENV=", "HIVEPAAS_APP=", "HIVEPAAS_CONTEXT=")
 }
 
 // must runs the CLI as run does, and fails the test unless it exits 0.

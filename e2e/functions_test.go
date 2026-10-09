@@ -28,6 +28,8 @@ func TestAFunction(t *testing.T) {
 	eventually(t, deployWithin, func() error { return answers(page, `"hello":"Grace"`) })
 
 	fn := p.app("hello")
+	assert.Contains(t, fn.must("function", "get").stdout, "node24")
+	fn.must("function", "metrics")
 	pulled := t.TempDir()
 	fn.in(pulled).must("function", "pull", ".")
 	for _, name := range []string{"index.js", "package.json"} {

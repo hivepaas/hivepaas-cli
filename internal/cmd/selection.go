@@ -194,6 +194,9 @@ func (a *App) findLink() (*link.Link, error) {
 	if a.ignoreLink {
 		return nil, nil
 	}
+	if a.linkFrom != "" {
+		return link.Find(a.linkFrom)
+	}
 	wd, err := os.Getwd()
 	if err != nil {
 		return nil, fmt.Errorf("finding the working directory: %w", err)

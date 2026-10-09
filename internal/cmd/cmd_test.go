@@ -38,11 +38,16 @@ type fakeAPI struct {
 
 func newFakeAPI(t *testing.T) *fakeAPI {
 	t.Helper()
+	return newFakeAPIWithApps(t, `[{"id":"A1","key":"api","name":"api","status":"active"}]`)
+}
+
+// newFakeAPIWithApps is newFakeAPI with production's apps as apps gives them.
+func newFakeAPIWithApps(t *testing.T, apps string) *fakeAPI {
+	t.Helper()
 	f := &fakeAPI{t: t, mux: http.NewServeMux(), bodies: map[string][]string{}}
 	f.json("GET /api/projects", http.StatusOK, `{"data":[{"id":"P1","key":"shop","name":"shop",
 		"envs":[{"id":"E1","name":"production"}]}]}`)
-	f.json("GET /api/projects/P1/production/apps", http.StatusOK,
-		`{"data":[{"id":"A1","key":"api","name":"api","status":"active"}]}`)
+	f.json("GET /api/projects/P1/production/apps", http.StatusOK, `{"data":`+apps+`}`)
 	f.srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
 		r.Body = io.NopCloser(bytes.NewReader(body))

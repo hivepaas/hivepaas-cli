@@ -45,7 +45,7 @@ func (a *App) appsCmd() *cobra.Command {
 				rows = append(rows, []string{name, app.Key, kindOf(app), string(app.Status),
 					output.Ago(app.UpdatedAt, now)})
 			}
-			return a.printer.Table([]string{colName, colKey, colKind, colStatus, "UPDATED"}, rows)
+			return a.printer.Table([]string{colName, colKey, colKind, colStatus, colUpdated}, rows)
 		},
 	}, &cobra.Command{
 		Use:   "get [APP]",

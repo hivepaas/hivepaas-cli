@@ -157,21 +157,7 @@ func (s *sourceFlags) input(ctx context.Context, c *client.Client, sel *selectio
 
 	r := resolve.New(c)
 	where := fmt.Sprintf(" in %s / %s", sel.Project.Name, sel.Env)
-	registry := func(input string) (*settingRef, error) {
-		if strings.EqualFold(input, none) {
-			return &settingRef{}, nil
-		}
-		auths, err := r.RegistryAuths(ctx, sel.Project.Id, sel.Env)
-		if err != nil {
-			return nil, err
-		}
-		auth, err := resolve.Setting("registry credential", input, where, auths,
-			func(a api.RegistryauthdtoRegistryAuthResp) (string, string) { return a.Id, a.Name })
-		if err != nil {
-			return nil, err
-		}
-		return &settingRef{ID: auth.Id, Name: auth.Name}, nil
-	}
+	registry := func(input string) (*settingRef, error) { return registryCredential(ctx, r, sel, where, input) }
 	var err error
 	if changed("registry-auth") {
 		if in.registryAuth, err = registry(s.registryAuth); err != nil {
@@ -189,6 +175,26 @@ func (s *sourceFlags) input(ctx context.Context, c *client.Client, sel *selectio
 		}
 	}
 	return in, nil
+}
+
+// registryCredential is the registry credential input names among the
+// environment's; none for none.
+func registryCredential(ctx context.Context, r *resolve.Resolver, sel *selection, where, input string) (
+	*settingRef, error,
+) {
+	if strings.EqualFold(input, none) {
+		return &settingRef{}, nil
+	}
+	auths, err := r.RegistryAuths(ctx, sel.Project.Id, sel.Env)
+	if err != nil {
+		return nil, err
+	}
+	auth, err := resolve.Setting("registry credential", input, where, auths,
+		func(a api.RegistryauthdtoRegistryAuthResp) (string, string) { return a.Id, a.Name })
+	if err != nil {
+		return nil, err
+	}
+	return &settingRef{ID: auth.Id, Name: auth.Name}, nil
 }
 
 func gitCredential(ctx context.Context, r *resolve.Resolver, sel *selection, where, input string) (

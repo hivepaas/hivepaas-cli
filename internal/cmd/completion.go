@@ -63,7 +63,7 @@ func (a *App) registerCompletions(root *cobra.Command) {
 			_ = cmd.RegisterFlagCompletionFunc("push-to", a.complete(a.registryAuthChoices))
 			_ = cmd.RegisterFlagCompletionFunc("git-credential", a.complete(a.gitCredentialChoices))
 			_ = cmd.RegisterFlagCompletionFunc("use", cobra.FixedCompletions(
-				[]cobra.Completion{"image", "repo"}, cobra.ShellCompDirectiveNoFileComp))
+				[]cobra.Completion{string(api.DeploymentMethodImage), codeRepo}, cobra.ShellCompDirectiveNoFileComp))
 		}
 	})
 }

@@ -59,8 +59,8 @@ func refOf(setting *api.SettingsBaseSettingResp) settingRef {
 // flags are of.
 func targetMethod(app string, current api.BaseDeploymentMethod, in *sourceInput) (api.BaseDeploymentMethod, error) {
 	if current == api.DeploymentMethodFunction {
-		return "", exitcode.New(exitcode.Invalid, "%s is a function: its source is set in the dashboard, and "+
-			"hivepaas deploy alone deploys it", app)
+		return "", exitcode.New(exitcode.Invalid, "%s is a function: hivepaas function deploy sends its code and "+
+			"settings, and hivepaas deploy alone deploys it again", app)
 	}
 	otherThan := func(method api.BaseDeploymentMethod) []string {
 		if method == api.DeploymentMethodImage {

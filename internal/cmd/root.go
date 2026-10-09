@@ -33,6 +33,9 @@ type App struct {
 	noColor     bool
 	debug       bool
 	ignoreLink  bool
+	// linkFrom is where a directory's link is looked for: the directory a
+	// command was given, else the working directory.
+	linkFrom string
 	// completing says the CLI answers the shell's Tab: it asks nothing.
 	completing bool
 
@@ -114,7 +117,7 @@ func (a *App) rootCmd() *cobra.Command {
 		a.versionCmd(), a.updateCmd(),
 		a.loginCmd(), a.logoutCmd(), a.whoamiCmd(), a.contextCmd(),
 		a.projectsCmd(), a.appsCmd(), a.linkCmd(), a.unlinkCmd(),
-		a.deployCmd(), a.logsCmd(), a.restartCmd(), a.execCmd(), a.envCmd(), a.domainCmd(), a.templatesCmd(),
+		a.deployCmd(), a.functionCmd(), a.logsCmd(), a.restartCmd(), a.execCmd(), a.envCmd(), a.domainCmd(), a.templatesCmd(),
 		a.psCmd(), a.cpCmd(), a.jobCmd(), a.taskCmd(), a.secretCmd(), a.configFileCmd(),
 		a.openCmd(),
 		a.apiCmd(),

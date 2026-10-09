@@ -81,10 +81,11 @@ const (
 	colName = "NAME"
 	// colKey is what -p and -a take, beside the name: a key does not change when
 	// the name does.
-	colKey    = "KEY"
-	colKind   = "KIND"
-	colType   = "TYPE"
-	colStatus = "STATUS"
+	colKey     = "KEY"
+	colKind    = "KIND"
+	colType    = "TYPE"
+	colStatus  = "STATUS"
+	colUpdated = "UPDATED"
 )
 
 func envNames(envs *[]api.ProjectdtoProjectEnvResp) string {

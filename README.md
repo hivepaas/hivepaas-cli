@@ -38,6 +38,17 @@ An app built from its repository deploys the commit a job was run for with
 `--commit ${{ github.sha }}`; with `--no-auto-deploy` the push itself does not
 deploy it too.
 
+A function is a directory's code
+([design](docs/superpowers/specs/2026-10-09-function-design.md)):
+
+```sh
+bin/hivepaas function init hello --runtime node24       # the runtime's starter code
+bin/hivepaas function create hello hello -p shop -e staging --runtime node24
+cd hello
+../bin/hivepaas function run --query name=Ada           # this code, called once, not deployed
+../bin/hivepaas function deploy                         # linked to it: no flags
+```
+
 ## Developing
 
 | Target | What it does |

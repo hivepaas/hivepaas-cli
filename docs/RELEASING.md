@@ -84,6 +84,11 @@ The example is `v0.2.0`.
    `release` from that commit. From then on CLIs of the channel are told, and
    `hivepaas update` installs it.
 
+8. **The docs.** With `hivepaas-website` checked out beside this repository,
+   `make docs` writes the command reference from the release's help into its
+   `docs/docs/cli/commands`; commit it there, and move the version the CLI pages
+   install (`docs/docs/cli/install.md`, `ci.md`).
+
 ## Undoing a release
 
 - **Before step 7**: delete the draft; nothing was offered to anyone.

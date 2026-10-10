@@ -7,4 +7,4 @@ package api
 const APILevel = 2
 
 // SpecRef is the hivepaas release, or commit, the spec was taken from.
-const SpecRef = "430eb7ca"
+const SpecRef = "v1.0.0-beta4"

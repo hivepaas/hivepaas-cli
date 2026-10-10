@@ -1908,6 +1908,7 @@ const (
 	TaskTypeAppLabelsSweep      BaseTaskType = "task:app-labels-sweep"
 	TaskTypeAppPreview          BaseTaskType = "task:app-preview"
 	TaskTypeBackupRestore       BaseTaskType = "task:backup-restore"
+	TaskTypeDataFileLoad        BaseTaskType = "task:data-file-load"
 	TaskTypeDummy               BaseTaskType = "task:dummy"
 	TaskTypePeriodicExec        BaseTaskType = "task:periodic-exec"
 	TaskTypeSSLObtain           BaseTaskType = "task:ssl-obtain"
@@ -1930,6 +1931,8 @@ func (e BaseTaskType) Valid() bool {
 	case TaskTypeAppPreview:
 		return true
 	case TaskTypeBackupRestore:
+		return true
+	case TaskTypeDataFileLoad:
 		return true
 	case TaskTypeDummy:
 		return true
@@ -3331,6 +3334,12 @@ type AppcontainerdtoUploadFileToContainerResp struct {
 	Data *AppcontainerdtoUploadFileToContainerDataResp `json:"data"`
 }
 
+// AppdeploymentdtoActiveDeploymentResp defines model for appdeploymentdto.ActiveDeploymentResp.
+type AppdeploymentdtoActiveDeploymentResp struct {
+	Id     string               `json:"id"`
+	Status BaseDeploymentStatus `json:"status"`
+}
+
 // AppdeploymentdtoCancelDeploymentDataResp defines model for appdeploymentdto.CancelDeploymentDataResp.
 type AppdeploymentdtoCancelDeploymentDataResp struct {
 	Canceled bool `json:"canceled"`
@@ -3388,6 +3397,13 @@ type AppdeploymentdtoDeploymentTriggerResp struct {
 	ChangeId   *string                     `json:"changeId,omitempty"`
 	Source     BaseDeploymentTriggerSource `json:"source"`
 	SourceUser *BasedtoUserBaseResp        `json:"sourceUser,omitempty"`
+}
+
+// AppdeploymentdtoGetActiveDeploymentResp defines model for appdeploymentdto.GetActiveDeploymentResp.
+type AppdeploymentdtoGetActiveDeploymentResp struct {
+	// Data Data is null when no deployment of the app is queued or running.
+	Data *AppdeploymentdtoActiveDeploymentResp `json:"data"`
+	Meta *BasedtoMeta                          `json:"meta"`
 }
 
 // AppdeploymentdtoGetDeploymentLogsResp defines model for appdeploymentdto.GetDeploymentLogsResp.
@@ -8385,6 +8401,26 @@ type FiledtoGetFileResp struct {
 type FiledtoListFileResp struct {
 	Data *[]FiledtoFileResp `json:"data"`
 	Meta *BasedtoListMeta   `json:"meta"`
+}
+
+// FiledtoLoadDataFileDataResp defines model for filedto.LoadDataFileDataResp.
+type FiledtoLoadDataFileDataResp struct {
+	// Task Task is the load's.
+	Task *BasedtoObjectIDResp `json:"task"`
+}
+
+// FiledtoLoadDataFileReq defines model for filedto.LoadDataFileReq.
+type FiledtoLoadDataFileReq struct {
+	Command *CommandtemplatedtoCommandTemplateBaseReq `json:"command"`
+
+	// Passphrase Passphrase decrypts a file its job saved encrypted, named .age.
+	Passphrase string `json:"passphrase"`
+}
+
+// FiledtoLoadDataFileResp defines model for filedto.LoadDataFileResp.
+type FiledtoLoadDataFileResp struct {
+	Data *FiledtoLoadDataFileDataResp `json:"data"`
+	Meta *BasedtoMeta                 `json:"meta"`
 }
 
 // FiledtoUploadResp defines model for filedto.UploadResp.
@@ -13783,7 +13819,7 @@ type UploadFileToAppContainerRequest struct {
 	// NodeId node ID
 	NodeId *string `json:"nodeId,omitempty"`
 
-	// Overwrite allow overwrite (default: true)
+	// Overwrite extract only: an entry may replace a directory, or a file (default: true)
 	Overwrite *bool `json:"overwrite,omitempty"`
 
 	// Path file/dir path in container
@@ -15123,6 +15159,36 @@ type DownloadFileFromAppContainerParams struct {
 
 	// CompressionFormat compression format (gzip, zstd)
 	CompressionFormat *string `form:"compressionFormat,omitempty" json:"compressionFormat,omitempty"`
+}
+
+// StreamFileToAppContainerParams defines parameters for StreamFileToAppContainer.
+type StreamFileToAppContainerParams struct {
+	// NodeId node ID
+	NodeId *string `form:"nodeId,omitempty" json:"nodeId,omitempty"`
+
+	// ContainerId container ID (optional, auto-picks active container if empty)
+	ContainerId *string `form:"containerId,omitempty" json:"containerId,omitempty"`
+
+	// Path file/dir path in container
+	Path string `form:"path" json:"path"`
+
+	// Extract extract archive into path
+	Extract *bool `form:"extract,omitempty" json:"extract,omitempty"`
+
+	// CompressionFormat compression format (gzip, zstd, zip, tar)
+	CompressionFormat *string `form:"compressionFormat,omitempty" json:"compressionFormat,omitempty"`
+
+	// Overwrite extract only: an entry may replace a directory, or a file (default: true)
+	Overwrite *bool `form:"overwrite,omitempty" json:"overwrite,omitempty"`
+
+	// FileName the file's name
+	FileName *string `form:"fileName,omitempty" json:"fileName,omitempty"`
+
+	// FileSize the file's size in bytes: required unless extract
+	FileSize *int `form:"fileSize,omitempty" json:"fileSize,omitempty"`
+
+	// Progress be told after each message how much the copy has taken
+	Progress *bool `form:"progress,omitempty" json:"progress,omitempty"`
 }
 
 // ListAppDataFileParams defines parameters for ListAppDataFile.
@@ -16924,6 +16990,9 @@ type UploadFileToAppContainerMultipartRequestBody = UploadFileToAppContainerRequ
 
 // CreateAppDataFileJSONRequestBody defines body for CreateAppDataFile for application/json ContentType.
 type CreateAppDataFileJSONRequestBody = FiledtoCreateFileReq
+
+// LoadAppDataFileJSONRequestBody defines body for LoadAppDataFile for application/json ContentType.
+type LoadAppDataFileJSONRequestBody = FiledtoLoadDataFileReq
 
 // AppActionDeployJSONRequestBody defines body for AppActionDeploy for application/json ContentType.
 type AppActionDeployJSONRequestBody = AppactiondtoDeployAppReq
@@ -19856,6 +19925,15 @@ type ClientInterface interface {
 	// Corresponds with PUT /projects/{projectID}/user-accesses (the `UpdateProjectUserAccesses` operationId).
 	UpdateProjectUserAccesses(ctx context.Context, projectID string, body UpdateProjectUserAccessesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetProjectSettingUsages Lists what references a project's setting
+	//
+	// Lists what still references one of the project's settings: the apps, projects and settings that
+	// use it. Deleting a setting they use fails with ERR_SETTING_IN_USE. kind is the settings group, as in
+	// its other routes, such as ssh-keys, secrets or config-files.
+	//
+	// Corresponds with GET /projects/{projectID}/{kind}/{itemID}/usages (the `GetProjectSettingUsages` operationId).
+	GetProjectSettingUsages(ctx context.Context, projectID string, kind string, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// DeleteProjectEnv Deletes a project env
 	//
 	// Corresponds with DELETE /projects/{projectID}/{projectEnv} (the `DeleteProjectEnv` operationId).
@@ -20322,6 +20400,19 @@ type ClientInterface interface {
 	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/container/file-upload (the `UploadFileToAppContainer` operationId).
 	UploadFileToAppContainerWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// StreamFileToAppContainer Uploads a file or archive into container over a websocket
+	//
+	// Takes what file-upload takes, as query parameters, then the content as binary messages
+	// and {"type":"end"} as a text message; answers {"type":"done","data":{...}} or
+	// {"type":"error","error":{...}}. Neither the server's nor Traefik's timeouts cut it; a
+	// client sends a message at least every 60 seconds. With progress=true, each binary
+	// message is followed by {"type":"progress","received":<bytes the copy has taken>}.
+	// Without the websocket upgrade, the request is only checked: 204 when the stream would
+	// be taken, else the error it would get - which a browser cannot read from a refused upgrade.
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/container/file-upload/stream (the `StreamFileToAppContainer` operationId).
+	StreamFileToAppContainer(ctx context.Context, projectID string, projectEnv string, appID string, params *StreamFileToAppContainerParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListAppDataFile Lists data files of an app
 	//
 	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/data-files (the `ListAppDataFile` operationId).
@@ -20355,6 +20446,28 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/data-files/{itemID}/download-url (the `GetAppDataFileDownloadURL` operationId).
 	GetAppDataFileDownloadURL(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, params *GetAppDataFileDownloadURLParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// LoadAppDataFileWithBody Loads a data file into a command
+	//
+	// Feeds an app's data file to a command run in the app, on its stdin - a dump a job
+	// saved, loaded back into the app's database. A file saved encrypted takes its passphrase.
+	// The load runs as a task, whose ID is answered.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/data-files/{itemID}/load (the `LoadAppDataFile` operationId).
+	LoadAppDataFileWithBody(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// LoadAppDataFile Loads a data file into a command
+	//
+	// Feeds an app's data file to a command run in the app, on its stdin - a dump a job
+	// saved, loaded back into the app's database. A file saved encrypted takes its passphrase.
+	// The load runs as a task, whose ID is answered.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/data-files/{itemID}/load (the `LoadAppDataFile` operationId).
+	LoadAppDataFile(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, body LoadAppDataFileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetAppDependencyMetrics Gets what an app calls
 	//
@@ -20410,6 +20523,14 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/deployments (the `ListAppDeployment` operationId).
 	ListAppDeployment(ctx context.Context, projectID string, projectEnv string, appID string, params *ListAppDeploymentParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetActiveAppDeployment Gets the app's deployment that has not ended
+	//
+	// The deployment running - in-progress - or else the next to run, not-started; data is null when none
+	// is queued or running. Light enough to be asked every few seconds.
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/deployments/active (the `GetActiveAppDeployment` operationId).
+	GetActiveAppDeployment(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetAppDeployment Gets app deployment
 	//
@@ -21245,6 +21366,16 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/terminal/info (the `GetAppTerminalInfo` operationId).
 	GetAppTerminalInfo(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetAppSettingUsages Lists what references an app's setting
+	//
+	// Lists what still references one of the app's settings: the apps and settings that use it, such as
+	// the setting mount that reads a secret. Deleting a setting they use fails with ERR_SETTING_IN_USE. kind
+	// is the settings group, as in its other routes: secrets, config-files, setting-mounts, sched-jobs or
+	// periodic-jobs.
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/{kind}/{itemID}/usages (the `GetAppSettingUsages` operationId).
+	GetAppSettingUsages(ctx context.Context, projectID string, projectEnv string, appID string, kind string, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListProjectEnvAuditLog Lists audit logs
 	//
@@ -22621,6 +22752,15 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /projects/{projectID}/{projectEnv}/tasks/{itemID}/status (the `GetProjectEnvTaskStatus` operationId).
 	GetProjectEnvTaskStatus(ctx context.Context, projectID string, projectEnv string, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetProjectEnvSettingUsages Lists what references an env's setting
+	//
+	// Lists what still references one of the env's settings: the apps, projects and settings that use
+	// it. Deleting a setting they use fails with ERR_SETTING_IN_USE. kind is the settings group, as in its
+	// other routes, such as ssh-keys, secrets or config-files.
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/{kind}/{itemID}/usages (the `GetProjectEnvSettingUsages` operationId).
+	GetProjectEnvSettingUsages(ctx context.Context, projectID string, projectEnv string, kind string, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteSession Deletes the current user session
 	//
@@ -30634,6 +30774,25 @@ func (c *Client) UpdateProjectUserAccesses(ctx context.Context, projectID string
 	return c.Client.Do(req)
 }
 
+// GetProjectSettingUsages Lists what references a project's setting
+//
+// Lists what still references one of the project's settings: the apps, projects and settings that
+// use it. Deleting a setting they use fails with ERR_SETTING_IN_USE. kind is the settings group, as in
+// its other routes, such as ssh-keys, secrets or config-files.
+//
+// Corresponds with GET /projects/{projectID}/{kind}/{itemID}/usages (the `GetProjectSettingUsages` operationId).
+func (c *Client) GetProjectSettingUsages(ctx context.Context, projectID string, kind string, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetProjectSettingUsagesRequest(c.Server, projectID, kind, itemID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // DeleteProjectEnv Deletes a project env
 //
 // Corresponds with DELETE /projects/{projectID}/{projectEnv} (the `DeleteProjectEnv` operationId).
@@ -31770,6 +31929,29 @@ func (c *Client) UploadFileToAppContainerWithBody(ctx context.Context, projectID
 	return c.Client.Do(req)
 }
 
+// StreamFileToAppContainer Uploads a file or archive into container over a websocket
+//
+// Takes what file-upload takes, as query parameters, then the content as binary messages
+// and {"type":"end"} as a text message; answers {"type":"done","data":{...}} or
+// {"type":"error","error":{...}}. Neither the server's nor Traefik's timeouts cut it; a
+// client sends a message at least every 60 seconds. With progress=true, each binary
+// message is followed by {"type":"progress","received":<bytes the copy has taken>}.
+// Without the websocket upgrade, the request is only checked: 204 when the stream would
+// be taken, else the error it would get - which a browser cannot read from a refused upgrade.
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/container/file-upload/stream (the `StreamFileToAppContainer` operationId).
+func (c *Client) StreamFileToAppContainer(ctx context.Context, projectID string, projectEnv string, appID string, params *StreamFileToAppContainerParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewStreamFileToAppContainerRequest(c.Server, projectID, projectEnv, appID, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // ListAppDataFile Lists data files of an app
 //
 // Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/data-files (the `ListAppDataFile` operationId).
@@ -31854,6 +32036,48 @@ func (c *Client) GetAppDataFile(ctx context.Context, projectID string, projectEn
 // Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/data-files/{itemID}/download-url (the `GetAppDataFileDownloadURL` operationId).
 func (c *Client) GetAppDataFileDownloadURL(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, params *GetAppDataFileDownloadURLParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetAppDataFileDownloadURLRequest(c.Server, projectID, projectEnv, appID, itemID, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// LoadAppDataFileWithBody Loads a data file into a command
+//
+// Feeds an app's data file to a command run in the app, on its stdin - a dump a job
+// saved, loaded back into the app's database. A file saved encrypted takes its passphrase.
+// The load runs as a task, whose ID is answered.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/data-files/{itemID}/load (the `LoadAppDataFile` operationId).
+func (c *Client) LoadAppDataFileWithBody(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLoadAppDataFileRequestWithBody(c.Server, projectID, projectEnv, appID, itemID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// LoadAppDataFile Loads a data file into a command
+//
+// Feeds an app's data file to a command run in the app, on its stdin - a dump a job
+// saved, loaded back into the app's database. A file saved encrypted takes its passphrase.
+// The load runs as a task, whose ID is answered.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/data-files/{itemID}/load (the `LoadAppDataFile` operationId).
+func (c *Client) LoadAppDataFile(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, body LoadAppDataFileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLoadAppDataFileRequest(c.Server, projectID, projectEnv, appID, itemID, body)
 	if err != nil {
 		return nil, err
 	}
@@ -31989,6 +32213,24 @@ func (c *Client) GetAppBuildDockerfileTemplate(ctx context.Context, projectID st
 // Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/deployments (the `ListAppDeployment` operationId).
 func (c *Client) ListAppDeployment(ctx context.Context, projectID string, projectEnv string, appID string, params *ListAppDeploymentParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewListAppDeploymentRequest(c.Server, projectID, projectEnv, appID, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetActiveAppDeployment Gets the app's deployment that has not ended
+//
+// The deployment running - in-progress - or else the next to run, not-started; data is null when none
+// is queued or running. Light enough to be asked every few seconds.
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/deployments/active (the `GetActiveAppDeployment` operationId).
+func (c *Client) GetActiveAppDeployment(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetActiveAppDeploymentRequest(c.Server, projectID, projectEnv, appID)
 	if err != nil {
 		return nil, err
 	}
@@ -34044,6 +34286,26 @@ func (c *Client) GetAppTerminal(ctx context.Context, projectID string, projectEn
 // Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/terminal/info (the `GetAppTerminalInfo` operationId).
 func (c *Client) GetAppTerminalInfo(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetAppTerminalInfoRequest(c.Server, projectID, projectEnv, appID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetAppSettingUsages Lists what references an app's setting
+//
+// Lists what still references one of the app's settings: the apps and settings that use it, such as
+// the setting mount that reads a secret. Deleting a setting they use fails with ERR_SETTING_IN_USE. kind
+// is the settings group, as in its other routes: secrets, config-files, setting-mounts, sched-jobs or
+// periodic-jobs.
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/{kind}/{itemID}/usages (the `GetAppSettingUsages` operationId).
+func (c *Client) GetAppSettingUsages(ctx context.Context, projectID string, projectEnv string, appID string, kind string, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAppSettingUsagesRequest(c.Server, projectID, projectEnv, appID, kind, itemID)
 	if err != nil {
 		return nil, err
 	}
@@ -37560,6 +37822,25 @@ func (c *Client) GetProjectEnvTaskLogs(ctx context.Context, projectID string, pr
 // Corresponds with GET /projects/{projectID}/{projectEnv}/tasks/{itemID}/status (the `GetProjectEnvTaskStatus` operationId).
 func (c *Client) GetProjectEnvTaskStatus(ctx context.Context, projectID string, projectEnv string, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetProjectEnvTaskStatusRequest(c.Server, projectID, projectEnv, itemID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetProjectEnvSettingUsages Lists what references an env's setting
+//
+// Lists what still references one of the env's settings: the apps, projects and settings that use
+// it. Deleting a setting they use fails with ERR_SETTING_IN_USE. kind is the settings group, as in its
+// other routes, such as ssh-keys, secrets or config-files.
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/{kind}/{itemID}/usages (the `GetProjectEnvSettingUsages` operationId).
+func (c *Client) GetProjectEnvSettingUsages(ctx context.Context, projectID string, projectEnv string, kind string, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetProjectEnvSettingUsagesRequest(c.Server, projectID, projectEnv, kind, itemID)
 	if err != nil {
 		return nil, err
 	}
@@ -56338,6 +56619,54 @@ func NewUpdateProjectUserAccessesRequestWithBody(server string, projectID string
 	return req, nil
 }
 
+// NewGetProjectSettingUsagesRequest constructs an http.Request for the GetProjectSettingUsages method
+func NewGetProjectSettingUsagesRequest(server string, projectID string, kind string, itemID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "kind", kind, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "itemID", itemID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/%s/usages", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewDeleteProjectEnvRequest constructs an http.Request for the DeleteProjectEnv method
 func NewDeleteProjectEnvRequest(server string, projectID string, projectEnv string, params *DeleteProjectEnvParams) (*http.Request, error) {
 	var err error
@@ -59424,6 +59753,173 @@ func NewUploadFileToAppContainerRequestWithBody(server string, projectID string,
 	return req, nil
 }
 
+// NewStreamFileToAppContainerRequest constructs an http.Request for the StreamFileToAppContainer method
+func NewStreamFileToAppContainerRequest(server string, projectID string, projectEnv string, appID string, params *StreamFileToAppContainerParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/container/file-upload/stream", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.NodeId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "nodeId", *params.NodeId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.ContainerId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "containerId", *params.ContainerId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "path", params.Path, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if params.Extract != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "extract", *params.Extract, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.CompressionFormat != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "compressionFormat", *params.CompressionFormat, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Overwrite != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "overwrite", *params.Overwrite, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.FileName != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "fileName", *params.FileName, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.FileSize != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "fileSize", *params.FileSize, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Progress != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "progress", *params.Progress, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewListAppDataFileRequest constructs an http.Request for the ListAppDataFile method
 func NewListAppDataFileRequest(server string, projectID string, projectEnv string, appID string, params *ListAppDataFileParams) (*http.Request, error) {
 	var err error
@@ -59914,6 +60410,74 @@ func NewGetAppDataFileDownloadURLRequest(server string, projectID string, projec
 	return req, nil
 }
 
+// NewLoadAppDataFileRequest calls the generic LoadAppDataFile builder with application/json body
+func NewLoadAppDataFileRequest(server string, projectID string, projectEnv string, appID string, itemID string, body LoadAppDataFileJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewLoadAppDataFileRequestWithBody(server, projectID, projectEnv, appID, itemID, "application/json", bodyReader)
+}
+
+// NewLoadAppDataFileRequestWithBody constructs an http.Request for the LoadAppDataFile method, with any body, and a specified content type
+func NewLoadAppDataFileRequestWithBody(server string, projectID string, projectEnv string, appID string, itemID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam3 string
+
+	pathParam3, err = runtime.StyleParamWithOptions("simple", false, "itemID", itemID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/data-files/%s/load", pathParam0, pathParam1, pathParam2, pathParam3)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetAppDependencyMetricsRequest constructs an http.Request for the GetAppDependencyMetrics method
 func NewGetAppDependencyMetricsRequest(server string, projectID string, projectEnv string, appID string, params *GetAppDependencyMetricsParams) (*http.Request, error) {
 	var err error
@@ -60343,6 +60907,54 @@ func NewListAppDeploymentRequest(server string, projectID string, projectEnv str
 			rawQueryFragments = append(rawQueryFragments, encoded)
 		}
 		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetActiveAppDeploymentRequest constructs an http.Request for the GetActiveAppDeployment method
+func NewGetActiveAppDeploymentRequest(server string, projectID string, projectEnv string, appID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/deployments/active", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
 	}
 
 	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
@@ -66128,6 +66740,68 @@ func NewGetAppTerminalInfoRequest(server string, projectID string, projectEnv st
 	}
 
 	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/terminal/info", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetAppSettingUsagesRequest constructs an http.Request for the GetAppSettingUsages method
+func NewGetAppSettingUsagesRequest(server string, projectID string, projectEnv string, appID string, kind string, itemID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam3 string
+
+	pathParam3, err = runtime.StyleParamWithOptions("simple", false, "kind", kind, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam4 string
+
+	pathParam4, err = runtime.StyleParamWithOptions("simple", false, "itemID", itemID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/%s/%s/usages", pathParam0, pathParam1, pathParam2, pathParam3, pathParam4)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -75815,6 +76489,61 @@ func NewGetProjectEnvTaskStatusRequest(server string, projectID string, projectE
 	}
 
 	operationPath := fmt.Sprintf("/projects/%s/%s/tasks/%s/status", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetProjectEnvSettingUsagesRequest constructs an http.Request for the GetProjectEnvSettingUsages method
+func NewGetProjectEnvSettingUsagesRequest(server string, projectID string, projectEnv string, kind string, itemID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "kind", kind, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam3 string
+
+	pathParam3, err = runtime.StyleParamWithOptions("simple", false, "itemID", itemID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/%s/%s/usages", pathParam0, pathParam1, pathParam2, pathParam3)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -89596,6 +90325,17 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with PUT /projects/{projectID}/user-accesses (the `UpdateProjectUserAccesses` operationId).
 	UpdateProjectUserAccessesWithResponse(ctx context.Context, projectID string, body UpdateProjectUserAccessesJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateProjectUserAccessesResponse, error)
 
+	// GetProjectSettingUsagesWithResponse Lists what references a project's setting
+	//
+	// Lists what still references one of the project's settings: the apps, projects and settings that
+	// use it. Deleting a setting they use fails with ERR_SETTING_IN_USE. kind is the settings group, as in
+	// its other routes, such as ssh-keys, secrets or config-files.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /projects/{projectID}/{kind}/{itemID}/usages (the `GetProjectSettingUsages` operationId).
+	GetProjectSettingUsagesWithResponse(ctx context.Context, projectID string, kind string, itemID string, reqEditors ...RequestEditorFn) (*GetProjectSettingUsagesResponse, error)
+
 	// DeleteProjectEnvWithResponse Deletes a project env
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -90110,6 +90850,21 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/container/file-upload (the `UploadFileToAppContainer` operationId).
 	UploadFileToAppContainerWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UploadFileToAppContainerResponse, error)
 
+	// StreamFileToAppContainerWithResponse Uploads a file or archive into container over a websocket
+	//
+	// Takes what file-upload takes, as query parameters, then the content as binary messages
+	// and {"type":"end"} as a text message; answers {"type":"done","data":{...}} or
+	// {"type":"error","error":{...}}. Neither the server's nor Traefik's timeouts cut it; a
+	// client sends a message at least every 60 seconds. With progress=true, each binary
+	// message is followed by {"type":"progress","received":<bytes the copy has taken>}.
+	// Without the websocket upgrade, the request is only checked: 204 when the stream would
+	// be taken, else the error it would get - which a browser cannot read from a refused upgrade.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/container/file-upload/stream (the `StreamFileToAppContainer` operationId).
+	StreamFileToAppContainerWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, params *StreamFileToAppContainerParams, reqEditors ...RequestEditorFn) (*StreamFileToAppContainerResponse, error)
+
 	// ListAppDataFileWithResponse Lists data files of an app
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -90151,6 +90906,28 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/data-files/{itemID}/download-url (the `GetAppDataFileDownloadURL` operationId).
 	GetAppDataFileDownloadURLWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, params *GetAppDataFileDownloadURLParams, reqEditors ...RequestEditorFn) (*GetAppDataFileDownloadURLResponse, error)
+
+	// LoadAppDataFileWithBodyWithResponse Loads a data file into a command
+	//
+	// Feeds an app's data file to a command run in the app, on its stdin - a dump a job
+	// saved, loaded back into the app's database. A file saved encrypted takes its passphrase.
+	// The load runs as a task, whose ID is answered.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/data-files/{itemID}/load (the `LoadAppDataFile` operationId).
+	LoadAppDataFileWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoadAppDataFileResponse, error)
+
+	// LoadAppDataFileWithResponse Loads a data file into a command
+	//
+	// Feeds an app's data file to a command run in the app, on its stdin - a dump a job
+	// saved, loaded back into the app's database. A file saved encrypted takes its passphrase.
+	// The load runs as a task, whose ID is answered.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/data-files/{itemID}/load (the `LoadAppDataFile` operationId).
+	LoadAppDataFileWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, body LoadAppDataFileJSONRequestBody, reqEditors ...RequestEditorFn) (*LoadAppDataFileResponse, error)
 
 	// GetAppDependencyMetricsWithResponse Gets what an app calls
 	//
@@ -90214,6 +90991,16 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/deployments (the `ListAppDeployment` operationId).
 	ListAppDeploymentWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, params *ListAppDeploymentParams, reqEditors ...RequestEditorFn) (*ListAppDeploymentResponse, error)
+
+	// GetActiveAppDeploymentWithResponse Gets the app's deployment that has not ended
+	//
+	// The deployment running - in-progress - or else the next to run, not-started; data is null when none
+	// is queued or running. Light enough to be asked every few seconds.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/deployments/active (the `GetActiveAppDeployment` operationId).
+	GetActiveAppDeploymentWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*GetActiveAppDeploymentResponse, error)
 
 	// GetAppDeploymentWithResponse Gets app deployment
 	//
@@ -91149,6 +91936,18 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/terminal/info (the `GetAppTerminalInfo` operationId).
 	GetAppTerminalInfoWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*GetAppTerminalInfoResponse, error)
+
+	// GetAppSettingUsagesWithResponse Lists what references an app's setting
+	//
+	// Lists what still references one of the app's settings: the apps and settings that use it, such as
+	// the setting mount that reads a secret. Deleting a setting they use fails with ERR_SETTING_IN_USE. kind
+	// is the settings group, as in its other routes: secrets, config-files, setting-mounts, sched-jobs or
+	// periodic-jobs.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/{kind}/{itemID}/usages (the `GetAppSettingUsages` operationId).
+	GetAppSettingUsagesWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, kind string, itemID string, reqEditors ...RequestEditorFn) (*GetAppSettingUsagesResponse, error)
 
 	// ListProjectEnvAuditLogWithResponse Lists audit logs
 	//
@@ -92689,6 +93488,17 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /projects/{projectID}/{projectEnv}/tasks/{itemID}/status (the `GetProjectEnvTaskStatus` operationId).
 	GetProjectEnvTaskStatusWithResponse(ctx context.Context, projectID string, projectEnv string, itemID string, reqEditors ...RequestEditorFn) (*GetProjectEnvTaskStatusResponse, error)
+
+	// GetProjectEnvSettingUsagesWithResponse Lists what references an env's setting
+	//
+	// Lists what still references one of the env's settings: the apps, projects and settings that use
+	// it. Deleting a setting they use fails with ERR_SETTING_IN_USE. kind is the settings group, as in its
+	// other routes, such as ssh-keys, secrets or config-files.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/{kind}/{itemID}/usages (the `GetProjectEnvSettingUsages` operationId).
+	GetProjectEnvSettingUsagesWithResponse(ctx context.Context, projectID string, projectEnv string, kind string, itemID string, reqEditors ...RequestEditorFn) (*GetProjectEnvSettingUsagesResponse, error)
 
 	// DeleteSessionWithResponse Deletes the current user session
 	//
@@ -107822,6 +108632,68 @@ func (r UpdateProjectUserAccessesResponse) ContentType() string {
 	return ""
 }
 
+type GetProjectSettingUsagesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *BasesettinghandlerGetSettingUsagesResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetProjectSettingUsagesResponse) GetJSON200() *BasesettinghandlerGetSettingUsagesResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetProjectSettingUsagesResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetProjectSettingUsagesResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetProjectSettingUsagesResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetProjectSettingUsagesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetProjectSettingUsagesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetProjectSettingUsagesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetProjectSettingUsagesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type DeleteProjectEnvResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -110318,6 +111190,8 @@ type UploadFileToAppContainerResponse struct {
 	JSON200 *AppcontainerdtoUploadFileToContainerResp
 	// JSON400 the response for an HTTP 400 `application/json` response
 	JSON400 *HperrorsErrorInfo
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *HperrorsErrorInfo
 	// JSON500 the response for an HTTP 500 `application/json` response
 	JSON500 *HperrorsErrorInfo
 }
@@ -110330,6 +111204,11 @@ func (r UploadFileToAppContainerResponse) GetJSON200() *AppcontainerdtoUploadFil
 // GetJSON400 returns the response for an HTTP 400 `application/json` response
 func (r UploadFileToAppContainerResponse) GetJSON400() *HperrorsErrorInfo {
 	return r.JSON400
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r UploadFileToAppContainerResponse) GetJSON409() *HperrorsErrorInfo {
+	return r.JSON409
 }
 
 // GetJSON500 returns the response for an HTTP 500 `application/json` response
@@ -110360,6 +111239,54 @@ func (r UploadFileToAppContainerResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r UploadFileToAppContainerResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type StreamFileToAppContainerResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r StreamFileToAppContainerResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r StreamFileToAppContainerResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r StreamFileToAppContainerResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r StreamFileToAppContainerResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r StreamFileToAppContainerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r StreamFileToAppContainerResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -110635,6 +111562,61 @@ func (r GetAppDataFileDownloadURLResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetAppDataFileDownloadURLResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type LoadAppDataFileResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *FiledtoLoadDataFileResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r LoadAppDataFileResponse) GetJSON200() *FiledtoLoadDataFileResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r LoadAppDataFileResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r LoadAppDataFileResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r LoadAppDataFileResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r LoadAppDataFileResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r LoadAppDataFileResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r LoadAppDataFileResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -110965,6 +111947,61 @@ func (r ListAppDeploymentResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r ListAppDeploymentResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetActiveAppDeploymentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppdeploymentdtoGetActiveDeploymentResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetActiveAppDeploymentResponse) GetJSON200() *AppdeploymentdtoGetActiveDeploymentResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetActiveAppDeploymentResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetActiveAppDeploymentResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetActiveAppDeploymentResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetActiveAppDeploymentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetActiveAppDeploymentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetActiveAppDeploymentResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -115688,6 +116725,68 @@ func (r GetAppTerminalInfoResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetAppTerminalInfoResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetAppSettingUsagesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *BasesettinghandlerGetSettingUsagesResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetAppSettingUsagesResponse) GetJSON200() *BasesettinghandlerGetSettingUsagesResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetAppSettingUsagesResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetAppSettingUsagesResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetAppSettingUsagesResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetAppSettingUsagesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAppSettingUsagesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAppSettingUsagesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetAppSettingUsagesResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -123772,6 +124871,68 @@ func (r GetProjectEnvTaskStatusResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetProjectEnvTaskStatusResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetProjectEnvSettingUsagesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *BasesettinghandlerGetSettingUsagesResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetProjectEnvSettingUsagesResponse) GetJSON200() *BasesettinghandlerGetSettingUsagesResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetProjectEnvSettingUsagesResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetProjectEnvSettingUsagesResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetProjectEnvSettingUsagesResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetProjectEnvSettingUsagesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetProjectEnvSettingUsagesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetProjectEnvSettingUsagesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetProjectEnvSettingUsagesResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -137053,6 +138214,8 @@ type HandleRepoWebhookResponse struct {
 	JSON200 *WebhookdtoHandleRepoWebhookResp
 	// JSON400 the response for an HTTP 400 `application/json` response
 	JSON400 *HperrorsErrorInfo
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *HperrorsErrorInfo
 	// JSON500 the response for an HTTP 500 `application/json` response
 	JSON500 *HperrorsErrorInfo
 }
@@ -137065,6 +138228,11 @@ func (r HandleRepoWebhookResponse) GetJSON200() *WebhookdtoHandleRepoWebhookResp
 // GetJSON400 returns the response for an HTTP 400 `application/json` response
 func (r HandleRepoWebhookResponse) GetJSON400() *HperrorsErrorInfo {
 	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r HandleRepoWebhookResponse) GetJSON401() *HperrorsErrorInfo {
+	return r.JSON401
 }
 
 // GetJSON500 returns the response for an HTTP 500 `application/json` response
@@ -141526,6 +142694,23 @@ func (c *ClientWithResponses) UpdateProjectUserAccessesWithResponse(ctx context.
 	return ParseUpdateProjectUserAccessesResponse(rsp)
 }
 
+// GetProjectSettingUsagesWithResponse Lists what references a project's setting
+//
+// Lists what still references one of the project's settings: the apps, projects and settings that
+// use it. Deleting a setting they use fails with ERR_SETTING_IN_USE. kind is the settings group, as in
+// its other routes, such as ssh-keys, secrets or config-files.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /projects/{projectID}/{kind}/{itemID}/usages (the `GetProjectSettingUsages` operationId).
+func (c *ClientWithResponses) GetProjectSettingUsagesWithResponse(ctx context.Context, projectID string, kind string, itemID string, reqEditors ...RequestEditorFn) (*GetProjectSettingUsagesResponse, error) {
+	rsp, err := c.GetProjectSettingUsages(ctx, projectID, kind, itemID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetProjectSettingUsagesResponse(rsp)
+}
+
 // DeleteProjectEnvWithResponse Deletes a project env
 //
 // Returns a wrapper object for the known response body format(s).
@@ -142442,6 +143627,27 @@ func (c *ClientWithResponses) UploadFileToAppContainerWithBodyWithResponse(ctx c
 	return ParseUploadFileToAppContainerResponse(rsp)
 }
 
+// StreamFileToAppContainerWithResponse Uploads a file or archive into container over a websocket
+//
+// Takes what file-upload takes, as query parameters, then the content as binary messages
+// and {"type":"end"} as a text message; answers {"type":"done","data":{...}} or
+// {"type":"error","error":{...}}. Neither the server's nor Traefik's timeouts cut it; a
+// client sends a message at least every 60 seconds. With progress=true, each binary
+// message is followed by {"type":"progress","received":<bytes the copy has taken>}.
+// Without the websocket upgrade, the request is only checked: 204 when the stream would
+// be taken, else the error it would get - which a browser cannot read from a refused upgrade.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/container/file-upload/stream (the `StreamFileToAppContainer` operationId).
+func (c *ClientWithResponses) StreamFileToAppContainerWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, params *StreamFileToAppContainerParams, reqEditors ...RequestEditorFn) (*StreamFileToAppContainerResponse, error) {
+	rsp, err := c.StreamFileToAppContainer(ctx, projectID, projectEnv, appID, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseStreamFileToAppContainerResponse(rsp)
+}
+
 // ListAppDataFileWithResponse Lists data files of an app
 //
 // Returns a wrapper object for the known response body format(s).
@@ -142518,6 +143724,40 @@ func (c *ClientWithResponses) GetAppDataFileDownloadURLWithResponse(ctx context.
 		return nil, err
 	}
 	return ParseGetAppDataFileDownloadURLResponse(rsp)
+}
+
+// LoadAppDataFileWithBodyWithResponse Loads a data file into a command
+//
+// Feeds an app's data file to a command run in the app, on its stdin - a dump a job
+// saved, loaded back into the app's database. A file saved encrypted takes its passphrase.
+// The load runs as a task, whose ID is answered.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/data-files/{itemID}/load (the `LoadAppDataFile` operationId).
+func (c *ClientWithResponses) LoadAppDataFileWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoadAppDataFileResponse, error) {
+	rsp, err := c.LoadAppDataFileWithBody(ctx, projectID, projectEnv, appID, itemID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLoadAppDataFileResponse(rsp)
+}
+
+// LoadAppDataFileWithResponse Loads a data file into a command
+//
+// Feeds an app's data file to a command run in the app, on its stdin - a dump a job
+// saved, loaded back into the app's database. A file saved encrypted takes its passphrase.
+// The load runs as a task, whose ID is answered.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/data-files/{itemID}/load (the `LoadAppDataFile` operationId).
+func (c *ClientWithResponses) LoadAppDataFileWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, body LoadAppDataFileJSONRequestBody, reqEditors ...RequestEditorFn) (*LoadAppDataFileResponse, error) {
+	rsp, err := c.LoadAppDataFile(ctx, projectID, projectEnv, appID, itemID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLoadAppDataFileResponse(rsp)
 }
 
 // GetAppDependencyMetricsWithResponse Gets what an app calls
@@ -142629,6 +143869,22 @@ func (c *ClientWithResponses) ListAppDeploymentWithResponse(ctx context.Context,
 		return nil, err
 	}
 	return ParseListAppDeploymentResponse(rsp)
+}
+
+// GetActiveAppDeploymentWithResponse Gets the app's deployment that has not ended
+//
+// The deployment running - in-progress - or else the next to run, not-started; data is null when none
+// is queued or running. Light enough to be asked every few seconds.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/deployments/active (the `GetActiveAppDeployment` operationId).
+func (c *ClientWithResponses) GetActiveAppDeploymentWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*GetActiveAppDeploymentResponse, error) {
+	rsp, err := c.GetActiveAppDeployment(ctx, projectID, projectEnv, appID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetActiveAppDeploymentResponse(rsp)
 }
 
 // GetAppDeploymentWithResponse Gets app deployment
@@ -144296,6 +145552,24 @@ func (c *ClientWithResponses) GetAppTerminalInfoWithResponse(ctx context.Context
 		return nil, err
 	}
 	return ParseGetAppTerminalInfoResponse(rsp)
+}
+
+// GetAppSettingUsagesWithResponse Lists what references an app's setting
+//
+// Lists what still references one of the app's settings: the apps and settings that use it, such as
+// the setting mount that reads a secret. Deleting a setting they use fails with ERR_SETTING_IN_USE. kind
+// is the settings group, as in its other routes: secrets, config-files, setting-mounts, sched-jobs or
+// periodic-jobs.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/{kind}/{itemID}/usages (the `GetAppSettingUsages` operationId).
+func (c *ClientWithResponses) GetAppSettingUsagesWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, kind string, itemID string, reqEditors ...RequestEditorFn) (*GetAppSettingUsagesResponse, error) {
+	rsp, err := c.GetAppSettingUsages(ctx, projectID, projectEnv, appID, kind, itemID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAppSettingUsagesResponse(rsp)
 }
 
 // ListProjectEnvAuditLogWithResponse Lists audit logs
@@ -147120,6 +148394,23 @@ func (c *ClientWithResponses) GetProjectEnvTaskStatusWithResponse(ctx context.Co
 		return nil, err
 	}
 	return ParseGetProjectEnvTaskStatusResponse(rsp)
+}
+
+// GetProjectEnvSettingUsagesWithResponse Lists what references an env's setting
+//
+// Lists what still references one of the env's settings: the apps, projects and settings that use
+// it. Deleting a setting they use fails with ERR_SETTING_IN_USE. kind is the settings group, as in its
+// other routes, such as ssh-keys, secrets or config-files.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/{kind}/{itemID}/usages (the `GetProjectEnvSettingUsages` operationId).
+func (c *ClientWithResponses) GetProjectEnvSettingUsagesWithResponse(ctx context.Context, projectID string, projectEnv string, kind string, itemID string, reqEditors ...RequestEditorFn) (*GetProjectEnvSettingUsagesResponse, error) {
+	rsp, err := c.GetProjectEnvSettingUsages(ctx, projectID, projectEnv, kind, itemID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetProjectEnvSettingUsagesResponse(rsp)
 }
 
 // DeleteSessionWithResponse Deletes the current user session
@@ -161035,6 +162326,53 @@ func ParseUpdateProjectUserAccessesResponse(rsp *http.Response) (*UpdateProjectU
 	return response, nil
 }
 
+// ParseGetProjectSettingUsagesResponse parses an HTTP response from a GetProjectSettingUsagesWithResponse call
+func ParseGetProjectSettingUsagesResponse(rsp *http.Response) (*GetProjectSettingUsagesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetProjectSettingUsagesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest BasesettinghandlerGetSettingUsagesResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseDeleteProjectEnvResponse parses an HTTP response from a DeleteProjectEnvWithResponse call
 func ParseDeleteProjectEnvResponse(rsp *http.Response) (*DeleteProjectEnvResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -162871,6 +164209,52 @@ func ParseUploadFileToAppContainerResponse(rsp *http.Response) (*UploadFileToApp
 		}
 		response.JSON400 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseStreamFileToAppContainerResponse parses an HTTP response from a StreamFileToAppContainerWithResponse call
+func ParseStreamFileToAppContainerResponse(rsp *http.Response) (*StreamFileToAppContainerResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &StreamFileToAppContainerResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 101:
+		break // No content-type
+
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest HperrorsErrorInfo
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -163059,6 +164443,46 @@ func ParseGetAppDataFileDownloadURLResponse(rsp *http.Response) (*GetAppDataFile
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest FiledtoGetFileDownloadURLResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseLoadAppDataFileResponse parses an HTTP response from a LoadAppDataFileWithResponse call
+func ParseLoadAppDataFileResponse(rsp *http.Response) (*LoadAppDataFileResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &LoadAppDataFileResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest FiledtoLoadDataFileResp
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -163299,6 +164723,46 @@ func ParseListAppDeploymentResponse(rsp *http.Response) (*ListAppDeploymentRespo
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest AppdeploymentdtoListDeploymentResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetActiveAppDeploymentResponse parses an HTTP response from a GetActiveAppDeploymentWithResponse call
+func ParseGetActiveAppDeploymentResponse(rsp *http.Response) (*GetActiveAppDeploymentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetActiveAppDeploymentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppdeploymentdtoGetActiveDeploymentResp
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -166749,6 +168213,53 @@ func ParseGetAppTerminalInfoResponse(rsp *http.Response) (*GetAppTerminalInfoRes
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetAppSettingUsagesResponse parses an HTTP response from a GetAppSettingUsagesWithResponse call
+func ParseGetAppSettingUsagesResponse(rsp *http.Response) (*GetAppSettingUsagesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAppSettingUsagesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest BasesettinghandlerGetSettingUsagesResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest HperrorsErrorInfo
@@ -172604,6 +174115,53 @@ func ParseGetProjectEnvTaskStatusResponse(rsp *http.Response) (*GetProjectEnvTas
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetProjectEnvSettingUsagesResponse parses an HTTP response from a GetProjectEnvSettingUsagesWithResponse call
+func ParseGetProjectEnvSettingUsagesResponse(rsp *http.Response) (*GetProjectEnvSettingUsagesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetProjectEnvSettingUsagesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest BasesettinghandlerGetSettingUsagesResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest HperrorsErrorInfo
@@ -182279,6 +183837,13 @@ func ParseHandleRepoWebhookResponse(rsp *http.Response) (*HandleRepoWebhookRespo
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest HperrorsErrorInfo

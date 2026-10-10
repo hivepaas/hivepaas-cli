@@ -59,3 +59,41 @@ func TestSecretsAndConfigFiles(t *testing.T) {
 	})
 	assert.Equal(t, "level=debug\n", app.must("config-file", "pull", "app-conf", "-").stdout)
 }
+
+// A project's secret and an environment's config file reach the apps that use
+// them, which list them as inherited. One kept from the apps is not theirs to
+// use.
+func TestSecretsAndConfigFilesOfAProjectAndAnEnvironment(t *testing.T) {
+	t.Parallel()
+	p := project(t, "shared")
+	app := p.app("shared")
+	p.must("app", "create", "shared", "--image", busybox, "--command", `sh -c 'echo "token=$TOKEN"; exec sleep 3600'`)
+
+	secret := "shared-" + runID
+	p.with(secret).must("secret", "set", "TOKEN", "--scope", "project")
+	p.must("secret", "set", "KEPT=x", "--scope", "project", "--no-inheritable")
+	ls := p.must("secret", "ls", "--scope", "project").stdout
+	assert.Regexp(t, `TOKEN\s+\S+ B\s+text\s+yes\s+this project`, ls)
+	assert.Regexp(t, `KEPT\s+\S+ B\s+text\s+no\s+this project`, ls)
+	assert.NotContains(t, ls, secret)
+	own := app.must("secret", "ls").stdout
+	assert.Regexp(t, `TOKEN\s+.*inherited`, own)
+	assert.NotContains(t, own, "KEPT")
+	app.must("env", "set", "TOKEN=${secrets.TOKEN}")
+	assert.NotZero(t, app.run("env", "set", "OTHER=${secrets.KEPT}").code, "a secret kept from the apps")
+
+	dir := files(t, map[string]string{"shared.conf": "region=eu\n"})
+	p.in(dir).must("config-file", "push", "shared-conf", "shared.conf", "--scope", "env")
+	assert.Regexp(t, `shared-conf\s+.*inherited`, app.must("config-file", "ls").stdout)
+	assert.Equal(t, "region=eu\n", app.must("config-file", "pull", "shared-conf", "-").stdout)
+
+	app.must("restart")
+	eventually(t, deployWithin, func() error {
+		return contains(app.run("logs", "--tail", "50").stdout, "token="+secret)
+	})
+
+	p.must("secret", "rm", "KEPT", "--scope", "project")
+	p.must("config-file", "rm", "shared-conf", "--scope", "env")
+	assert.NotContains(t, app.must("config-file", "ls").stdout, "shared-conf")
+	assert.NotContains(t, p.must("secret", "ls", "--scope", "project").stdout, "KEPT")
+}

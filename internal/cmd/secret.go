@@ -16,18 +16,20 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/hivepaas/hivepaas-cli/internal/api"
-	"github.com/hivepaas/hivepaas-cli/internal/client"
 	"github.com/hivepaas/hivepaas-cli/internal/exitcode"
 	"github.com/hivepaas/hivepaas-cli/internal/output"
-	"github.com/hivepaas/hivepaas-cli/internal/resolve"
 )
 
 func (a *App) secretCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "secret",
 		Aliases: []string{"secrets"},
-		Short:   "An app's secrets: values kept hidden, given to it as ${secrets.KEY} or as files",
+		Short:   "Secrets: values kept hidden, given to apps as ${secrets.KEY} or as files",
+		Long: "Secrets of an app, or - with --scope env or --scope project - of its environment or its\n" +
+			"project, which the apps there get unless --no-inheritable. Values are kept hidden, given to\n" +
+			"an app as ${secrets.KEY} in an env var, or as a file through a setting mount.",
 	}
+	a.addScopeFlag(cmd, "secrets")
 	cmd.AddCommand(a.secretLsCmd(), a.secretSetCmd(), a.secretRmCmd())
 	return cmd
 }
@@ -35,18 +37,14 @@ func (a *App) secretCmd() *cobra.Command {
 func (a *App) secretLsCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "ls",
-		Short: "List an app's secrets, without their values",
+		Short: "List the secrets, without their values",
 		Args:  usageArgs(cobra.NoArgs),
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			c, err := a.client()
+			st, err := a.openStore(cmd.Context())
 			if err != nil {
 				return err
 			}
-			sel, err := a.selectTarget(cmd.Context(), c, scopeApp)
-			if err != nil {
-				return err
-			}
-			secrets, err := appSecrets(cmd.Context(), c, sel)
+			secrets, err := st.secrets(cmd.Context())
 			if err != nil {
 				return err
 			}
@@ -56,40 +54,44 @@ func (a *App) secretLsCmd() *cobra.Command {
 			now := time.Now()
 			rows := make([][]string, 0, len(secrets))
 			for _, s := range secrets {
-				rows = append(rows, storedRow(s.Key, s.Size, s.Base64, s.Inheritable, s.Inherited, s.UpdatedAt, now))
+				rows = append(rows, storedRow(s.Key, s.Size, s.Base64, s.Inheritable, st.owner(s.Inherited),
+					s.UpdatedAt, now))
 			}
-			return a.printer.Table(storedColumns(colKey), rows)
+			return a.printer.Table(st.columns(colKey), rows)
 		},
 	}
 }
 
 type secretSetFlags struct {
-	file                 string
-	previews, noPreviews bool
+	file  string
+	share shareFlags
 }
 
 func (a *App) secretSetCmd() *cobra.Command {
 	var flags secretSetFlags
 	cmd := &cobra.Command{
 		Use:   "set KEY=VALUE... | KEY --file FILE | KEY",
-		Short: "Add or change an app's secrets",
-		Long: "Add or change secrets of an app. KEY alone reads the value from stdin, or asks for it at a\n" +
-			"terminal without showing it: a value on the command line stays in the shell's history.\n" +
-			"--file takes a file, kept as it is: a keystore, a certificate.\n\n" +
-			"A secret reaches the app as ${secrets.KEY} in an env var, or as a file through a setting\n" +
-			"mount; it is in the app's pull request previews too unless --no-previews.",
+		Short: "Add or change secrets",
+		Long: "Add or change secrets of an app, or with --scope of its environment or project. KEY alone\n" +
+			"reads the value from stdin, or asks for it at a terminal without showing it: a value on the\n" +
+			"command line stays in the shell's history. --file takes a file, kept as it is: a keystore,\n" +
+			"a certificate.\n\n" +
+			"A secret reaches an app as ${secrets.KEY} in an env var, or as a file through a setting\n" +
+			"mount. One is shared below unless --no-inheritable: an app's with its pull request\n" +
+			"previews, an environment's or a project's with their apps. A secret changed keeps how it is\n" +
+			"shared unless told.",
 		Example: "  hivepaas secret set STRIPE_KEY\n" +
 			"  echo -n \"$TOKEN\" | hivepaas secret set API_TOKEN\n" +
-			"  hivepaas secret set KEYSTORE --file ./keystore.jks --no-previews",
+			"  hivepaas secret set KEYSTORE --file ./keystore.jks --no-previews\n" +
+			"  hivepaas secret set DATABASE_URL --scope env -p shop -e production\n" +
+			"  hivepaas secret set SENTRY_DSN=https://... --scope project --no-inheritable",
 		Args: usageArgs(cobra.MinimumNArgs(1)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return a.secretSet(cmd.Context(), args, flags)
 		},
 	}
 	cmd.Flags().StringVar(&flags.file, "file", "", "the value is this file's content")
-	cmd.Flags().BoolVar(&flags.previews, "previews", false, "the app's pull request previews get it too (default)")
-	cmd.Flags().BoolVar(&flags.noPreviews, "no-previews", false, "the app's pull request previews do not get it")
-	cmd.MarkFlagsMutuallyExclusive("previews", "no-previews")
+	flags.share.add(cmd)
 	return cmd
 }
 
@@ -107,63 +109,56 @@ func valueOf(data []byte) secretValue {
 }
 
 func (a *App) secretSet(ctx context.Context, args []string, flags secretSetFlags) error {
+	st, err := a.openStore(ctx)
+	if err != nil {
+		return err
+	}
+	shared, err := flags.share.shared(st.level)
+	if err != nil {
+		return err
+	}
 	values, err := a.secretValues(ctx, args, flags.file)
 	if err != nil {
 		return err
 	}
-	c, err := a.client()
+	secrets, err := st.secrets(ctx)
 	if err != nil {
 		return err
 	}
-	sel, err := a.selectTarget(ctx, c, scopeApp)
-	if err != nil {
-		return err
-	}
-	secrets, err := appSecrets(ctx, c, sel)
-	if err != nil {
-		return err
-	}
-	previews := previewsOf(flags.previews, flags.noPreviews)
 	var added, changed []string
 	for _, kv := range values {
 		current := ownSecret(secrets, kv.key)
 		if current == nil {
-			resp, err := c.CreateAppSecretWithResponse(ctx, sel.Project.Id, sel.Env, sel.App.Id,
-				api.SecretdtoCreateSecretReq{Key: kv.key, Value: kv.value.text, Base64: kv.value.base64,
-					Inheritable: previews == nil || *previews})
-			if err = client.Check(resp, err); err != nil {
-				return a.secretsSoFar(err, added, changed, sel)
+			meta, err := st.createSecret(ctx, api.SecretdtoCreateSecretReq{Key: kv.key, Value: kv.value.text,
+				Base64: kv.value.base64, Inheritable: shared == nil || *shared})
+			if err != nil {
+				return a.secretsSoFar(err, added, changed, st)
 			}
-			if resp.JSON201 != nil {
-				a.warnMeta(resp.JSON201.Meta)
-			}
+			a.warnMeta(meta)
 			added = append(added, kv.key)
 			continue
 		}
 		inheritable := current.Inheritable
-		if previews != nil {
-			inheritable = *previews
+		if shared != nil {
+			inheritable = *shared
 		}
-		resp, err := c.UpdateAppSecretWithResponse(ctx, sel.Project.Id, sel.Env, sel.App.Id, current.Id,
-			api.SecretdtoUpdateSecretReq{Key: current.Key, Value: kv.value.text, Base64: kv.value.base64,
-				Inheritable: inheritable, Default: current.Default != nil && *current.Default,
-				UpdateVer: current.UpdateVer})
-		if err = client.Check(resp, err); err != nil {
-			return a.secretsSoFar(err, added, changed, sel)
+		meta, err := st.updateSecret(ctx, current.Id, api.SecretdtoUpdateSecretReq{Key: current.Key,
+			Value: kv.value.text, Base64: kv.value.base64, Inheritable: inheritable,
+			Default: current.Default != nil && *current.Default, UpdateVer: current.UpdateVer})
+		if err != nil {
+			return a.secretsSoFar(err, added, changed, st)
 		}
-		if resp.JSON200 != nil {
-			a.warnMeta(resp.JSON200.Meta)
-		}
+		a.warnMeta(meta)
 		changed = append(changed, kv.key)
 	}
-	a.printer.Successf("%s on %s.", changeWords(changed, added), sel.where())
+	a.printer.Successf("%s on %s.", changeWords(changed, added), st.where())
 	return nil
 }
 
 // secretsSoFar says which secrets were written before err stopped the rest.
-func (a *App) secretsSoFar(err error, added, changed []string, sel *selection) error {
+func (a *App) secretsSoFar(err error, added, changed []string, st *store) error {
 	if len(added)+len(changed) > 0 {
-		a.printer.Infof("%s on %s before this:", changeWords(changed, added), sel.where())
+		a.printer.Infof("%s on %s before this:", changeWords(changed, added), st.where())
 	}
 	return err
 }
@@ -216,19 +211,15 @@ func (a *App) secretValues(ctx context.Context, args []string, file string) ([]k
 func (a *App) secretRmCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "rm KEY...",
-		Short: "Remove secrets of an app",
+		Short: "Remove secrets",
 		Args:  usageArgs(cobra.MinimumNArgs(1)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
-			c, err := a.client()
+			st, err := a.openStore(ctx)
 			if err != nil {
 				return err
 			}
-			sel, err := a.selectTarget(ctx, c, scopeApp)
-			if err != nil {
-				return err
-			}
-			secrets, err := appSecrets(ctx, c, sel)
+			secrets, err := st.secrets(ctx)
 			if err != nil {
 				return err
 			}
@@ -238,39 +229,18 @@ func (a *App) secretRmCmd() *cobra.Command {
 			for _, key := range args {
 				s := ownSecret(secrets, key)
 				if s == nil {
-					return exitcode.New(exitcode.NotFound, "%s is not a secret of %s", key, sel.where())
+					return exitcode.New(exitcode.NotFound, "%s is not a secret of %s", key, st.where())
 				}
 				found = append(found, s)
 			}
 			for i, s := range found {
-				resp, err := c.DeleteAppSecretWithResponse(ctx, sel.Project.Id, sel.Env, sel.App.Id, s.Id)
-				if err = client.Check(resp, err); err != nil {
-					return a.removedSoFar(err, args[:i], sel)
+				if err := st.deleteSecret(ctx, s.Id); err != nil {
+					return a.removedSoFar(err, args[:i], st)
 				}
 			}
-			a.printer.Successf("Removed %s from %s.", strings.Join(args, ", "), sel.where())
+			a.printer.Successf("Removed %s from %s.", strings.Join(args, ", "), st.where())
 			return nil
 		},
-	}
-}
-
-// appSecrets are an app's secrets, those of its project and env among them,
-// page by page: the server answers 50 unless asked.
-func appSecrets(ctx context.Context, c *client.Client, sel *selection) ([]api.SecretdtoSecretResp, error) {
-	var all []api.SecretdtoSecretResp
-	for offset := 0; ; offset += storedPage {
-		resp, err := c.ListAppSecretWithResponse(ctx, sel.Project.Id, sel.Env, sel.App.Id, page(offset))
-		if err = client.Check(resp, err); err != nil {
-			return nil, err
-		}
-		if resp.JSON200 == nil {
-			return all, nil
-		}
-		items := resolve.Deref(resp.JSON200.Data)
-		all = append(all, items...)
-		if len(items) < storedPage {
-			return all, nil
-		}
 	}
 }
 
@@ -296,30 +266,19 @@ func (a *App) warnMeta(meta *api.BasedtoMeta) {
 }
 
 // removedSoFar says which were removed before err stopped the rest.
-func (a *App) removedSoFar(err error, removed []string, sel *selection) error {
+func (a *App) removedSoFar(err error, removed []string, st *store) error {
 	if len(removed) > 0 {
-		a.printer.Infof("Removed %s from %s before this:", strings.Join(removed, ", "), sel.where())
+		a.printer.Infof("Removed %s from %s before this:", strings.Join(removed, ", "), st.where())
 	}
 	return err
 }
 
-// ownSecret is the app's own secret key names, not one it inherits.
+// ownSecret is the store's own secret key names, not one it inherits.
 func ownSecret(secrets []api.SecretdtoSecretResp, key string) *api.SecretdtoSecretResp {
 	for i, s := range secrets {
 		if s.Key == key && (s.Inherited == nil || !*s.Inherited) {
 			return &secrets[i]
 		}
-	}
-	return nil
-}
-
-// previewsOf is what --previews and --no-previews ask: nil for neither.
-func previewsOf(previews, noPreviews bool) *bool {
-	switch {
-	case previews:
-		return ptr(true)
-	case noPreviews:
-		return ptr(false)
 	}
 	return nil
 }
@@ -340,17 +299,9 @@ func changeWords(changed, added []string) string {
 	return strings.ToUpper(words[:1]) + words[1:]
 }
 
-// storedColumns head a list of what HivePaaS keeps for an app: its secrets, its
-// config files.
-func storedColumns(first string) []string {
-	return []string{first, colSize, colType, "PREVIEWS", "OF", colUpdated}
-}
-
-func storedRow(name string, size *int, isBase64, inheritable bool, inherited *bool, updatedAt string,
-	now time.Time,
-) []string {
-	return []string{name, sizeWords(size), valueKind(isBase64), yesNo(inheritable), owner(inherited),
-		output.Ago(updatedAt, now)}
+// storedRow is one of a store's secrets or config files, as a list shows it.
+func storedRow(name string, size *int, isBase64, inheritable bool, of, updatedAt string, now time.Time) []string {
+	return []string{name, sizeWords(size), valueKind(isBase64), yesNo(inheritable), of, output.Ago(updatedAt, now)}
 }
 
 func sizeWords(size *int) string {
@@ -369,12 +320,4 @@ func valueKind(isBase64 bool) string {
 		return "binary"
 	}
 	return "text"
-}
-
-// owner says whose a setting an app sees is: its own, or its project's or env's.
-func owner(inherited *bool) string {
-	if inherited != nil && *inherited {
-		return "inherited"
-	}
-	return "this app"
 }

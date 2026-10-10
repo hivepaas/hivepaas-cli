@@ -19,6 +19,7 @@ bin/hivepaas ps                                # where each replica runs, and wh
 bin/hivepaas job run migrate                   # a scheduled job, now, waited for
 bin/hivepaas cp ./config.yaml :/app/config.yaml
 bin/hivepaas secret set STRIPE_KEY             # the value asked for, not on the command line
+bin/hivepaas secret set SENTRY_DSN --scope project   # the project's, for its apps
 bin/hivepaas logs -f --since 10m
 bin/hivepaas status                            # what needs attention on the installation
 bin/hivepaas backup ls && bin/hivepaas backup restore a1b2c3d4 --stop-app

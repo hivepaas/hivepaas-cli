@@ -38,6 +38,9 @@ type App struct {
 	linkFrom string
 	// completing says the CLI answers the shell's Tab: it asks nothing.
 	completing bool
+	// storeScope is --scope of the secret and config-file commands: whose
+	// they act on.
+	storeScope string
 
 	stdin  io.Reader
 	stdout io.Writer

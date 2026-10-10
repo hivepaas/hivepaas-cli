@@ -12,20 +12,20 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/hivepaas/hivepaas-cli/internal/api"
-	"github.com/hivepaas/hivepaas-cli/internal/client"
 	"github.com/hivepaas/hivepaas-cli/internal/exitcode"
-	"github.com/hivepaas/hivepaas-cli/internal/resolve"
 )
 
 func (a *App) configFileCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "config-file",
 		Aliases: []string{"config-files"},
-		Short:   "An app's config files: files HivePaaS keeps, mounted into its containers",
-		Long: "An app's config files: an nginx.conf, a settings.yaml, kept by HivePaaS. A setting mount, made\n" +
-			"in the dashboard, puts one at a path in the app's containers; a change reaches them on its\n" +
-			"own, without a deployment.",
+		Short:   "Config files: files HivePaaS keeps, mounted into apps' containers",
+		Long: "Config files: an nginx.conf, a settings.yaml, kept by HivePaaS for an app, or - with --scope\n" +
+			"env or --scope project - for its environment or its project, whose apps get them unless\n" +
+			"--no-inheritable. A setting mount, made in the dashboard, puts one at a path in an app's\n" +
+			"containers; a change reaches them on its own, without a deployment.",
 	}
+	a.addScopeFlag(cmd, "config files")
 	cmd.AddCommand(a.configFileLsCmd(), a.configFilePushCmd(), a.configFilePullCmd(), a.configFileRmCmd())
 	return cmd
 }
@@ -33,10 +33,10 @@ func (a *App) configFileCmd() *cobra.Command {
 func (a *App) configFileLsCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "ls",
-		Short: "List an app's config files",
+		Short: "List the config files",
 		Args:  usageArgs(cobra.NoArgs),
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			_, _, files, err := a.configFiles(cmd.Context())
+			st, files, err := a.configFiles(cmd.Context())
 			if err != nil {
 				return err
 			}
@@ -46,34 +46,35 @@ func (a *App) configFileLsCmd() *cobra.Command {
 			now := time.Now()
 			rows := make([][]string, 0, len(files))
 			for _, f := range files {
-				rows = append(rows, storedRow(f.Name, f.Size, f.Base64, f.Inheritable, f.Inherited, f.UpdatedAt, now))
+				rows = append(rows, storedRow(f.Name, f.Size, f.Base64, f.Inheritable, st.owner(f.Inherited),
+					f.UpdatedAt, now))
 			}
-			return a.printer.Table(storedColumns(colName), rows)
+			return a.printer.Table(st.columns(colName), rows)
 		},
 	}
 }
 
 func (a *App) configFilePushCmd() *cobra.Command {
-	var previews, noPreviews bool
+	var share shareFlags
 	cmd := &cobra.Command{
 		Use:   "push NAME FILE",
-		Short: "Add a config file to an app, or change one, from a local file",
-		Long: "Add a config file to an app, or change the one of that name, with FILE's content; - reads\n" +
-			"stdin. A file that is not text is kept as it is. The app's pull request previews get it too\n" +
-			"unless --no-previews.",
-		Example: "  hivepaas config-file push nginx-conf ./nginx.conf",
-		Args:    usageArgs(cobra.ExactArgs(2)), //nolint:mnd // NAME and FILE
+		Short: "Add a config file, or change one, from a local file",
+		Long: "Add a config file, or change the one of that name, with FILE's content; - reads stdin. A file\n" +
+			"that is not text is kept as it is. It is shared below unless --no-inheritable: an app's with\n" +
+			"its pull request previews, an environment's or a project's with their apps. One changed keeps\n" +
+			"how it is shared unless told.",
+		Example: "  hivepaas config-file push nginx-conf ./nginx.conf\n" +
+			"  hivepaas config-file push ca-bundle ./ca.pem --scope project",
+		Args: usageArgs(cobra.ExactArgs(2)), //nolint:mnd // NAME and FILE
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return a.configFilePush(cmd.Context(), args[0], args[1], previewsOf(previews, noPreviews))
+			return a.configFilePush(cmd.Context(), args[0], args[1], share)
 		},
 	}
-	cmd.Flags().BoolVar(&previews, "previews", false, "the app's pull request previews get it too (default)")
-	cmd.Flags().BoolVar(&noPreviews, "no-previews", false, "the app's pull request previews do not get it")
-	cmd.MarkFlagsMutuallyExclusive("previews", "no-previews")
+	share.add(cmd)
 	return cmd
 }
 
-func (a *App) configFilePush(ctx context.Context, name, file string, previews *bool) error {
+func (a *App) configFilePush(ctx context.Context, name, file string, share shareFlags) error {
 	var data []byte
 	var err error
 	if file == "-" {
@@ -85,54 +86,53 @@ func (a *App) configFilePush(ctx context.Context, name, file string, previews *b
 		return exitcode.Wrap(exitcode.Usage, err)
 	}
 	content := valueOf(data)
-	c, sel, files, err := a.configFiles(ctx)
+	st, files, err := a.configFiles(ctx)
+	if err != nil {
+		return err
+	}
+	shared, err := share.shared(st.level)
 	if err != nil {
 		return err
 	}
 	current := ownConfigFile(files, name)
 	if current == nil {
-		resp, err := c.CreateAppConfigFileWithResponse(ctx, sel.Project.Id, sel.Env, sel.App.Id,
-			api.ConfigfiledtoCreateConfigFileReq{Name: name, Content: content.text, Base64: content.base64,
-				Inheritable: previews == nil || *previews})
-		if err = client.Check(resp, err); err != nil {
+		meta, err := st.createConfigFile(ctx, api.ConfigfiledtoCreateConfigFileReq{Name: name, Content: content.text,
+			Base64: content.base64, Inheritable: shared == nil || *shared})
+		if err != nil {
 			return err
 		}
-		if resp.JSON201 != nil {
-			a.warnMeta(resp.JSON201.Meta)
-		}
-		a.printer.Successf("Added config file %s to %s.", name, sel.where())
+		a.warnMeta(meta)
+		a.printer.Successf("Added config file %s to %s.", name, st.where())
 		return nil
 	}
 	inheritable := current.Inheritable
-	if previews != nil {
-		inheritable = *previews
+	if shared != nil {
+		inheritable = *shared
 	}
-	resp, err := c.UpdateAppConfigFileWithResponse(ctx, sel.Project.Id, sel.Env, sel.App.Id, current.Id,
-		api.ConfigfiledtoUpdateConfigFileReq{Name: current.Name, Content: content.text, Base64: content.base64,
-			Inheritable: inheritable, Default: current.Default != nil && *current.Default, UpdateVer: current.UpdateVer})
-	if err = client.Check(resp, err); err != nil {
+	meta, err := st.updateConfigFile(ctx, current.Id, api.ConfigfiledtoUpdateConfigFileReq{Name: current.Name,
+		Content: content.text, Base64: content.base64, Inheritable: inheritable,
+		Default: current.Default != nil && *current.Default, UpdateVer: current.UpdateVer})
+	if err != nil {
 		return err
 	}
-	if resp.JSON200 != nil {
-		a.warnMeta(resp.JSON200.Meta)
-	}
-	a.printer.Successf("Changed config file %s of %s.", name, sel.where())
+	a.warnMeta(meta)
+	a.printer.Successf("Changed config file %s of %s.", name, st.where())
 	return nil
 }
 
 func (a *App) configFilePullCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "pull NAME [FILE]",
-		Short: "Write an app's config file to a local file, or to stdout",
+		Short: "Write a config file to a local file, or to stdout",
 		Args:  usageArgs(cobra.RangeArgs(1, 2)), //nolint:mnd // NAME and FILE
 		RunE: func(cmd *cobra.Command, args []string) error {
-			_, sel, files, err := a.configFiles(cmd.Context())
+			st, files, err := a.configFiles(cmd.Context())
 			if err != nil {
 				return err
 			}
 			f := findConfigFile(files, args[0])
 			if f == nil {
-				return exitcode.New(exitcode.NotFound, "%s is not a config file of %s", args[0], sel.where())
+				return exitcode.New(exitcode.NotFound, "%s is not a config file of %s", args[0], st.where())
 			}
 			data := []byte(f.Content)
 			if f.Base64 {
@@ -147,7 +147,7 @@ func (a *App) configFilePullCmd() *cobra.Command {
 			if err = os.WriteFile(args[1], data, 0o644); err != nil { //nolint:gosec,mnd // a file as touch makes one
 				return exitcode.Wrap(exitcode.Failure, err)
 			}
-			a.printer.Successf("Wrote config file %s of %s to %s.", f.Name, sel.where(), args[1])
+			a.printer.Successf("Wrote config file %s of %s to %s.", f.Name, st.where(), args[1])
 			return nil
 		},
 	}
@@ -156,11 +156,11 @@ func (a *App) configFilePullCmd() *cobra.Command {
 func (a *App) configFileRmCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "rm NAME...",
-		Short: "Remove config files of an app",
+		Short: "Remove config files",
 		Args:  usageArgs(cobra.MinimumNArgs(1)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
-			c, sel, files, err := a.configFiles(ctx)
+			st, files, err := a.configFiles(ctx)
 			if err != nil {
 				return err
 			}
@@ -169,53 +169,36 @@ func (a *App) configFileRmCmd() *cobra.Command {
 			for _, name := range args {
 				f := ownConfigFile(files, name)
 				if f == nil {
-					return exitcode.New(exitcode.NotFound, "%s is not a config file of %s", name, sel.where())
+					return exitcode.New(exitcode.NotFound, "%s is not a config file of %s", name, st.where())
 				}
 				found = append(found, f)
 			}
 			for i, f := range found {
-				resp, err := c.DeleteAppConfigFileWithResponse(ctx, sel.Project.Id, sel.Env, sel.App.Id, f.Id)
-				if err = client.Check(resp, err); err != nil {
-					return a.removedSoFar(err, args[:i], sel)
+				if err := st.deleteConfigFile(ctx, f.Id); err != nil {
+					return a.removedSoFar(err, args[:i], st)
 				}
 			}
-			a.printer.Successf("Removed %s from %s.", strings.Join(args, ", "), sel.where())
+			a.printer.Successf("Removed %s from %s.", strings.Join(args, ", "), st.where())
 			return nil
 		},
 	}
 }
 
-// configFiles are the app's config files, those of its project and env among
-// them, with the client and the app they were read with.
-func (a *App) configFiles(ctx context.Context) (
-	*client.Client, *selection, []api.ConfigfiledtoConfigFileResp, error,
-) {
-	c, err := a.client()
+// configFiles are the store's config files, those it inherits among them,
+// with the store they were read from.
+func (a *App) configFiles(ctx context.Context) (*store, []api.ConfigfiledtoConfigFileResp, error) {
+	st, err := a.openStore(ctx)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
-	sel, err := a.selectTarget(ctx, c, scopeApp)
+	files, err := st.configFiles(ctx)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
-	var files []api.ConfigfiledtoConfigFileResp
-	for offset := 0; ; offset += storedPage {
-		resp, err := c.ListAppConfigFileWithResponse(ctx, sel.Project.Id, sel.Env, sel.App.Id, page(offset))
-		if err = client.Check(resp, err); err != nil {
-			return nil, nil, nil, err
-		}
-		if resp.JSON200 == nil {
-			return c, sel, files, nil
-		}
-		items := resolve.Deref(resp.JSON200.Data)
-		files = append(files, items...)
-		if len(items) < storedPage {
-			return c, sel, files, nil
-		}
-	}
+	return st, files, nil
 }
 
-// ownConfigFile is the app's own config file name names, not one it inherits.
+// ownConfigFile is the store's own config file name names, not one it inherits.
 func ownConfigFile(files []api.ConfigfiledtoConfigFileResp, name string) *api.ConfigfiledtoConfigFileResp {
 	for i, f := range files {
 		if f.Name == name && (f.Inherited == nil || !*f.Inherited) {
@@ -225,7 +208,7 @@ func ownConfigFile(files []api.ConfigfiledtoConfigFileResp, name string) *api.Co
 	return nil
 }
 
-// findConfigFile is the config file name names: the app's own first, else one
+// findConfigFile is the config file name names: the store's own first, else one
 // it inherits.
 func findConfigFile(files []api.ConfigfiledtoConfigFileResp, name string) *api.ConfigfiledtoConfigFileResp {
 	if f := ownConfigFile(files, name); f != nil {

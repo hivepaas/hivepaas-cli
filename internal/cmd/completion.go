@@ -287,11 +287,11 @@ func (a *App) taskChoices(ctx context.Context, c *client.Client) ([]cobra.Comple
 }
 
 func (a *App) secretChoices(ctx context.Context, c *client.Client) ([]cobra.Completion, error) {
-	sel, err := a.selectTarget(ctx, c, scopeApp)
+	st, err := a.storeWith(ctx, c)
 	if err != nil {
 		return nil, err
 	}
-	secrets, err := appSecrets(ctx, c, sel)
+	secrets, err := st.secrets(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -304,14 +304,18 @@ func (a *App) secretChoices(ctx context.Context, c *client.Client) ([]cobra.Comp
 	return out, nil
 }
 
-func (a *App) configFileChoices(ctx context.Context, _ *client.Client) ([]cobra.Completion, error) {
-	_, _, files, err := a.configFiles(ctx)
+func (a *App) configFileChoices(ctx context.Context, c *client.Client) ([]cobra.Completion, error) {
+	st, err := a.storeWith(ctx, c)
+	if err != nil {
+		return nil, err
+	}
+	files, err := st.configFiles(ctx)
 	if err != nil {
 		return nil, err
 	}
 	out := make([]cobra.Completion, 0, len(files))
 	for _, f := range files {
-		out = append(out, cobra.CompletionWithDesc(f.Name, owner(f.Inherited)))
+		out = append(out, cobra.CompletionWithDesc(f.Name, st.owner(f.Inherited)))
 	}
 	return out, nil
 }

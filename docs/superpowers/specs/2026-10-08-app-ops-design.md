@@ -88,6 +88,13 @@ Both list the app's own and those it inherits from its project and env (`OF`:
 `this app` or `inherited`); `set`, `push` and `rm` touch only its own. A name
 the app inherits gets an app's own of that name, not a change of the project's.
 
+**`--scope env` or `--scope project`** acts on the environment's or the
+project's instead (`.../{env}/secrets`, `/projects/{id}/secrets`, and the same
+for config files): they need `-p`, and `-e` for an env, not `-a`. An
+environment's list has the project's it inherits too; messages name "the
+environment shop / production" or "the project shop", and the list's column
+is `FOR APPS` rather than `PREVIEWS`.
+
 - **Values are never printed.** The server masks a secret's value in lists.
 - `secret set KEY=VALUE...` as `env set` does. `secret set KEY` alone reads the
   value from stdin (one trailing newline dropped), or asks for it at a terminal
@@ -96,9 +103,11 @@ the app inherits gets an app's own of that name, not a change of the project's.
   the server decodes - a keystore stays a keystore.
 - `config-file push NAME FILE` (`-` for stdin) and `pull NAME [FILE]` (stdout
   without FILE), from the list's `content`, decoded when `base64`.
-- **Previews.** `inheritable` is the dashboard's "Available in Previews": on for
-  a new one, as the dashboard's form starts it, off with `--no-previews`; a
-  change keeps what the secret had unless a flag says. A change also sends back
+- **Shared below.** `inheritable` is the dashboard's "Available in Previews"
+  for an app, "Available in Apps" for an env or a project: on for a new one, as
+  the dashboard's form starts it, off with `--no-inheritable`; a change keeps
+  what the secret had unless a flag says. An app's `--previews` and
+  `--no-previews` say the same, and are refused at another scope. A change also sends back
   `default`, which the server overwrites, and the key or name, which it keeps.
 - `rm` finds every name before it removes any, each once; a removal that fails
   says which went before it.

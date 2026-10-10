@@ -20,7 +20,7 @@ func (a *App) loginCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "login [URL]",
 		Short: "Log in to an installation with an API key",
-		Long: "Log in to an installation with an API key, made in its dashboard under Settings, API keys, " +
+		Long: "Log in to an installation with an API key, made in its dashboard under Your Account, API Keys, " +
 			"with the actions the commands need: read, execute for deploy and restart, write for changes.\n\n" +
 			"The secret is typed at the prompt, where it does not show, or read from stdin with\n" +
 			"--with-secret - never given as an argument, which the shell's history keeps and other\n" +

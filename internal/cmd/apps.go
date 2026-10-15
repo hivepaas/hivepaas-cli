@@ -85,7 +85,7 @@ func (a *App) appsCmd() *cobra.Command {
 		},
 	})
 	cmd.AddCommand(a.appRunningCmd("stop", false), a.appRunningCmd("start", true), a.appScaleCmd(),
-		a.appCreateCmd(), a.appDeleteCmd())
+		a.appCreateCmd(), a.appDeleteCmd(), a.appVulnsCmd(), a.appScanCmd())
 	return cmd
 }
 

@@ -470,6 +470,7 @@ Exit codes:
 | 8 | what the command waited for - a deployment, a job's run - failed or was canceled |
 | 9 | timed out waiting |
 | 10 | the server takes no writes from a CLI this old (426) |
+| 11 | `app vulns --fail-on` (and `app scan --wait --fail-on`): the app runs a fixable vulnerability of that severity or worse that no ignore sets aside (added with image scanning, hivepaas's 2026-10-15 phase 2 spec) |
 | 130 | interrupted |
 
 ## 8. Knowing the server, and what it takes from the CLI

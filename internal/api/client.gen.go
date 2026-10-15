@@ -842,6 +842,42 @@ func (e BaseIMServiceKind) Valid() bool {
 	}
 }
 
+// Defines values for BaseImageScanSource.
+const (
+	ImageScanSourceNode     BaseImageScanSource = "node"
+	ImageScanSourceRegistry BaseImageScanSource = "registry"
+)
+
+// Valid indicates whether the value is a known member of the BaseImageScanSource enum.
+func (e BaseImageScanSource) Valid() bool {
+	switch e {
+	case ImageScanSourceNode:
+		return true
+	case ImageScanSourceRegistry:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for BaseImageScanStatus.
+const (
+	ImageScanStatusDone   BaseImageScanStatus = "done"
+	ImageScanStatusFailed BaseImageScanStatus = "failed"
+)
+
+// Valid indicates whether the value is a known member of the BaseImageScanStatus enum.
+func (e BaseImageScanStatus) Valid() bool {
+	switch e {
+	case ImageScanStatusDone:
+		return true
+	case ImageScanStatusFailed:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for BaseLoggingBackendType.
 const (
 	LoggingBackendTypeVictoriaLogs BaseLoggingBackendType = "victoria-logs"
@@ -1181,6 +1217,7 @@ const (
 	ResourceTypeIMService           BaseResourceType = "im-service"
 	ResourceTypeImage               BaseResourceType = "image"
 	ResourceTypeImageBuild          BaseResourceType = "image-build"
+	ResourceTypeImageScan           BaseResourceType = "image-scan"
 	ResourceTypeKeyAuth             BaseResourceType = "key-auth"
 	ResourceTypeLogging             BaseResourceType = "logging"
 	ResourceTypeMCP                 BaseResourceType = "mcp"
@@ -1211,6 +1248,7 @@ const (
 	ResourceTypeSystemStatus        BaseResourceType = "system-status"
 	ResourceTypeTask                BaseResourceType = "task"
 	ResourceTypeUser                BaseResourceType = "user"
+	ResourceTypeVulnIgnore          BaseResourceType = "vulnerability-ignore"
 )
 
 // Valid indicates whether the value is a known member of the BaseResourceType enum.
@@ -1272,6 +1310,8 @@ func (e BaseResourceType) Valid() bool {
 		return true
 	case ResourceTypeImageBuild:
 		return true
+	case ResourceTypeImageScan:
+		return true
 	case ResourceTypeKeyAuth:
 		return true
 	case ResourceTypeLogging:
@@ -1331,6 +1371,8 @@ func (e BaseResourceType) Valid() bool {
 	case ResourceTypeTask:
 		return true
 	case ResourceTypeUser:
+		return true
+	case ResourceTypeVulnIgnore:
 		return true
 	default:
 		return false
@@ -1659,6 +1701,7 @@ const (
 	SettingTypeHivePaaSService     BaseSettingType = "hivepaas-service"
 	SettingTypeIMService           BaseSettingType = "im-service"
 	SettingTypeImageBuild          BaseSettingType = "image-build"
+	SettingTypeImageScan           BaseSettingType = "image-scan"
 	SettingTypeKeyAuth             BaseSettingType = "key-auth"
 	SettingTypeLogging             BaseSettingType = "logging"
 	SettingTypeMCP                 BaseSettingType = "mcp"
@@ -1681,6 +1724,7 @@ const (
 	SettingTypeSystemCleanup       BaseSettingType = "system-cleanup"
 	SettingTypeTraefikConfig       BaseSettingType = "traefik-config"
 	SettingTypeTraefikService      BaseSettingType = "traefik-service"
+	SettingTypeVulnerabilityIgnore BaseSettingType = "vulnerability-ignore"
 )
 
 // Valid indicates whether the value is a known member of the BaseSettingType enum.
@@ -1750,6 +1794,8 @@ func (e BaseSettingType) Valid() bool {
 		return true
 	case SettingTypeImageBuild:
 		return true
+	case SettingTypeImageScan:
+		return true
 	case SettingTypeKeyAuth:
 		return true
 	case SettingTypeLogging:
@@ -1793,6 +1839,8 @@ func (e BaseSettingType) Valid() bool {
 	case SettingTypeTraefikConfig:
 		return true
 	case SettingTypeTraefikService:
+		return true
+	case SettingTypeVulnerabilityIgnore:
 		return true
 	default:
 		return false
@@ -1910,6 +1958,7 @@ const (
 	TaskTypeBackupRestore       BaseTaskType = "task:backup-restore"
 	TaskTypeDataFileLoad        BaseTaskType = "task:data-file-load"
 	TaskTypeDummy               BaseTaskType = "task:dummy"
+	TaskTypeImageScan           BaseTaskType = "task:image-scan"
 	TaskTypePeriodicExec        BaseTaskType = "task:periodic-exec"
 	TaskTypeSSLObtain           BaseTaskType = "task:ssl-obtain"
 	TaskTypeSchedJobExec        BaseTaskType = "task:sched-job-exec"
@@ -1935,6 +1984,8 @@ func (e BaseTaskType) Valid() bool {
 	case TaskTypeDataFileLoad:
 		return true
 	case TaskTypeDummy:
+		return true
+	case TaskTypeImageScan:
 		return true
 	case TaskTypePeriodicExec:
 		return true
@@ -2009,6 +2060,33 @@ func (e BaseUserStatus) Valid() bool {
 	case UserStatusDisabled:
 		return true
 	case UserStatusPending:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for BaseVulnSeverity.
+const (
+	VulnSeverityCritical BaseVulnSeverity = "CRITICAL"
+	VulnSeverityHigh     BaseVulnSeverity = "HIGH"
+	VulnSeverityLow      BaseVulnSeverity = "LOW"
+	VulnSeverityMedium   BaseVulnSeverity = "MEDIUM"
+	VulnSeverityUnknown  BaseVulnSeverity = "UNKNOWN"
+)
+
+// Valid indicates whether the value is a known member of the BaseVulnSeverity enum.
+func (e BaseVulnSeverity) Valid() bool {
+	switch e {
+	case VulnSeverityCritical:
+		return true
+	case VulnSeverityHigh:
+		return true
+	case VulnSeverityLow:
+		return true
+	case VulnSeverityMedium:
+		return true
+	case VulnSeverityUnknown:
 		return true
 	default:
 		return false
@@ -3834,6 +3912,172 @@ type AppfeaturesettingsdtoUpdateAppFeatureSettingsReq struct {
 // AppfeaturesettingsdtoUpdateAppFeatureSettingsResp defines model for appfeaturesettingsdto.UpdateAppFeatureSettingsResp.
 type AppfeaturesettingsdtoUpdateAppFeatureSettingsResp struct {
 	Meta *BasedtoMeta `json:"meta"`
+}
+
+// AppimagescandtoAppImageScanResp defines model for appimagescandto.AppImageScanResp.
+type AppimagescandtoAppImageScanResp struct {
+	// Enabled Enabled says image scanning is switched on.
+	Enabled bool    `json:"enabled"`
+	Error   *string `json:"error,omitempty"`
+
+	// Findings Findings are those no ignore sets aside, the worst first; Ignored, the
+	// rest, each with its ignore.
+	Findings *[]AppimagescandtoFindingResp        `json:"findings"`
+	Ignored  *[]AppimagescandtoIgnoredFindingResp `json:"ignored"`
+	Images   *[]AppimagescandtoImageResp          `json:"images"`
+
+	// ScannedAt ScannedAt is when the app's images were last looked for, and Error why
+	// none could be scanned then. Nil before the first scan.
+	ScannedAt *string `json:"scannedAt,omitempty"`
+
+	// Summary Summary counts the findings of every image, after ignores.
+	Summary *AppimagescandtoSummaryResp `json:"summary"`
+
+	// Task Task is the app's scan not ended yet: queued or running.
+	Task *AppimagescandtoScanTaskResp `json:"task,omitempty"`
+}
+
+// AppimagescandtoCountResp defines model for appimagescandto.CountResp.
+type AppimagescandtoCountResp struct {
+	Fixable int `json:"fixable"`
+	Total   int `json:"total"`
+}
+
+// AppimagescandtoEnvRefResp defines model for appimagescandto.EnvRefResp.
+type AppimagescandtoEnvRefResp struct {
+	Id   string `json:"id"`
+	Key  string `json:"key"`
+	Name string `json:"name"`
+}
+
+// AppimagescandtoFindingResp defines model for appimagescandto.FindingResp.
+type AppimagescandtoFindingResp struct {
+	FixedVersion     *string          `json:"fixedVersion,omitempty"`
+	ImageId          string           `json:"imageId"`
+	InstalledVersion string           `json:"installedVersion"`
+	PkgName          string           `json:"pkgName"`
+	PkgPath          *string          `json:"pkgPath,omitempty"`
+	PkgType          string           `json:"pkgType"`
+	PublishedAt      *string          `json:"publishedAt,omitempty"`
+	Severity         BaseVulnSeverity `json:"severity"`
+	Title            *string          `json:"title,omitempty"`
+	Url              *string          `json:"url,omitempty"`
+	VulnId           string           `json:"vulnId"`
+}
+
+// AppimagescandtoGetAppImageScanResp defines model for appimagescandto.GetAppImageScanResp.
+type AppimagescandtoGetAppImageScanResp struct {
+	Data *AppimagescandtoAppImageScanResp `json:"data"`
+	Meta *BasedtoMeta                     `json:"meta"`
+}
+
+// AppimagescandtoGetProjectImageScanResp defines model for appimagescandto.GetProjectImageScanResp.
+type AppimagescandtoGetProjectImageScanResp struct {
+	Data *AppimagescandtoProjectImageScanDataResp `json:"data"`
+	Meta *BasedtoMeta                             `json:"meta"`
+}
+
+// AppimagescandtoIgnoreRefResp defines model for appimagescandto.IgnoreRefResp.
+type AppimagescandtoIgnoreRefResp struct {
+	ExpireAt *string `json:"expireAt,omitempty"`
+	Id       string  `json:"id"`
+
+	// Inheritable Inheritable says the apps of the scope's children have it too; a global
+	// one that is not applies to HivePaaS's own parts alone.
+	Inheritable bool                `json:"inheritable"`
+	Package     *string             `json:"package,omitempty"`
+	Reason      string              `json:"reason"`
+	Scope       BaseObjectScopeType `json:"scope"`
+	SetBy       *string             `json:"setBy,omitempty"`
+}
+
+// AppimagescandtoIgnoredFindingResp defines model for appimagescandto.IgnoredFindingResp.
+type AppimagescandtoIgnoredFindingResp struct {
+	FixedVersion     *string                       `json:"fixedVersion,omitempty"`
+	Ignore           *AppimagescandtoIgnoreRefResp `json:"ignore"`
+	ImageId          string                        `json:"imageId"`
+	InstalledVersion string                        `json:"installedVersion"`
+	PkgName          string                        `json:"pkgName"`
+	PkgPath          *string                       `json:"pkgPath,omitempty"`
+	PkgType          string                        `json:"pkgType"`
+	PublishedAt      *string                       `json:"publishedAt,omitempty"`
+	Severity         BaseVulnSeverity              `json:"severity"`
+	Title            *string                       `json:"title,omitempty"`
+	Url              *string                       `json:"url,omitempty"`
+	VulnId           string                        `json:"vulnId"`
+}
+
+// AppimagescandtoImageResp defines model for appimagescandto.ImageResp.
+type AppimagescandtoImageResp struct {
+	DbUpdatedAt *string `json:"dbUpdatedAt,omitempty"`
+
+	// Error Error is why the last scan failed; the findings are the scan's before.
+	Error    *string `json:"error,omitempty"`
+	ImageId  string  `json:"imageId"`
+	ImageRef string  `json:"imageRef"`
+
+	// OsEosl OSEOSL says the OS is past its support: its packages get no fixes.
+	OsEosl    bool    `json:"osEosl"`
+	OsFamily  *string `json:"osFamily,omitempty"`
+	OsName    *string `json:"osName,omitempty"`
+	Platform  *string `json:"platform,omitempty"`
+	ScannedAt string  `json:"scannedAt"`
+
+	// Source Source is where the last scan read the image: on the node running it, or
+	// from its registry when scans run on another node.
+	Source       *BaseImageScanSource        `json:"source,omitempty"`
+	Status       BaseImageScanStatus         `json:"status"`
+	Summary      *AppimagescandtoSummaryResp `json:"summary"`
+	TrivyVersion *string                     `json:"trivyVersion,omitempty"`
+	UpdatedAt    string                      `json:"updatedAt"`
+}
+
+// AppimagescandtoProjectImageScanDataResp defines model for appimagescandto.ProjectImageScanDataResp.
+type AppimagescandtoProjectImageScanDataResp struct {
+	Apps    *[]AppimagescandtoScannedAppResp `json:"apps"`
+	Enabled bool                             `json:"enabled"`
+}
+
+// AppimagescandtoScanAppImagesDataResp defines model for appimagescandto.ScanAppImagesDataResp.
+type AppimagescandtoScanAppImagesDataResp struct {
+	// Task Task is the scan: the one just queued, or one queued before that has not
+	// started yet.
+	Task *BasedtoObjectIDResp `json:"task"`
+}
+
+// AppimagescandtoScanAppImagesResp defines model for appimagescandto.ScanAppImagesResp.
+type AppimagescandtoScanAppImagesResp struct {
+	Data *AppimagescandtoScanAppImagesDataResp `json:"data"`
+	Meta *BasedtoMeta                          `json:"meta"`
+}
+
+// AppimagescandtoScanTaskResp defines model for appimagescandto.ScanTaskResp.
+type AppimagescandtoScanTaskResp struct {
+	Id     string         `json:"id"`
+	Status BaseTaskStatus `json:"status"`
+}
+
+// AppimagescandtoScannedAppResp defines model for appimagescandto.ScannedAppResp.
+type AppimagescandtoScannedAppResp struct {
+	App        *BasedtoNamedObjectResp     `json:"app"`
+	Error      *string                     `json:"error,omitempty"`
+	Images     *[]AppimagescandtoImageResp `json:"images"`
+	Project    *BasedtoNamedObjectResp     `json:"project"`
+	ProjectEnv *AppimagescandtoEnvRefResp  `json:"projectEnv"`
+	ScannedAt  string                      `json:"scannedAt"`
+	Summary    *AppimagescandtoSummaryResp `json:"summary"`
+}
+
+// AppimagescandtoSummaryResp defines model for appimagescandto.SummaryResp.
+type AppimagescandtoSummaryResp struct {
+	Critical AppimagescandtoCountResp `json:"critical"`
+	High     AppimagescandtoCountResp `json:"high"`
+
+	// Ignored Ignored is how many were set aside, of every severity.
+	Ignored int                      `json:"ignored"`
+	Low     AppimagescandtoCountResp `json:"low"`
+	Medium  AppimagescandtoCountResp `json:"medium"`
+	Unknown AppimagescandtoCountResp `json:"unknown"`
 }
 
 // AppmetricsdtoAppDependencyAppResp defines model for appmetricsdto.AppDependencyAppResp.
@@ -6940,6 +7184,12 @@ type BaseHealthcheckType string
 // BaseIMServiceKind defines model for base.IMServiceKind.
 type BaseIMServiceKind string
 
+// BaseImageScanSource defines model for base.ImageScanSource.
+type BaseImageScanSource string
+
+// BaseImageScanStatus defines model for base.ImageScanStatus.
+type BaseImageScanStatus string
+
 // BaseLoggingBackendType defines model for base.LoggingBackendType.
 type BaseLoggingBackendType string
 
@@ -7059,6 +7309,9 @@ type BaseUserSecurityOption string
 
 // BaseUserStatus defines model for base.UserStatus.
 type BaseUserStatus string
+
+// BaseVulnSeverity defines model for base.VulnSeverity.
+type BaseVulnSeverity string
 
 // BaseWebhookKind defines model for base.WebhookKind.
 type BaseWebhookKind string
@@ -8729,14 +8982,16 @@ type HomedtoAttentionItemResp struct {
 
 	// CanAct CanAct is whether the user may change what the item is about, beyond
 	// looking at it: the screen it leads to lets them act.
-	CanAct  bool `json:"canAct"`
-	Desired *int `json:"desired,omitempty"`
+	CanAct          bool `json:"canAct"`
+	CriticalFixable *int `json:"criticalFixable,omitempty"`
+	Desired         *int `json:"desired,omitempty"`
 
 	// Env Env is the app's env by its name, as the app's screens and their
 	// addresses name it.
 	Env *string `json:"env,omitempty"`
 
-	// Kind Kind is app-not-running, app-restarting, node-down or node-overcommitted.
+	// Kind Kind is app-not-running, app-restarting, app-vulnerable, node-down or
+	// node-overcommitted.
 	Kind              string                  `json:"kind"`
 	LastError         *string                 `json:"lastError,omitempty"`
 	MemoryLimitsBytes *int                    `json:"memoryLimitsBytes,omitempty"`
@@ -8955,10 +9210,14 @@ type HpappserviceReleaseInfo struct {
 	// from release info, never from the copy compiled in: templates are released
 	// on their own schedule, and the binary has no use for a pin it cannot fetch.
 	// Absent means the release offers no templates.
-	Templates         *BaseTemplatesRef `json:"templates,omitempty"`
-	TraefikImage      string            `json:"traefikImage"`
-	VictoriaLogsImage string            `json:"victoriaLogsImage"`
-	VlagentImage      string            `json:"vlagentImage"`
+	Templates    *BaseTemplatesRef `json:"templates,omitempty"`
+	TraefikImage string            `json:"traefikImage"`
+
+	// TrivyImage TrivyImage is what image scanning runs, when it is switched on: each
+	// scan's container, which the scan node's agent pulls when it lacks it.
+	TrivyImage        *string `json:"trivyImage,omitempty"`
+	VictoriaLogsImage string  `json:"victoriaLogsImage"`
+	VlagentImage      string  `json:"vlagentImage"`
 }
 
 // HpappserviceReleaseRelation defines model for hpappservice.ReleaseRelation.
@@ -9450,6 +9709,171 @@ type ImagebuildsettingsdtoUpdateImageBuildSettingsStatusReq struct {
 
 // ImagebuildsettingsdtoUpdateImageBuildSettingsStatusResp defines model for imagebuildsettingsdto.UpdateImageBuildSettingsStatusResp.
 type ImagebuildsettingsdtoUpdateImageBuildSettingsStatusResp struct {
+	Meta *BasedtoMeta `json:"meta"`
+}
+
+// ImagescandtoComponentImageScanResp defines model for imagescandto.ComponentImageScanResp.
+type ImagescandtoComponentImageScanResp struct {
+	Component *ImagescandtoComponentRefResp    `json:"component"`
+	Scan      *AppimagescandtoAppImageScanResp `json:"scan"`
+}
+
+// ImagescandtoComponentRefResp defines model for imagescandto.ComponentRefResp.
+type ImagescandtoComponentRefResp struct {
+	Key  string `json:"key"`
+	Name string `json:"name"`
+}
+
+// ImagescandtoExecuteImageScanDataResp defines model for imagescandto.ExecuteImageScanDataResp.
+type ImagescandtoExecuteImageScanDataResp struct {
+	Task *BasedtoObjectIDResp `json:"task"`
+}
+
+// ImagescandtoExecuteImageScanResp defines model for imagescandto.ExecuteImageScanResp.
+type ImagescandtoExecuteImageScanResp struct {
+	Data *ImagescandtoExecuteImageScanDataResp `json:"data"`
+	Meta *BasedtoMeta                          `json:"meta"`
+}
+
+// ImagescandtoGetImageScanComponentResp defines model for imagescandto.GetImageScanComponentResp.
+type ImagescandtoGetImageScanComponentResp struct {
+	Data *ImagescandtoComponentImageScanResp `json:"data"`
+	Meta *BasedtoMeta                        `json:"meta"`
+}
+
+// ImagescandtoGetImageScanSettingsResp defines model for imagescandto.GetImageScanSettingsResp.
+type ImagescandtoGetImageScanSettingsResp struct {
+	Data *ImagescandtoImageScanSettingsResp `json:"data"`
+	Meta *BasedtoMeta                       `json:"meta"`
+}
+
+// ImagescandtoImageScanComponentsDataResp defines model for imagescandto.ImageScanComponentsDataResp.
+type ImagescandtoImageScanComponentsDataResp struct {
+	Components *[]ImagescandtoScannedComponentResp `json:"components"`
+}
+
+// ImagescandtoImageScanSettingsResp defines model for imagescandto.ImageScanSettingsResp.
+type ImagescandtoImageScanSettingsResp struct {
+	// CpuLimit CPULimit and MemoryLimit are what each scan's container runs under: the
+	// defaults where none were set.
+	CpuLimit         float32 `json:"cpuLimit"`
+	CreatedAt        string  `json:"createdAt"`
+	DbRepository     string  `json:"dbRepository"`
+	Default          *bool   `json:"default,omitempty"`
+	Enabled          bool    `json:"enabled"`
+	ExpireAt         *string `json:"expireAt,omitempty"`
+	Id               string  `json:"id"`
+	Inheritable      bool    `json:"inheritable"`
+	Inherited        *bool   `json:"inherited,omitempty"`
+	JavaDbRepository string  `json:"javaDbRepository"`
+	Kind             string  `json:"kind"`
+	MemoryLimit      string  `json:"memoryLimit"`
+	Name             string  `json:"name"`
+
+	// NextRuns Calculated fields
+	NextRuns     *[]string                         `json:"nextRuns"`
+	Notification *BasedtoBaseEventNotificationResp `json:"notification"`
+
+	// ScannerStatus ScannerStatus is what runs, as opposed to what was configured. It is not
+	// called Status: BaseSettingResp has one.
+	ScannerStatus *ImagescandtoScannerStatusResp `json:"scannerStatus"`
+	Schedule      *ImagescandtoScheduleResp      `json:"schedule"`
+	Size          *int                           `json:"size,omitempty"`
+	Status        BaseSettingStatus              `json:"status"`
+	Type          BaseSettingType                `json:"type"`
+	UpdateVer     int                            `json:"updateVer"`
+	UpdatedAt     string                         `json:"updatedAt"`
+
+	// Volume Volume is the cluster volume Trivy keeps its data on.
+	Volume *BasedtoObjectIDResp `json:"volume,omitempty"`
+}
+
+// ImagescandtoListImageScanAppsResp defines model for imagescandto.ListImageScanAppsResp.
+type ImagescandtoListImageScanAppsResp struct {
+	Data *[]AppimagescandtoScannedAppResp `json:"data"`
+	Meta *BasedtoListMeta                 `json:"meta"`
+}
+
+// ImagescandtoListImageScanComponentsResp defines model for imagescandto.ListImageScanComponentsResp.
+type ImagescandtoListImageScanComponentsResp struct {
+	Data *ImagescandtoImageScanComponentsDataResp `json:"data"`
+	Meta *BasedtoMeta                             `json:"meta"`
+}
+
+// ImagescandtoScanVolumeResp defines model for imagescandto.ScanVolumeResp.
+type ImagescandtoScanVolumeResp struct {
+	Id string `json:"id"`
+
+	// Missing Missing says the volume is gone: no scan can run.
+	Missing   *bool   `json:"missing,omitempty"`
+	Name      *string `json:"name,omitempty"`
+	NodeId    *string `json:"nodeId,omitempty"`
+	NodeLabel *string `json:"nodeLabel,omitempty"`
+	NodeName  *string `json:"nodeName,omitempty"`
+	Shared    *bool   `json:"shared,omitempty"`
+}
+
+// ImagescandtoScannedComponentResp defines model for imagescandto.ScannedComponentResp.
+type ImagescandtoScannedComponentResp struct {
+	Component *ImagescandtoComponentRefResp `json:"component"`
+	Error     *string                       `json:"error,omitempty"`
+	Images    *[]AppimagescandtoImageResp   `json:"images"`
+	ScannedAt string                        `json:"scannedAt"`
+	Summary   *AppimagescandtoSummaryResp   `json:"summary"`
+}
+
+// ImagescandtoScannerStatusResp defines model for imagescandto.ScannerStatusResp.
+type ImagescandtoScannerStatusResp struct {
+	DbUpdatedAt *string `json:"dbUpdatedAt,omitempty"`
+	Image       string  `json:"image"`
+
+	// LastError LastError is the last scan's, when it failed.
+	LastError    *string `json:"lastError,omitempty"`
+	LastScanAt   *string `json:"lastScanAt,omitempty"`
+	TrivyVersion *string `json:"trivyVersion,omitempty"`
+
+	// Volume Volume is the chosen volume and where it has scans run; absent when none
+	// is chosen.
+	Volume *ImagescandtoScanVolumeResp `json:"volume,omitempty"`
+}
+
+// ImagescandtoScheduleReq defines model for imagescandto.ScheduleReq.
+type ImagescandtoScheduleReq struct {
+	InitialTime string `json:"initialTime"`
+	Interval    string `json:"interval"`
+}
+
+// ImagescandtoScheduleResp defines model for imagescandto.ScheduleResp.
+type ImagescandtoScheduleResp struct {
+	InitialTime string `json:"initialTime"`
+	Interval    string `json:"interval"`
+}
+
+// ImagescandtoUpdateImageScanSettingsReq defines model for imagescandto.UpdateImageScanSettingsReq.
+type ImagescandtoUpdateImageScanSettingsReq struct {
+	// CpuLimit CPULimit and MemoryLimit are what each scan's container runs under. Zero
+	// is the default.
+	CpuLimit float32 `json:"cpuLimit"`
+
+	// DbRepository DBRepository and JavaDBRepository are OCI repositories of a mirror Trivy
+	// fetches its DBs from; empty for Trivy's own.
+	DbRepository     string                           `json:"dbRepository"`
+	Default          bool                             `json:"default"`
+	Enabled          bool                             `json:"enabled"`
+	Inheritable      bool                             `json:"inheritable"`
+	JavaDbRepository string                           `json:"javaDbRepository"`
+	MemoryLimit      string                           `json:"memoryLimit"`
+	Notification     *BasedtoBaseEventNotificationReq `json:"notification"`
+	Schedule         ImagescandtoScheduleReq          `json:"schedule"`
+	UpdateVer        int                              `json:"updateVer"`
+
+	// Volume Volume is the cluster volume Trivy keeps its DBs and its layer cache on,
+	// required while scanning is on.
+	Volume *BasedtoObjectIDReq `json:"volume"`
+}
+
+// ImagescandtoUpdateImageScanSettingsResp defines model for imagescandto.UpdateImageScanSettingsResp.
+type ImagescandtoUpdateImageScanSettingsResp struct {
 	Meta *BasedtoMeta `json:"meta"`
 }
 
@@ -14328,6 +14752,97 @@ type VolumedtoVolumeTmpfsOptionsResp struct {
 	Uid          int    `json:"uid"`
 }
 
+// VulnignoredtoCreateVulnIgnoreReq defines model for vulnignoredto.CreateVulnIgnoreReq.
+type VulnignoredtoCreateVulnIgnoreReq struct {
+	Default bool `json:"default"`
+
+	// ExpireAt ExpireAt is when the ignore stops applying; null for never, and at most a
+	// year away.
+	ExpireAt    *string `json:"expireAt"`
+	Inheritable bool    `json:"inheritable"`
+	Package     string  `json:"package"`
+	Reason      string  `json:"reason"`
+	VulnId      string  `json:"vulnId"`
+}
+
+// VulnignoredtoCreateVulnIgnoreResp defines model for vulnignoredto.CreateVulnIgnoreResp.
+type VulnignoredtoCreateVulnIgnoreResp struct {
+	Data *BasedtoObjectIDResp `json:"data"`
+	Meta *BasedtoMeta         `json:"meta"`
+}
+
+// VulnignoredtoDeleteVulnIgnoreResp defines model for vulnignoredto.DeleteVulnIgnoreResp.
+type VulnignoredtoDeleteVulnIgnoreResp struct {
+	Meta *BasedtoMeta `json:"meta"`
+}
+
+// VulnignoredtoGetVulnIgnoreResp defines model for vulnignoredto.GetVulnIgnoreResp.
+type VulnignoredtoGetVulnIgnoreResp struct {
+	Data *VulnignoredtoVulnIgnoreResp `json:"data"`
+	Meta *BasedtoMeta                 `json:"meta"`
+}
+
+// VulnignoredtoListVulnIgnoreResp defines model for vulnignoredto.ListVulnIgnoreResp.
+type VulnignoredtoListVulnIgnoreResp struct {
+	Data *[]VulnignoredtoVulnIgnoreResp `json:"data"`
+	Meta *BasedtoListMeta               `json:"meta"`
+}
+
+// VulnignoredtoUpdateVulnIgnoreReq defines model for vulnignoredto.UpdateVulnIgnoreReq.
+type VulnignoredtoUpdateVulnIgnoreReq struct {
+	Default bool `json:"default"`
+
+	// ExpireAt ExpireAt is when the ignore stops applying; null for never, and at most a
+	// year away.
+	ExpireAt    *string `json:"expireAt"`
+	Inheritable bool    `json:"inheritable"`
+	Package     string  `json:"package"`
+	Reason      string  `json:"reason"`
+	UpdateVer   int     `json:"updateVer"`
+	VulnId      string  `json:"vulnId"`
+}
+
+// VulnignoredtoUpdateVulnIgnoreResp defines model for vulnignoredto.UpdateVulnIgnoreResp.
+type VulnignoredtoUpdateVulnIgnoreResp struct {
+	Meta *BasedtoMeta `json:"meta"`
+}
+
+// VulnignoredtoUpdateVulnIgnoreStatusReq defines model for vulnignoredto.UpdateVulnIgnoreStatusReq.
+type VulnignoredtoUpdateVulnIgnoreStatusReq struct {
+	Default     *bool              `json:"default"`
+	ExpireAt    *string            `json:"expireAt"`
+	Inheritable *bool              `json:"inheritable"`
+	Status      *BaseSettingStatus `json:"status"`
+	UpdateVer   int                `json:"updateVer"`
+}
+
+// VulnignoredtoUpdateVulnIgnoreStatusResp defines model for vulnignoredto.UpdateVulnIgnoreStatusResp.
+type VulnignoredtoUpdateVulnIgnoreStatusResp struct {
+	Meta *BasedtoMeta `json:"meta"`
+}
+
+// VulnignoredtoVulnIgnoreResp defines model for vulnignoredto.VulnIgnoreResp.
+type VulnignoredtoVulnIgnoreResp struct {
+	CreatedAt   string            `json:"createdAt"`
+	Default     *bool             `json:"default,omitempty"`
+	ExpireAt    *string           `json:"expireAt,omitempty"`
+	Id          string            `json:"id"`
+	Inheritable bool              `json:"inheritable"`
+	Inherited   *bool             `json:"inherited,omitempty"`
+	Kind        string            `json:"kind"`
+	Name        string            `json:"name"`
+	Package     *string           `json:"package,omitempty"`
+	Reason      string            `json:"reason"`
+	Scope       string            `json:"scope"`
+	SetBy       *string           `json:"setBy,omitempty"`
+	Size        *int              `json:"size,omitempty"`
+	Status      BaseSettingStatus `json:"status"`
+	Type        BaseSettingType   `json:"type"`
+	UpdateVer   int               `json:"updateVer"`
+	UpdatedAt   string            `json:"updatedAt"`
+	VulnId      string            `json:"vulnId"`
+}
+
 // WebhookdtoHandleRepoWebhookReq defines model for webhookdto.HandleRepoWebhookReq.
 type WebhookdtoHandleRepoWebhookReq = map[string]interface{}
 
@@ -15020,6 +15535,21 @@ type GetProjectTaskLogsParams struct {
 	Tail *int `form:"tail,omitempty" json:"tail,omitempty"`
 }
 
+// ListProjectVulnIgnoreParams defines parameters for ListProjectVulnIgnore.
+type ListProjectVulnIgnoreParams struct {
+	// Search `search=<target> (support *)`
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
+
+	// PageOffset `pageOffset=offset`
+	PageOffset *int `form:"pageOffset,omitempty" json:"pageOffset,omitempty"`
+
+	// PageLimit `pageLimit=limit`
+	PageLimit *int `form:"pageLimit,omitempty" json:"pageLimit,omitempty"`
+
+	// Sort `sort=[-]field1|field2...`
+	Sort *string `form:"sort,omitempty" json:"sort,omitempty"`
+}
+
 // DeleteProjectEnvParams defines parameters for DeleteProjectEnv.
 type DeleteProjectEnvParams struct {
 	// RemoveStorage `removeStorage=true` also deletes the data its apps keep on volumes
@@ -15311,6 +15841,12 @@ type GetAppHTTPMetricsParams struct {
 	Range *string `form:"range,omitempty" json:"range,omitempty"`
 }
 
+// GetAppImageSBOMParams defines parameters for GetAppImageSBOM.
+type GetAppImageSBOMParams struct {
+	// ImageId the image's ID, as the app's Security tab lists it
+	ImageId string `form:"imageId" json:"imageId"`
+}
+
 // GetAppKindSettingsParams defines parameters for GetAppKindSettings.
 type GetAppKindSettingsParams struct {
 	// RevealSecrets `revealSecrets=true` to include the secrets' values
@@ -15510,6 +16046,21 @@ type GetAppTerminalParams struct {
 
 	// W `w=<columns>`: the terminal's width
 	W *int `form:"w,omitempty" json:"w,omitempty"`
+}
+
+// ListAppVulnIgnoreParams defines parameters for ListAppVulnIgnore.
+type ListAppVulnIgnoreParams struct {
+	// Search `search=<target> (support *)`
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
+
+	// PageOffset `pageOffset=offset`
+	PageOffset *int `form:"pageOffset,omitempty" json:"pageOffset,omitempty"`
+
+	// PageLimit `pageLimit=limit`
+	PageLimit *int `form:"pageLimit,omitempty" json:"pageLimit,omitempty"`
+
+	// Sort `sort=[-]field1|field2...`
+	Sort *string `form:"sort,omitempty" json:"sort,omitempty"`
 }
 
 // ListProjectEnvAuditLogParams defines parameters for ListProjectEnvAuditLog.
@@ -16022,6 +16573,21 @@ type GetProjectEnvTaskLogsParams struct {
 	Tail *int `form:"tail,omitempty" json:"tail,omitempty"`
 }
 
+// ListProjectEnvVulnIgnoreParams defines parameters for ListProjectEnvVulnIgnore.
+type ListProjectEnvVulnIgnoreParams struct {
+	// Search `search=<target> (support *)`
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
+
+	// PageOffset `pageOffset=offset`
+	PageOffset *int `form:"pageOffset,omitempty" json:"pageOffset,omitempty"`
+
+	// PageLimit `pageLimit=limit`
+	PageLimit *int `form:"pageLimit,omitempty" json:"pageLimit,omitempty"`
+
+	// Sort `sort=[-]field1|field2...`
+	Sort *string `form:"sort,omitempty" json:"sort,omitempty"`
+}
+
 // GetMeParams defines parameters for GetMe.
 type GetMeParams struct {
 	// GetAccesses `getAccesses=true/false`
@@ -16373,6 +16939,21 @@ type ListSettingSSLProviderParams struct {
 	Sort *string `form:"sort,omitempty" json:"sort,omitempty"`
 }
 
+// ListSettingVulnIgnoreParams defines parameters for ListSettingVulnIgnore.
+type ListSettingVulnIgnoreParams struct {
+	// Search `search=<target> (support *)`
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
+
+	// PageOffset `pageOffset=offset`
+	PageOffset *int `form:"pageOffset,omitempty" json:"pageOffset,omitempty"`
+
+	// PageLimit `pageLimit=limit`
+	PageLimit *int `form:"pageLimit,omitempty" json:"pageLimit,omitempty"`
+
+	// Sort `sort=[-]field1|field2...`
+	Sort *string `form:"sort,omitempty" json:"sort,omitempty"`
+}
+
 // ListAuditLogParams defines parameters for ListAuditLog.
 type ListAuditLogParams struct {
 	// Search `search=<target> (support *)`
@@ -16467,6 +17048,15 @@ type GetBackupRepoCleanupSettingsParams struct {
 type GetSystemCleanupSettingsParams struct {
 	// RevealSecrets `revealSecrets=true` to include the secrets' values
 	RevealSecrets *bool `form:"revealSecrets,omitempty" json:"revealSecrets,omitempty"`
+}
+
+// ListSystemImageScanAppsParams defines parameters for ListSystemImageScanApps.
+type ListSystemImageScanAppsParams struct {
+	// PageOffset `pageOffset=offset`
+	PageOffset *int `form:"pageOffset,omitempty" json:"pageOffset,omitempty"`
+
+	// PageLimit `pageLimit=limit`
+	PageLimit *int `form:"pageLimit,omitempty" json:"pageLimit,omitempty"`
 }
 
 // GetSystemLoggingSettingsParams defines parameters for GetSystemLoggingSettings.
@@ -16922,6 +17512,15 @@ type DeleteProjectTagJSONRequestBody = ProjectsettingsdtoDeleteProjectTagsReq
 // UpdateProjectUserAccessesJSONRequestBody defines body for UpdateProjectUserAccesses for application/json ContentType.
 type UpdateProjectUserAccessesJSONRequestBody = ProjectsettingsdtoUpdateUserAccessesReq
 
+// CreateProjectVulnIgnoreJSONRequestBody defines body for CreateProjectVulnIgnore for application/json ContentType.
+type CreateProjectVulnIgnoreJSONRequestBody = VulnignoredtoCreateVulnIgnoreReq
+
+// UpdateProjectVulnIgnoreJSONRequestBody defines body for UpdateProjectVulnIgnore for application/json ContentType.
+type UpdateProjectVulnIgnoreJSONRequestBody = VulnignoredtoUpdateVulnIgnoreReq
+
+// UpdateProjectVulnIgnoreStatusJSONRequestBody defines body for UpdateProjectVulnIgnoreStatus for application/json ContentType.
+type UpdateProjectVulnIgnoreStatusJSONRequestBody = VulnignoredtoUpdateVulnIgnoreStatusReq
+
 // CreateProjectEnvAccessTokenJSONRequestBody defines body for CreateProjectEnvAccessToken for application/json ContentType.
 type CreateProjectEnvAccessTokenJSONRequestBody = AccesstokendtoCreateAccessTokenReq
 
@@ -17107,6 +17706,15 @@ type CreateAppTagJSONRequestBody = AppsettingsdtoCreateAppTagReq
 
 // DeleteAppTagJSONRequestBody defines body for DeleteAppTag for application/json ContentType.
 type DeleteAppTagJSONRequestBody = AppsettingsdtoDeleteAppTagsReq
+
+// CreateAppVulnIgnoreJSONRequestBody defines body for CreateAppVulnIgnore for application/json ContentType.
+type CreateAppVulnIgnoreJSONRequestBody = VulnignoredtoCreateVulnIgnoreReq
+
+// UpdateAppVulnIgnoreJSONRequestBody defines body for UpdateAppVulnIgnore for application/json ContentType.
+type UpdateAppVulnIgnoreJSONRequestBody = VulnignoredtoUpdateVulnIgnoreReq
+
+// UpdateAppVulnIgnoreStatusJSONRequestBody defines body for UpdateAppVulnIgnoreStatus for application/json ContentType.
+type UpdateAppVulnIgnoreStatusJSONRequestBody = VulnignoredtoUpdateVulnIgnoreStatusReq
 
 // CreateProjectEnvBackupRepoJSONRequestBody defines body for CreateProjectEnvBackupRepo for application/json ContentType.
 type CreateProjectEnvBackupRepoJSONRequestBody = BackuprepodtoCreateBackupRepoReq
@@ -17305,6 +17913,15 @@ type UpdateProjectEnvSSLProviderStatusJSONRequestBody = SslproviderdtoUpdateSSLP
 
 // UpdateProjectEnvStatusJSONRequestBody defines body for UpdateProjectEnvStatus for application/json ContentType.
 type UpdateProjectEnvStatusJSONRequestBody = ProjectenvdtoUpdateProjectEnvStatusReq
+
+// CreateProjectEnvVulnIgnoreJSONRequestBody defines body for CreateProjectEnvVulnIgnore for application/json ContentType.
+type CreateProjectEnvVulnIgnoreJSONRequestBody = VulnignoredtoCreateVulnIgnoreReq
+
+// UpdateProjectEnvVulnIgnoreJSONRequestBody defines body for UpdateProjectEnvVulnIgnore for application/json ContentType.
+type UpdateProjectEnvVulnIgnoreJSONRequestBody = VulnignoredtoUpdateVulnIgnoreReq
+
+// UpdateProjectEnvVulnIgnoreStatusJSONRequestBody defines body for UpdateProjectEnvVulnIgnoreStatus for application/json ContentType.
+type UpdateProjectEnvVulnIgnoreStatusJSONRequestBody = VulnignoredtoUpdateVulnIgnoreStatusReq
 
 // CreateSettingAccessTokenJSONRequestBody defines body for CreateSettingAccessToken for application/json ContentType.
 type CreateSettingAccessTokenJSONRequestBody = AccesstokendtoCreateAccessTokenReq
@@ -17525,6 +18142,15 @@ type UpdateSettingSSLProviderJSONRequestBody = SslproviderdtoUpdateSSLProviderRe
 // UpdateSettingSSLProviderStatusJSONRequestBody defines body for UpdateSettingSSLProviderStatus for application/json ContentType.
 type UpdateSettingSSLProviderStatusJSONRequestBody = SslproviderdtoUpdateSSLProviderStatusReq
 
+// CreateSettingVulnIgnoreJSONRequestBody defines body for CreateSettingVulnIgnore for application/json ContentType.
+type CreateSettingVulnIgnoreJSONRequestBody = VulnignoredtoCreateVulnIgnoreReq
+
+// UpdateSettingVulnIgnoreJSONRequestBody defines body for UpdateSettingVulnIgnore for application/json ContentType.
+type UpdateSettingVulnIgnoreJSONRequestBody = VulnignoredtoUpdateVulnIgnoreReq
+
+// UpdateSettingVulnIgnoreStatusJSONRequestBody defines body for UpdateSettingVulnIgnoreStatus for application/json ContentType.
+type UpdateSettingVulnIgnoreStatusJSONRequestBody = VulnignoredtoUpdateVulnIgnoreStatusReq
+
 // ExportGlobalSpecJSONRequestBody defines body for ExportGlobalSpec for application/json ContentType.
 type ExportGlobalSpecJSONRequestBody = SpecdtoExportSpecReq
 
@@ -17587,6 +18213,9 @@ type UpdateSystemCleanupSettingsJSONRequestBody = SystemcleanupdtoUpdateSystemCl
 
 // ExecuteSystemCleanupJSONRequestBody defines body for ExecuteSystemCleanup for application/json ContentType.
 type ExecuteSystemCleanupJSONRequestBody = SystemcleanupdtoExecuteSystemCleanupReq
+
+// UpdateSystemImageScanSettingsJSONRequestBody defines body for UpdateSystemImageScanSettings for application/json ContentType.
+type UpdateSystemImageScanSettingsJSONRequestBody = ImagescandtoUpdateImageScanSettingsReq
 
 // UpdateSystemLoggingSettingsJSONRequestBody defines body for UpdateSystemLoggingSettings for application/json ContentType.
 type UpdateSystemLoggingSettingsJSONRequestBody = LoggingdtoUpdateLoggingSettingsReq
@@ -19293,6 +19922,15 @@ type ClientInterface interface {
 	// Corresponds with PUT /projects/{projectID}/image-build-settings/status (the `UpdateProjectImageBuildSettingsStatus` operationId).
 	UpdateProjectImageBuildSettingsStatus(ctx context.Context, projectID string, body UpdateProjectImageBuildSettingsStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetProjectImageScan Gets what the images of a project's apps carry
+	//
+	// The project's scanned apps, each with its images and their counts after the ignores of its
+	// scopes, the worst first: by fixable CRITICAL, then fixable HIGH. Only the envs and the apps the
+	// caller may read are listed. enabled says whether image scanning is on.
+	//
+	// Corresponds with GET /projects/{projectID}/image-scan (the `GetProjectImageScan` operationId).
+	GetProjectImageScan(ctx context.Context, projectID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListProjectKeyAuth Lists key auth settings
 	//
 	// Corresponds with GET /projects/{projectID}/key-auth (the `ListProjectKeyAuth` operationId).
@@ -19924,6 +20562,63 @@ type ClientInterface interface {
 	//
 	// Corresponds with PUT /projects/{projectID}/user-accesses (the `UpdateProjectUserAccesses` operationId).
 	UpdateProjectUserAccesses(ctx context.Context, projectID string, body UpdateProjectUserAccessesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListProjectVulnIgnore Lists vulnerability ignores
+	//
+	// Corresponds with GET /projects/{projectID}/vulnerability-ignores (the `ListProjectVulnIgnore` operationId).
+	ListProjectVulnIgnore(ctx context.Context, projectID string, params *ListProjectVulnIgnoreParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateProjectVulnIgnoreWithBody Creates a vulnerability ignore
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /projects/{projectID}/vulnerability-ignores (the `CreateProjectVulnIgnore` operationId).
+	CreateProjectVulnIgnoreWithBody(ctx context.Context, projectID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateProjectVulnIgnore Creates a vulnerability ignore
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /projects/{projectID}/vulnerability-ignores (the `CreateProjectVulnIgnore` operationId).
+	CreateProjectVulnIgnore(ctx context.Context, projectID string, body CreateProjectVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteProjectVulnIgnore Deletes vulnerability ignore
+	//
+	// Corresponds with DELETE /projects/{projectID}/vulnerability-ignores/{itemID} (the `DeleteProjectVulnIgnore` operationId).
+	DeleteProjectVulnIgnore(ctx context.Context, projectID string, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetProjectVulnIgnore Gets vulnerability ignore details
+	//
+	// Corresponds with GET /projects/{projectID}/vulnerability-ignores/{itemID} (the `GetProjectVulnIgnore` operationId).
+	GetProjectVulnIgnore(ctx context.Context, projectID string, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateProjectVulnIgnoreWithBody Updates vulnerability ignore
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /projects/{projectID}/vulnerability-ignores/{itemID} (the `UpdateProjectVulnIgnore` operationId).
+	UpdateProjectVulnIgnoreWithBody(ctx context.Context, projectID string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateProjectVulnIgnore Updates vulnerability ignore
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /projects/{projectID}/vulnerability-ignores/{itemID} (the `UpdateProjectVulnIgnore` operationId).
+	UpdateProjectVulnIgnore(ctx context.Context, projectID string, itemID string, body UpdateProjectVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateProjectVulnIgnoreStatusWithBody Updates vulnerability ignore status
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /projects/{projectID}/vulnerability-ignores/{itemID}/status (the `UpdateProjectVulnIgnoreStatus` operationId).
+	UpdateProjectVulnIgnoreStatusWithBody(ctx context.Context, projectID string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateProjectVulnIgnoreStatus Updates vulnerability ignore status
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /projects/{projectID}/vulnerability-ignores/{itemID}/status (the `UpdateProjectVulnIgnoreStatus` operationId).
+	UpdateProjectVulnIgnoreStatus(ctx context.Context, projectID string, itemID string, body UpdateProjectVulnIgnoreStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetProjectSettingUsages Lists what references a project's setting
 	//
@@ -20709,6 +21404,32 @@ type ClientInterface interface {
 	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/http-metrics (the `GetAppHTTPMetrics` operationId).
 	GetAppHTTPMetrics(ctx context.Context, projectID string, projectEnv string, appID string, params *GetAppHTTPMetricsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetAppImageScan Gets what an app's images carry
+	//
+	// The images the app's tasks ran when last scanned, each with its last scan; the findings no
+	// ignore of the app's scopes sets aside, the worst first; those one does, each with its ignore;
+	// and the app's scan queued or running, if any.
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/image-scan (the `GetAppImageScan` operationId).
+	GetAppImageScan(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ScanAppImages Scans an app's images now
+	//
+	// Queues a scan of the images the app's tasks run, scanning again those scanned within the hour.
+	// A scan of the app queued before and not started yet is the one answered.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/image-scan (the `ScanAppImages` operationId).
+	ScanAppImages(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetAppImageSBOM Downloads the SBOM of an image an app runs
+	//
+	// The image's packages as CycloneDX JSON, read as a scan reads the image - on the same node,
+	// with the same volume - and not kept: a few seconds once the image was scanned. Only an image
+	// the app's tasks run now.
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/image-scan/sbom (the `GetAppImageSBOM` operationId).
+	GetAppImageSBOM(ctx context.Context, projectID string, projectEnv string, appID string, params *GetAppImageSBOMParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetAppKindSettings Gets app kind settings
 	//
 	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/kind-settings (the `GetAppKindSettings` operationId).
@@ -21366,6 +22087,63 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/terminal/info (the `GetAppTerminalInfo` operationId).
 	GetAppTerminalInfo(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAppVulnIgnore Lists vulnerability ignores
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores (the `ListAppVulnIgnore` operationId).
+	ListAppVulnIgnore(ctx context.Context, projectID string, projectEnv string, appID string, params *ListAppVulnIgnoreParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateAppVulnIgnoreWithBody Creates a vulnerability ignore
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores (the `CreateAppVulnIgnore` operationId).
+	CreateAppVulnIgnoreWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateAppVulnIgnore Creates a vulnerability ignore
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores (the `CreateAppVulnIgnore` operationId).
+	CreateAppVulnIgnore(ctx context.Context, projectID string, projectEnv string, appID string, body CreateAppVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteAppVulnIgnore Deletes vulnerability ignore
+	//
+	// Corresponds with DELETE /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID} (the `DeleteAppVulnIgnore` operationId).
+	DeleteAppVulnIgnore(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetAppVulnIgnore Gets vulnerability ignore details
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID} (the `GetAppVulnIgnore` operationId).
+	GetAppVulnIgnore(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateAppVulnIgnoreWithBody Updates vulnerability ignore
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID} (the `UpdateAppVulnIgnore` operationId).
+	UpdateAppVulnIgnoreWithBody(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateAppVulnIgnore Updates vulnerability ignore
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID} (the `UpdateAppVulnIgnore` operationId).
+	UpdateAppVulnIgnore(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, body UpdateAppVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateAppVulnIgnoreStatusWithBody Updates vulnerability ignore status
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID}/status (the `UpdateAppVulnIgnoreStatus` operationId).
+	UpdateAppVulnIgnoreStatusWithBody(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateAppVulnIgnoreStatus Updates vulnerability ignore status
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID}/status (the `UpdateAppVulnIgnoreStatus` operationId).
+	UpdateAppVulnIgnoreStatus(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, body UpdateAppVulnIgnoreStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetAppSettingUsages Lists what references an app's setting
 	//
@@ -22752,6 +23530,63 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /projects/{projectID}/{projectEnv}/tasks/{itemID}/status (the `GetProjectEnvTaskStatus` operationId).
 	GetProjectEnvTaskStatus(ctx context.Context, projectID string, projectEnv string, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListProjectEnvVulnIgnore Lists vulnerability ignores
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/vulnerability-ignores (the `ListProjectEnvVulnIgnore` operationId).
+	ListProjectEnvVulnIgnore(ctx context.Context, projectID string, projectEnv string, params *ListProjectEnvVulnIgnoreParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateProjectEnvVulnIgnoreWithBody Creates a vulnerability ignore
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/vulnerability-ignores (the `CreateProjectEnvVulnIgnore` operationId).
+	CreateProjectEnvVulnIgnoreWithBody(ctx context.Context, projectID string, projectEnv string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateProjectEnvVulnIgnore Creates a vulnerability ignore
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/vulnerability-ignores (the `CreateProjectEnvVulnIgnore` operationId).
+	CreateProjectEnvVulnIgnore(ctx context.Context, projectID string, projectEnv string, body CreateProjectEnvVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteProjectEnvVulnIgnore Deletes vulnerability ignore
+	//
+	// Corresponds with DELETE /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID} (the `DeleteProjectEnvVulnIgnore` operationId).
+	DeleteProjectEnvVulnIgnore(ctx context.Context, projectID string, projectEnv string, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetProjectEnvVulnIgnore Gets vulnerability ignore details
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID} (the `GetProjectEnvVulnIgnore` operationId).
+	GetProjectEnvVulnIgnore(ctx context.Context, projectID string, projectEnv string, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateProjectEnvVulnIgnoreWithBody Updates vulnerability ignore
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID} (the `UpdateProjectEnvVulnIgnore` operationId).
+	UpdateProjectEnvVulnIgnoreWithBody(ctx context.Context, projectID string, projectEnv string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateProjectEnvVulnIgnore Updates vulnerability ignore
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID} (the `UpdateProjectEnvVulnIgnore` operationId).
+	UpdateProjectEnvVulnIgnore(ctx context.Context, projectID string, projectEnv string, itemID string, body UpdateProjectEnvVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateProjectEnvVulnIgnoreStatusWithBody Updates vulnerability ignore status
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID}/status (the `UpdateProjectEnvVulnIgnoreStatus` operationId).
+	UpdateProjectEnvVulnIgnoreStatusWithBody(ctx context.Context, projectID string, projectEnv string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateProjectEnvVulnIgnoreStatus Updates vulnerability ignore status
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID}/status (the `UpdateProjectEnvVulnIgnoreStatus` operationId).
+	UpdateProjectEnvVulnIgnoreStatus(ctx context.Context, projectID string, projectEnv string, itemID string, body UpdateProjectEnvVulnIgnoreStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetProjectEnvSettingUsages Lists what references an env's setting
 	//
@@ -24193,6 +25028,63 @@ type ClientInterface interface {
 	// Corresponds with PUT /settings/ssl-providers/{itemID}/status (the `UpdateSettingSSLProviderStatus` operationId).
 	UpdateSettingSSLProviderStatus(ctx context.Context, itemID string, body UpdateSettingSSLProviderStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ListSettingVulnIgnore Lists vulnerability ignores
+	//
+	// Corresponds with GET /settings/vulnerability-ignores (the `ListSettingVulnIgnore` operationId).
+	ListSettingVulnIgnore(ctx context.Context, params *ListSettingVulnIgnoreParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateSettingVulnIgnoreWithBody Creates a vulnerability ignore
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /settings/vulnerability-ignores (the `CreateSettingVulnIgnore` operationId).
+	CreateSettingVulnIgnoreWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateSettingVulnIgnore Creates a vulnerability ignore
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /settings/vulnerability-ignores (the `CreateSettingVulnIgnore` operationId).
+	CreateSettingVulnIgnore(ctx context.Context, body CreateSettingVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteSettingVulnIgnore Deletes vulnerability ignore
+	//
+	// Corresponds with DELETE /settings/vulnerability-ignores/{itemID} (the `DeleteSettingVulnIgnore` operationId).
+	DeleteSettingVulnIgnore(ctx context.Context, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetSettingVulnIgnore Gets vulnerability ignore details
+	//
+	// Corresponds with GET /settings/vulnerability-ignores/{itemID} (the `GetSettingVulnIgnore` operationId).
+	GetSettingVulnIgnore(ctx context.Context, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateSettingVulnIgnoreWithBody Updates vulnerability ignore
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /settings/vulnerability-ignores/{itemID} (the `UpdateSettingVulnIgnore` operationId).
+	UpdateSettingVulnIgnoreWithBody(ctx context.Context, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateSettingVulnIgnore Updates vulnerability ignore
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /settings/vulnerability-ignores/{itemID} (the `UpdateSettingVulnIgnore` operationId).
+	UpdateSettingVulnIgnore(ctx context.Context, itemID string, body UpdateSettingVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateSettingVulnIgnoreStatusWithBody Updates vulnerability ignore status
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /settings/vulnerability-ignores/{itemID}/status (the `UpdateSettingVulnIgnoreStatus` operationId).
+	UpdateSettingVulnIgnoreStatusWithBody(ctx context.Context, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateSettingVulnIgnoreStatus Updates vulnerability ignore status
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /settings/vulnerability-ignores/{itemID}/status (the `UpdateSettingVulnIgnoreStatus` operationId).
+	UpdateSettingVulnIgnoreStatus(ctx context.Context, itemID string, body UpdateSettingVulnIgnoreStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetSettingUsages Lists what references a setting
 	//
 	// Lists what still references a setting: the apps, projects and settings that use it. Deleting
@@ -24632,6 +25524,66 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /system/settings/cleanup/exec (the `ExecuteSystemCleanup` operationId).
 	ExecuteSystemCleanup(ctx context.Context, body ExecuteSystemCleanupJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetSystemImageScanSettings Gets image scanning settings
+	//
+	// Gets image scanning's settings - the addon and its daily scan - and what runs: Trivy's server,
+	// the runner on the nodes, and the vulnerability DB of the last scan.
+	//
+	// Corresponds with GET /system/settings/image-scan (the `GetSystemImageScanSettings` operationId).
+	GetSystemImageScanSettings(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateSystemImageScanSettingsWithBody Updates image scanning settings
+	//
+	// Switches image scanning on - Trivy's server and a runner on every node are made - or off -
+	// both are removed, the results kept - and sets its daily scan.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /system/settings/image-scan (the `UpdateSystemImageScanSettings` operationId).
+	UpdateSystemImageScanSettingsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateSystemImageScanSettings Updates image scanning settings
+	//
+	// Switches image scanning on - Trivy's server and a runner on every node are made - or off -
+	// both are removed, the results kept - and sets its daily scan.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /system/settings/image-scan (the `UpdateSystemImageScanSettings` operationId).
+	UpdateSystemImageScanSettings(ctx context.Context, body UpdateSystemImageScanSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListSystemImageScanApps Lists every app's images and what they carry
+	//
+	// Every scanned app with its images and their findings counted by severity, after ignores; the
+	// worst first, by fixable CRITICAL then fixable HIGH.
+	//
+	// Corresponds with GET /system/settings/image-scan/apps (the `ListSystemImageScanApps` operationId).
+	ListSystemImageScanApps(ctx context.Context, params *ListSystemImageScanAppsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ExecuteSystemImageScan Runs the daily image scan now
+	//
+	// Scans again what every app runs, as the daily scan does.
+	//
+	// Corresponds with POST /system/settings/image-scan/exec (the `ExecuteSystemImageScan` operationId).
+	ExecuteSystemImageScan(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListSystemImageScanComponents Lists what HivePaaS's own parts run and carry
+	//
+	// HivePaaS's parts the daily scan found running - the app, the agent, the database, Redis,
+	// Traefik, the registry, the logging backend and collector, OBI - each with its images and their
+	// findings counted by severity, after the global ignores, in HivePaaS's order.
+	//
+	// Corresponds with GET /system/settings/image-scan/hivepaas (the `ListSystemImageScanComponents` operationId).
+	ListSystemImageScanComponents(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetSystemImageScanComponent Gets what a part of HivePaaS runs and carries
+	//
+	// The images the part ran when last scanned, its findings no global ignore sets aside, the worst
+	// first, and those one does, each with its ignore.
+	//
+	// Corresponds with GET /system/settings/image-scan/hivepaas/{component} (the `GetSystemImageScanComponent` operationId).
+	GetSystemImageScanComponent(ctx context.Context, component string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetSystemLoggingSettings Gets logging settings
 	//
@@ -29142,6 +30094,25 @@ func (c *Client) UpdateProjectImageBuildSettingsStatus(ctx context.Context, proj
 	return c.Client.Do(req)
 }
 
+// GetProjectImageScan Gets what the images of a project's apps carry
+//
+// The project's scanned apps, each with its images and their counts after the ignores of its
+// scopes, the worst first: by fixable CRITICAL, then fixable HIGH. Only the envs and the apps the
+// caller may read are listed. enabled says whether image scanning is on.
+//
+// Corresponds with GET /projects/{projectID}/image-scan (the `GetProjectImageScan` operationId).
+func (c *Client) GetProjectImageScan(ctx context.Context, projectID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetProjectImageScanRequest(c.Server, projectID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // ListProjectKeyAuth Lists key auth settings
 //
 // Corresponds with GET /projects/{projectID}/key-auth (the `ListProjectKeyAuth` operationId).
@@ -30764,6 +31735,153 @@ func (c *Client) UpdateProjectUserAccessesWithBody(ctx context.Context, projectI
 // Corresponds with PUT /projects/{projectID}/user-accesses (the `UpdateProjectUserAccesses` operationId).
 func (c *Client) UpdateProjectUserAccesses(ctx context.Context, projectID string, body UpdateProjectUserAccessesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewUpdateProjectUserAccessesRequest(c.Server, projectID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListProjectVulnIgnore Lists vulnerability ignores
+//
+// Corresponds with GET /projects/{projectID}/vulnerability-ignores (the `ListProjectVulnIgnore` operationId).
+func (c *Client) ListProjectVulnIgnore(ctx context.Context, projectID string, params *ListProjectVulnIgnoreParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListProjectVulnIgnoreRequest(c.Server, projectID, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateProjectVulnIgnoreWithBody Creates a vulnerability ignore
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /projects/{projectID}/vulnerability-ignores (the `CreateProjectVulnIgnore` operationId).
+func (c *Client) CreateProjectVulnIgnoreWithBody(ctx context.Context, projectID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateProjectVulnIgnoreRequestWithBody(c.Server, projectID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateProjectVulnIgnore Creates a vulnerability ignore
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /projects/{projectID}/vulnerability-ignores (the `CreateProjectVulnIgnore` operationId).
+func (c *Client) CreateProjectVulnIgnore(ctx context.Context, projectID string, body CreateProjectVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateProjectVulnIgnoreRequest(c.Server, projectID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteProjectVulnIgnore Deletes vulnerability ignore
+//
+// Corresponds with DELETE /projects/{projectID}/vulnerability-ignores/{itemID} (the `DeleteProjectVulnIgnore` operationId).
+func (c *Client) DeleteProjectVulnIgnore(ctx context.Context, projectID string, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteProjectVulnIgnoreRequest(c.Server, projectID, itemID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetProjectVulnIgnore Gets vulnerability ignore details
+//
+// Corresponds with GET /projects/{projectID}/vulnerability-ignores/{itemID} (the `GetProjectVulnIgnore` operationId).
+func (c *Client) GetProjectVulnIgnore(ctx context.Context, projectID string, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetProjectVulnIgnoreRequest(c.Server, projectID, itemID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateProjectVulnIgnoreWithBody Updates vulnerability ignore
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /projects/{projectID}/vulnerability-ignores/{itemID} (the `UpdateProjectVulnIgnore` operationId).
+func (c *Client) UpdateProjectVulnIgnoreWithBody(ctx context.Context, projectID string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateProjectVulnIgnoreRequestWithBody(c.Server, projectID, itemID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateProjectVulnIgnore Updates vulnerability ignore
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /projects/{projectID}/vulnerability-ignores/{itemID} (the `UpdateProjectVulnIgnore` operationId).
+func (c *Client) UpdateProjectVulnIgnore(ctx context.Context, projectID string, itemID string, body UpdateProjectVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateProjectVulnIgnoreRequest(c.Server, projectID, itemID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateProjectVulnIgnoreStatusWithBody Updates vulnerability ignore status
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /projects/{projectID}/vulnerability-ignores/{itemID}/status (the `UpdateProjectVulnIgnoreStatus` operationId).
+func (c *Client) UpdateProjectVulnIgnoreStatusWithBody(ctx context.Context, projectID string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateProjectVulnIgnoreStatusRequestWithBody(c.Server, projectID, itemID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateProjectVulnIgnoreStatus Updates vulnerability ignore status
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /projects/{projectID}/vulnerability-ignores/{itemID}/status (the `UpdateProjectVulnIgnoreStatus` operationId).
+func (c *Client) UpdateProjectVulnIgnoreStatus(ctx context.Context, projectID string, itemID string, body UpdateProjectVulnIgnoreStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateProjectVulnIgnoreStatusRequest(c.Server, projectID, itemID, body)
 	if err != nil {
 		return nil, err
 	}
@@ -32648,6 +33766,62 @@ func (c *Client) GetAppHTTPMetrics(ctx context.Context, projectID string, projec
 	return c.Client.Do(req)
 }
 
+// GetAppImageScan Gets what an app's images carry
+//
+// The images the app's tasks ran when last scanned, each with its last scan; the findings no
+// ignore of the app's scopes sets aside, the worst first; those one does, each with its ignore;
+// and the app's scan queued or running, if any.
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/image-scan (the `GetAppImageScan` operationId).
+func (c *Client) GetAppImageScan(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAppImageScanRequest(c.Server, projectID, projectEnv, appID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ScanAppImages Scans an app's images now
+//
+// Queues a scan of the images the app's tasks run, scanning again those scanned within the hour.
+// A scan of the app queued before and not started yet is the one answered.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/image-scan (the `ScanAppImages` operationId).
+func (c *Client) ScanAppImages(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewScanAppImagesRequest(c.Server, projectID, projectEnv, appID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetAppImageSBOM Downloads the SBOM of an image an app runs
+//
+// The image's packages as CycloneDX JSON, read as a scan reads the image - on the same node,
+// with the same volume - and not kept: a few seconds once the image was scanned. Only an image
+// the app's tasks run now.
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/image-scan/sbom (the `GetAppImageSBOM` operationId).
+func (c *Client) GetAppImageSBOM(ctx context.Context, projectID string, projectEnv string, appID string, params *GetAppImageSBOMParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAppImageSBOMRequest(c.Server, projectID, projectEnv, appID, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // GetAppKindSettings Gets app kind settings
 //
 // Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/kind-settings (the `GetAppKindSettings` operationId).
@@ -34286,6 +35460,153 @@ func (c *Client) GetAppTerminal(ctx context.Context, projectID string, projectEn
 // Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/terminal/info (the `GetAppTerminalInfo` operationId).
 func (c *Client) GetAppTerminalInfo(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetAppTerminalInfoRequest(c.Server, projectID, projectEnv, appID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListAppVulnIgnore Lists vulnerability ignores
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores (the `ListAppVulnIgnore` operationId).
+func (c *Client) ListAppVulnIgnore(ctx context.Context, projectID string, projectEnv string, appID string, params *ListAppVulnIgnoreParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAppVulnIgnoreRequest(c.Server, projectID, projectEnv, appID, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateAppVulnIgnoreWithBody Creates a vulnerability ignore
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores (the `CreateAppVulnIgnore` operationId).
+func (c *Client) CreateAppVulnIgnoreWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAppVulnIgnoreRequestWithBody(c.Server, projectID, projectEnv, appID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateAppVulnIgnore Creates a vulnerability ignore
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores (the `CreateAppVulnIgnore` operationId).
+func (c *Client) CreateAppVulnIgnore(ctx context.Context, projectID string, projectEnv string, appID string, body CreateAppVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAppVulnIgnoreRequest(c.Server, projectID, projectEnv, appID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteAppVulnIgnore Deletes vulnerability ignore
+//
+// Corresponds with DELETE /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID} (the `DeleteAppVulnIgnore` operationId).
+func (c *Client) DeleteAppVulnIgnore(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteAppVulnIgnoreRequest(c.Server, projectID, projectEnv, appID, itemID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetAppVulnIgnore Gets vulnerability ignore details
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID} (the `GetAppVulnIgnore` operationId).
+func (c *Client) GetAppVulnIgnore(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAppVulnIgnoreRequest(c.Server, projectID, projectEnv, appID, itemID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateAppVulnIgnoreWithBody Updates vulnerability ignore
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID} (the `UpdateAppVulnIgnore` operationId).
+func (c *Client) UpdateAppVulnIgnoreWithBody(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateAppVulnIgnoreRequestWithBody(c.Server, projectID, projectEnv, appID, itemID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateAppVulnIgnore Updates vulnerability ignore
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID} (the `UpdateAppVulnIgnore` operationId).
+func (c *Client) UpdateAppVulnIgnore(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, body UpdateAppVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateAppVulnIgnoreRequest(c.Server, projectID, projectEnv, appID, itemID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateAppVulnIgnoreStatusWithBody Updates vulnerability ignore status
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID}/status (the `UpdateAppVulnIgnoreStatus` operationId).
+func (c *Client) UpdateAppVulnIgnoreStatusWithBody(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateAppVulnIgnoreStatusRequestWithBody(c.Server, projectID, projectEnv, appID, itemID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateAppVulnIgnoreStatus Updates vulnerability ignore status
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID}/status (the `UpdateAppVulnIgnoreStatus` operationId).
+func (c *Client) UpdateAppVulnIgnoreStatus(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, body UpdateAppVulnIgnoreStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateAppVulnIgnoreStatusRequest(c.Server, projectID, projectEnv, appID, itemID, body)
 	if err != nil {
 		return nil, err
 	}
@@ -37822,6 +39143,153 @@ func (c *Client) GetProjectEnvTaskLogs(ctx context.Context, projectID string, pr
 // Corresponds with GET /projects/{projectID}/{projectEnv}/tasks/{itemID}/status (the `GetProjectEnvTaskStatus` operationId).
 func (c *Client) GetProjectEnvTaskStatus(ctx context.Context, projectID string, projectEnv string, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetProjectEnvTaskStatusRequest(c.Server, projectID, projectEnv, itemID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListProjectEnvVulnIgnore Lists vulnerability ignores
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/vulnerability-ignores (the `ListProjectEnvVulnIgnore` operationId).
+func (c *Client) ListProjectEnvVulnIgnore(ctx context.Context, projectID string, projectEnv string, params *ListProjectEnvVulnIgnoreParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListProjectEnvVulnIgnoreRequest(c.Server, projectID, projectEnv, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateProjectEnvVulnIgnoreWithBody Creates a vulnerability ignore
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/vulnerability-ignores (the `CreateProjectEnvVulnIgnore` operationId).
+func (c *Client) CreateProjectEnvVulnIgnoreWithBody(ctx context.Context, projectID string, projectEnv string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateProjectEnvVulnIgnoreRequestWithBody(c.Server, projectID, projectEnv, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateProjectEnvVulnIgnore Creates a vulnerability ignore
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/vulnerability-ignores (the `CreateProjectEnvVulnIgnore` operationId).
+func (c *Client) CreateProjectEnvVulnIgnore(ctx context.Context, projectID string, projectEnv string, body CreateProjectEnvVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateProjectEnvVulnIgnoreRequest(c.Server, projectID, projectEnv, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteProjectEnvVulnIgnore Deletes vulnerability ignore
+//
+// Corresponds with DELETE /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID} (the `DeleteProjectEnvVulnIgnore` operationId).
+func (c *Client) DeleteProjectEnvVulnIgnore(ctx context.Context, projectID string, projectEnv string, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteProjectEnvVulnIgnoreRequest(c.Server, projectID, projectEnv, itemID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetProjectEnvVulnIgnore Gets vulnerability ignore details
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID} (the `GetProjectEnvVulnIgnore` operationId).
+func (c *Client) GetProjectEnvVulnIgnore(ctx context.Context, projectID string, projectEnv string, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetProjectEnvVulnIgnoreRequest(c.Server, projectID, projectEnv, itemID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateProjectEnvVulnIgnoreWithBody Updates vulnerability ignore
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID} (the `UpdateProjectEnvVulnIgnore` operationId).
+func (c *Client) UpdateProjectEnvVulnIgnoreWithBody(ctx context.Context, projectID string, projectEnv string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateProjectEnvVulnIgnoreRequestWithBody(c.Server, projectID, projectEnv, itemID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateProjectEnvVulnIgnore Updates vulnerability ignore
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID} (the `UpdateProjectEnvVulnIgnore` operationId).
+func (c *Client) UpdateProjectEnvVulnIgnore(ctx context.Context, projectID string, projectEnv string, itemID string, body UpdateProjectEnvVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateProjectEnvVulnIgnoreRequest(c.Server, projectID, projectEnv, itemID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateProjectEnvVulnIgnoreStatusWithBody Updates vulnerability ignore status
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID}/status (the `UpdateProjectEnvVulnIgnoreStatus` operationId).
+func (c *Client) UpdateProjectEnvVulnIgnoreStatusWithBody(ctx context.Context, projectID string, projectEnv string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateProjectEnvVulnIgnoreStatusRequestWithBody(c.Server, projectID, projectEnv, itemID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateProjectEnvVulnIgnoreStatus Updates vulnerability ignore status
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID}/status (the `UpdateProjectEnvVulnIgnoreStatus` operationId).
+func (c *Client) UpdateProjectEnvVulnIgnoreStatus(ctx context.Context, projectID string, projectEnv string, itemID string, body UpdateProjectEnvVulnIgnoreStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateProjectEnvVulnIgnoreStatusRequest(c.Server, projectID, projectEnv, itemID, body)
 	if err != nil {
 		return nil, err
 	}
@@ -41472,6 +42940,153 @@ func (c *Client) UpdateSettingSSLProviderStatus(ctx context.Context, itemID stri
 	return c.Client.Do(req)
 }
 
+// ListSettingVulnIgnore Lists vulnerability ignores
+//
+// Corresponds with GET /settings/vulnerability-ignores (the `ListSettingVulnIgnore` operationId).
+func (c *Client) ListSettingVulnIgnore(ctx context.Context, params *ListSettingVulnIgnoreParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListSettingVulnIgnoreRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateSettingVulnIgnoreWithBody Creates a vulnerability ignore
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /settings/vulnerability-ignores (the `CreateSettingVulnIgnore` operationId).
+func (c *Client) CreateSettingVulnIgnoreWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateSettingVulnIgnoreRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateSettingVulnIgnore Creates a vulnerability ignore
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /settings/vulnerability-ignores (the `CreateSettingVulnIgnore` operationId).
+func (c *Client) CreateSettingVulnIgnore(ctx context.Context, body CreateSettingVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateSettingVulnIgnoreRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteSettingVulnIgnore Deletes vulnerability ignore
+//
+// Corresponds with DELETE /settings/vulnerability-ignores/{itemID} (the `DeleteSettingVulnIgnore` operationId).
+func (c *Client) DeleteSettingVulnIgnore(ctx context.Context, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteSettingVulnIgnoreRequest(c.Server, itemID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetSettingVulnIgnore Gets vulnerability ignore details
+//
+// Corresponds with GET /settings/vulnerability-ignores/{itemID} (the `GetSettingVulnIgnore` operationId).
+func (c *Client) GetSettingVulnIgnore(ctx context.Context, itemID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSettingVulnIgnoreRequest(c.Server, itemID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateSettingVulnIgnoreWithBody Updates vulnerability ignore
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /settings/vulnerability-ignores/{itemID} (the `UpdateSettingVulnIgnore` operationId).
+func (c *Client) UpdateSettingVulnIgnoreWithBody(ctx context.Context, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateSettingVulnIgnoreRequestWithBody(c.Server, itemID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateSettingVulnIgnore Updates vulnerability ignore
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /settings/vulnerability-ignores/{itemID} (the `UpdateSettingVulnIgnore` operationId).
+func (c *Client) UpdateSettingVulnIgnore(ctx context.Context, itemID string, body UpdateSettingVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateSettingVulnIgnoreRequest(c.Server, itemID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateSettingVulnIgnoreStatusWithBody Updates vulnerability ignore status
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /settings/vulnerability-ignores/{itemID}/status (the `UpdateSettingVulnIgnoreStatus` operationId).
+func (c *Client) UpdateSettingVulnIgnoreStatusWithBody(ctx context.Context, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateSettingVulnIgnoreStatusRequestWithBody(c.Server, itemID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateSettingVulnIgnoreStatus Updates vulnerability ignore status
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /settings/vulnerability-ignores/{itemID}/status (the `UpdateSettingVulnIgnoreStatus` operationId).
+func (c *Client) UpdateSettingVulnIgnoreStatus(ctx context.Context, itemID string, body UpdateSettingVulnIgnoreStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateSettingVulnIgnoreStatusRequest(c.Server, itemID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // GetSettingUsages Lists what references a setting
 //
 // Lists what still references a setting: the apps, projects and settings that use it. Deleting
@@ -42522,6 +44137,136 @@ func (c *Client) ExecuteSystemCleanupWithBody(ctx context.Context, contentType s
 // Corresponds with POST /system/settings/cleanup/exec (the `ExecuteSystemCleanup` operationId).
 func (c *Client) ExecuteSystemCleanup(ctx context.Context, body ExecuteSystemCleanupJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewExecuteSystemCleanupRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetSystemImageScanSettings Gets image scanning settings
+//
+// Gets image scanning's settings - the addon and its daily scan - and what runs: Trivy's server,
+// the runner on the nodes, and the vulnerability DB of the last scan.
+//
+// Corresponds with GET /system/settings/image-scan (the `GetSystemImageScanSettings` operationId).
+func (c *Client) GetSystemImageScanSettings(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSystemImageScanSettingsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateSystemImageScanSettingsWithBody Updates image scanning settings
+//
+// Switches image scanning on - Trivy's server and a runner on every node are made - or off -
+// both are removed, the results kept - and sets its daily scan.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /system/settings/image-scan (the `UpdateSystemImageScanSettings` operationId).
+func (c *Client) UpdateSystemImageScanSettingsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateSystemImageScanSettingsRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateSystemImageScanSettings Updates image scanning settings
+//
+// Switches image scanning on - Trivy's server and a runner on every node are made - or off -
+// both are removed, the results kept - and sets its daily scan.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /system/settings/image-scan (the `UpdateSystemImageScanSettings` operationId).
+func (c *Client) UpdateSystemImageScanSettings(ctx context.Context, body UpdateSystemImageScanSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateSystemImageScanSettingsRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListSystemImageScanApps Lists every app's images and what they carry
+//
+// Every scanned app with its images and their findings counted by severity, after ignores; the
+// worst first, by fixable CRITICAL then fixable HIGH.
+//
+// Corresponds with GET /system/settings/image-scan/apps (the `ListSystemImageScanApps` operationId).
+func (c *Client) ListSystemImageScanApps(ctx context.Context, params *ListSystemImageScanAppsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListSystemImageScanAppsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ExecuteSystemImageScan Runs the daily image scan now
+//
+// Scans again what every app runs, as the daily scan does.
+//
+// Corresponds with POST /system/settings/image-scan/exec (the `ExecuteSystemImageScan` operationId).
+func (c *Client) ExecuteSystemImageScan(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewExecuteSystemImageScanRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListSystemImageScanComponents Lists what HivePaaS's own parts run and carry
+//
+// HivePaaS's parts the daily scan found running - the app, the agent, the database, Redis,
+// Traefik, the registry, the logging backend and collector, OBI - each with its images and their
+// findings counted by severity, after the global ignores, in HivePaaS's order.
+//
+// Corresponds with GET /system/settings/image-scan/hivepaas (the `ListSystemImageScanComponents` operationId).
+func (c *Client) ListSystemImageScanComponents(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListSystemImageScanComponentsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetSystemImageScanComponent Gets what a part of HivePaaS runs and carries
+//
+// The images the part ran when last scanned, its findings no global ignore sets aside, the worst
+// first, and those one does, each with its ignore.
+//
+// Corresponds with GET /system/settings/image-scan/hivepaas/{component} (the `GetSystemImageScanComponent` operationId).
+func (c *Client) GetSystemImageScanComponent(ctx context.Context, component string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSystemImageScanComponentRequest(c.Server, component)
 	if err != nil {
 		return nil, err
 	}
@@ -52944,6 +54689,40 @@ func NewUpdateProjectImageBuildSettingsStatusRequestWithBody(server string, proj
 	return req, nil
 }
 
+// NewGetProjectImageScanRequest constructs an http.Request for the GetProjectImageScan method
+func NewGetProjectImageScanRequest(server string, projectID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/image-scan", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewListProjectKeyAuthRequest constructs an http.Request for the ListProjectKeyAuth method
 func NewListProjectKeyAuthRequest(server string, projectID string, params *ListProjectKeyAuthParams) (*http.Request, error) {
 	var err error
@@ -56600,6 +58379,340 @@ func NewUpdateProjectUserAccessesRequestWithBody(server string, projectID string
 	}
 
 	operationPath := fmt.Sprintf("/projects/%s/user-accesses", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListProjectVulnIgnoreRequest constructs an http.Request for the ListProjectVulnIgnore method
+func NewListProjectVulnIgnoreRequest(server string, projectID string, params *ListProjectVulnIgnoreParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/vulnerability-ignores", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Search != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "search", *params.Search, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PageOffset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "pageOffset", *params.PageOffset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PageLimit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "pageLimit", *params.PageLimit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Sort != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "sort", *params.Sort, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateProjectVulnIgnoreRequest calls the generic CreateProjectVulnIgnore builder with application/json body
+func NewCreateProjectVulnIgnoreRequest(server string, projectID string, body CreateProjectVulnIgnoreJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateProjectVulnIgnoreRequestWithBody(server, projectID, "application/json", bodyReader)
+}
+
+// NewCreateProjectVulnIgnoreRequestWithBody constructs an http.Request for the CreateProjectVulnIgnore method, with any body, and a specified content type
+func NewCreateProjectVulnIgnoreRequestWithBody(server string, projectID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/vulnerability-ignores", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteProjectVulnIgnoreRequest constructs an http.Request for the DeleteProjectVulnIgnore method
+func NewDeleteProjectVulnIgnoreRequest(server string, projectID string, itemID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "itemID", itemID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/vulnerability-ignores/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetProjectVulnIgnoreRequest constructs an http.Request for the GetProjectVulnIgnore method
+func NewGetProjectVulnIgnoreRequest(server string, projectID string, itemID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "itemID", itemID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/vulnerability-ignores/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateProjectVulnIgnoreRequest calls the generic UpdateProjectVulnIgnore builder with application/json body
+func NewUpdateProjectVulnIgnoreRequest(server string, projectID string, itemID string, body UpdateProjectVulnIgnoreJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateProjectVulnIgnoreRequestWithBody(server, projectID, itemID, "application/json", bodyReader)
+}
+
+// NewUpdateProjectVulnIgnoreRequestWithBody constructs an http.Request for the UpdateProjectVulnIgnore method, with any body, and a specified content type
+func NewUpdateProjectVulnIgnoreRequestWithBody(server string, projectID string, itemID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "itemID", itemID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/vulnerability-ignores/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewUpdateProjectVulnIgnoreStatusRequest calls the generic UpdateProjectVulnIgnoreStatus builder with application/json body
+func NewUpdateProjectVulnIgnoreStatusRequest(server string, projectID string, itemID string, body UpdateProjectVulnIgnoreStatusJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateProjectVulnIgnoreStatusRequestWithBody(server, projectID, itemID, "application/json", bodyReader)
+}
+
+// NewUpdateProjectVulnIgnoreStatusRequestWithBody constructs an http.Request for the UpdateProjectVulnIgnoreStatus method, with any body, and a specified content type
+func NewUpdateProjectVulnIgnoreStatusRequestWithBody(server string, projectID string, itemID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "itemID", itemID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/vulnerability-ignores/%s/status", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -62054,6 +64167,173 @@ func NewGetAppHTTPMetricsRequest(server string, projectID string, projectEnv str
 	return req, nil
 }
 
+// NewGetAppImageScanRequest constructs an http.Request for the GetAppImageScan method
+func NewGetAppImageScanRequest(server string, projectID string, projectEnv string, appID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/image-scan", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewScanAppImagesRequest constructs an http.Request for the ScanAppImages method
+func NewScanAppImagesRequest(server string, projectID string, projectEnv string, appID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/image-scan", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetAppImageSBOMRequest constructs an http.Request for the GetAppImageSBOM method
+func NewGetAppImageSBOMRequest(server string, projectID string, projectEnv string, appID string, params *GetAppImageSBOMParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/image-scan/sbom", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "imageId", params.ImageId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetAppKindSettingsRequest constructs an http.Request for the GetAppKindSettings method
 func NewGetAppKindSettingsRequest(server string, projectID string, projectEnv string, appID string, params *GetAppKindSettingsParams) (*http.Request, error) {
 	var err error
@@ -66753,6 +69033,424 @@ func NewGetAppTerminalInfoRequest(server string, projectID string, projectEnv st
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewListAppVulnIgnoreRequest constructs an http.Request for the ListAppVulnIgnore method
+func NewListAppVulnIgnoreRequest(server string, projectID string, projectEnv string, appID string, params *ListAppVulnIgnoreParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/vulnerability-ignores", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Search != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "search", *params.Search, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PageOffset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "pageOffset", *params.PageOffset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PageLimit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "pageLimit", *params.PageLimit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Sort != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "sort", *params.Sort, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateAppVulnIgnoreRequest calls the generic CreateAppVulnIgnore builder with application/json body
+func NewCreateAppVulnIgnoreRequest(server string, projectID string, projectEnv string, appID string, body CreateAppVulnIgnoreJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateAppVulnIgnoreRequestWithBody(server, projectID, projectEnv, appID, "application/json", bodyReader)
+}
+
+// NewCreateAppVulnIgnoreRequestWithBody constructs an http.Request for the CreateAppVulnIgnore method, with any body, and a specified content type
+func NewCreateAppVulnIgnoreRequestWithBody(server string, projectID string, projectEnv string, appID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/vulnerability-ignores", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteAppVulnIgnoreRequest constructs an http.Request for the DeleteAppVulnIgnore method
+func NewDeleteAppVulnIgnoreRequest(server string, projectID string, projectEnv string, appID string, itemID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam3 string
+
+	pathParam3, err = runtime.StyleParamWithOptions("simple", false, "itemID", itemID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/vulnerability-ignores/%s", pathParam0, pathParam1, pathParam2, pathParam3)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetAppVulnIgnoreRequest constructs an http.Request for the GetAppVulnIgnore method
+func NewGetAppVulnIgnoreRequest(server string, projectID string, projectEnv string, appID string, itemID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam3 string
+
+	pathParam3, err = runtime.StyleParamWithOptions("simple", false, "itemID", itemID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/vulnerability-ignores/%s", pathParam0, pathParam1, pathParam2, pathParam3)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateAppVulnIgnoreRequest calls the generic UpdateAppVulnIgnore builder with application/json body
+func NewUpdateAppVulnIgnoreRequest(server string, projectID string, projectEnv string, appID string, itemID string, body UpdateAppVulnIgnoreJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateAppVulnIgnoreRequestWithBody(server, projectID, projectEnv, appID, itemID, "application/json", bodyReader)
+}
+
+// NewUpdateAppVulnIgnoreRequestWithBody constructs an http.Request for the UpdateAppVulnIgnore method, with any body, and a specified content type
+func NewUpdateAppVulnIgnoreRequestWithBody(server string, projectID string, projectEnv string, appID string, itemID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam3 string
+
+	pathParam3, err = runtime.StyleParamWithOptions("simple", false, "itemID", itemID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/vulnerability-ignores/%s", pathParam0, pathParam1, pathParam2, pathParam3)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewUpdateAppVulnIgnoreStatusRequest calls the generic UpdateAppVulnIgnoreStatus builder with application/json body
+func NewUpdateAppVulnIgnoreStatusRequest(server string, projectID string, projectEnv string, appID string, itemID string, body UpdateAppVulnIgnoreStatusJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateAppVulnIgnoreStatusRequestWithBody(server, projectID, projectEnv, appID, itemID, "application/json", bodyReader)
+}
+
+// NewUpdateAppVulnIgnoreStatusRequestWithBody constructs an http.Request for the UpdateAppVulnIgnoreStatus method, with any body, and a specified content type
+func NewUpdateAppVulnIgnoreStatusRequestWithBody(server string, projectID string, projectEnv string, appID string, itemID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam3 string
+
+	pathParam3, err = runtime.StyleParamWithOptions("simple", false, "itemID", itemID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/vulnerability-ignores/%s/status", pathParam0, pathParam1, pathParam2, pathParam3)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -76506,6 +79204,382 @@ func NewGetProjectEnvTaskStatusRequest(server string, projectID string, projectE
 	return req, nil
 }
 
+// NewListProjectEnvVulnIgnoreRequest constructs an http.Request for the ListProjectEnvVulnIgnore method
+func NewListProjectEnvVulnIgnoreRequest(server string, projectID string, projectEnv string, params *ListProjectEnvVulnIgnoreParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/vulnerability-ignores", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Search != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "search", *params.Search, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PageOffset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "pageOffset", *params.PageOffset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PageLimit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "pageLimit", *params.PageLimit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Sort != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "sort", *params.Sort, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateProjectEnvVulnIgnoreRequest calls the generic CreateProjectEnvVulnIgnore builder with application/json body
+func NewCreateProjectEnvVulnIgnoreRequest(server string, projectID string, projectEnv string, body CreateProjectEnvVulnIgnoreJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateProjectEnvVulnIgnoreRequestWithBody(server, projectID, projectEnv, "application/json", bodyReader)
+}
+
+// NewCreateProjectEnvVulnIgnoreRequestWithBody constructs an http.Request for the CreateProjectEnvVulnIgnore method, with any body, and a specified content type
+func NewCreateProjectEnvVulnIgnoreRequestWithBody(server string, projectID string, projectEnv string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/vulnerability-ignores", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteProjectEnvVulnIgnoreRequest constructs an http.Request for the DeleteProjectEnvVulnIgnore method
+func NewDeleteProjectEnvVulnIgnoreRequest(server string, projectID string, projectEnv string, itemID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "itemID", itemID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/vulnerability-ignores/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetProjectEnvVulnIgnoreRequest constructs an http.Request for the GetProjectEnvVulnIgnore method
+func NewGetProjectEnvVulnIgnoreRequest(server string, projectID string, projectEnv string, itemID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "itemID", itemID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/vulnerability-ignores/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateProjectEnvVulnIgnoreRequest calls the generic UpdateProjectEnvVulnIgnore builder with application/json body
+func NewUpdateProjectEnvVulnIgnoreRequest(server string, projectID string, projectEnv string, itemID string, body UpdateProjectEnvVulnIgnoreJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateProjectEnvVulnIgnoreRequestWithBody(server, projectID, projectEnv, itemID, "application/json", bodyReader)
+}
+
+// NewUpdateProjectEnvVulnIgnoreRequestWithBody constructs an http.Request for the UpdateProjectEnvVulnIgnore method, with any body, and a specified content type
+func NewUpdateProjectEnvVulnIgnoreRequestWithBody(server string, projectID string, projectEnv string, itemID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "itemID", itemID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/vulnerability-ignores/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewUpdateProjectEnvVulnIgnoreStatusRequest calls the generic UpdateProjectEnvVulnIgnoreStatus builder with application/json body
+func NewUpdateProjectEnvVulnIgnoreStatusRequest(server string, projectID string, projectEnv string, itemID string, body UpdateProjectEnvVulnIgnoreStatusJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateProjectEnvVulnIgnoreStatusRequestWithBody(server, projectID, projectEnv, itemID, "application/json", bodyReader)
+}
+
+// NewUpdateProjectEnvVulnIgnoreStatusRequestWithBody constructs an http.Request for the UpdateProjectEnvVulnIgnoreStatus method, with any body, and a specified content type
+func NewUpdateProjectEnvVulnIgnoreStatusRequestWithBody(server string, projectID string, projectEnv string, itemID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "itemID", itemID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/vulnerability-ignores/%s/status", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetProjectEnvSettingUsagesRequest constructs an http.Request for the GetProjectEnvSettingUsages method
 func NewGetProjectEnvSettingUsagesRequest(server string, projectID string, projectEnv string, kind string, itemID string) (*http.Request, error) {
 	var err error
@@ -83494,6 +86568,298 @@ func NewUpdateSettingSSLProviderStatusRequestWithBody(server string, itemID stri
 	return req, nil
 }
 
+// NewListSettingVulnIgnoreRequest constructs an http.Request for the ListSettingVulnIgnore method
+func NewListSettingVulnIgnoreRequest(server string, params *ListSettingVulnIgnoreParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/settings/vulnerability-ignores")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Search != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "search", *params.Search, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PageOffset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "pageOffset", *params.PageOffset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PageLimit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "pageLimit", *params.PageLimit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Sort != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "sort", *params.Sort, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateSettingVulnIgnoreRequest calls the generic CreateSettingVulnIgnore builder with application/json body
+func NewCreateSettingVulnIgnoreRequest(server string, body CreateSettingVulnIgnoreJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateSettingVulnIgnoreRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateSettingVulnIgnoreRequestWithBody constructs an http.Request for the CreateSettingVulnIgnore method, with any body, and a specified content type
+func NewCreateSettingVulnIgnoreRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/settings/vulnerability-ignores")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteSettingVulnIgnoreRequest constructs an http.Request for the DeleteSettingVulnIgnore method
+func NewDeleteSettingVulnIgnoreRequest(server string, itemID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "itemID", itemID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/settings/vulnerability-ignores/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetSettingVulnIgnoreRequest constructs an http.Request for the GetSettingVulnIgnore method
+func NewGetSettingVulnIgnoreRequest(server string, itemID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "itemID", itemID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/settings/vulnerability-ignores/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateSettingVulnIgnoreRequest calls the generic UpdateSettingVulnIgnore builder with application/json body
+func NewUpdateSettingVulnIgnoreRequest(server string, itemID string, body UpdateSettingVulnIgnoreJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateSettingVulnIgnoreRequestWithBody(server, itemID, "application/json", bodyReader)
+}
+
+// NewUpdateSettingVulnIgnoreRequestWithBody constructs an http.Request for the UpdateSettingVulnIgnore method, with any body, and a specified content type
+func NewUpdateSettingVulnIgnoreRequestWithBody(server string, itemID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "itemID", itemID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/settings/vulnerability-ignores/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewUpdateSettingVulnIgnoreStatusRequest calls the generic UpdateSettingVulnIgnoreStatus builder with application/json body
+func NewUpdateSettingVulnIgnoreStatusRequest(server string, itemID string, body UpdateSettingVulnIgnoreStatusJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateSettingVulnIgnoreStatusRequestWithBody(server, itemID, "application/json", bodyReader)
+}
+
+// NewUpdateSettingVulnIgnoreStatusRequestWithBody constructs an http.Request for the UpdateSettingVulnIgnoreStatus method, with any body, and a specified content type
+func NewUpdateSettingVulnIgnoreStatusRequestWithBody(server string, itemID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "itemID", itemID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/settings/vulnerability-ignores/%s/status", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetSettingUsagesRequest constructs an http.Request for the GetSettingUsages method
 func NewGetSettingUsagesRequest(server string, kind string, itemID string) (*http.Request, error) {
 	var err error
@@ -85303,6 +88669,227 @@ func NewExecuteSystemCleanupRequestWithBody(server string, contentType string, b
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetSystemImageScanSettingsRequest constructs an http.Request for the GetSystemImageScanSettings method
+func NewGetSystemImageScanSettingsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/system/settings/image-scan")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateSystemImageScanSettingsRequest calls the generic UpdateSystemImageScanSettings builder with application/json body
+func NewUpdateSystemImageScanSettingsRequest(server string, body UpdateSystemImageScanSettingsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateSystemImageScanSettingsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewUpdateSystemImageScanSettingsRequestWithBody constructs an http.Request for the UpdateSystemImageScanSettings method, with any body, and a specified content type
+func NewUpdateSystemImageScanSettingsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/system/settings/image-scan")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListSystemImageScanAppsRequest constructs an http.Request for the ListSystemImageScanApps method
+func NewListSystemImageScanAppsRequest(server string, params *ListSystemImageScanAppsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/system/settings/image-scan/apps")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.PageOffset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "pageOffset", *params.PageOffset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PageLimit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "pageLimit", *params.PageLimit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewExecuteSystemImageScanRequest constructs an http.Request for the ExecuteSystemImageScan method
+func NewExecuteSystemImageScanRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/system/settings/image-scan/exec")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListSystemImageScanComponentsRequest constructs an http.Request for the ListSystemImageScanComponents method
+func NewListSystemImageScanComponentsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/system/settings/image-scan/hivepaas")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetSystemImageScanComponentRequest constructs an http.Request for the GetSystemImageScanComponent method
+func NewGetSystemImageScanComponentRequest(server string, component string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "component", component, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/system/settings/image-scan/hivepaas/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -89625,6 +93212,17 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with PUT /projects/{projectID}/image-build-settings/status (the `UpdateProjectImageBuildSettingsStatus` operationId).
 	UpdateProjectImageBuildSettingsStatusWithResponse(ctx context.Context, projectID string, body UpdateProjectImageBuildSettingsStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateProjectImageBuildSettingsStatusResponse, error)
 
+	// GetProjectImageScanWithResponse Gets what the images of a project's apps carry
+	//
+	// The project's scanned apps, each with its images and their counts after the ignores of its
+	// scopes, the worst first: by fixable CRITICAL, then fixable HIGH. Only the envs and the apps the
+	// caller may read are listed. enabled says whether image scanning is on.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /projects/{projectID}/image-scan (the `GetProjectImageScan` operationId).
+	GetProjectImageScanWithResponse(ctx context.Context, projectID string, reqEditors ...RequestEditorFn) (*GetProjectImageScanResponse, error)
+
 	// ListProjectKeyAuthWithResponse Lists key auth settings
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -90324,6 +93922,69 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with PUT /projects/{projectID}/user-accesses (the `UpdateProjectUserAccesses` operationId).
 	UpdateProjectUserAccessesWithResponse(ctx context.Context, projectID string, body UpdateProjectUserAccessesJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateProjectUserAccessesResponse, error)
+
+	// ListProjectVulnIgnoreWithResponse Lists vulnerability ignores
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /projects/{projectID}/vulnerability-ignores (the `ListProjectVulnIgnore` operationId).
+	ListProjectVulnIgnoreWithResponse(ctx context.Context, projectID string, params *ListProjectVulnIgnoreParams, reqEditors ...RequestEditorFn) (*ListProjectVulnIgnoreResponse, error)
+
+	// CreateProjectVulnIgnoreWithBodyWithResponse Creates a vulnerability ignore
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/vulnerability-ignores (the `CreateProjectVulnIgnore` operationId).
+	CreateProjectVulnIgnoreWithBodyWithResponse(ctx context.Context, projectID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateProjectVulnIgnoreResponse, error)
+
+	// CreateProjectVulnIgnoreWithResponse Creates a vulnerability ignore
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/vulnerability-ignores (the `CreateProjectVulnIgnore` operationId).
+	CreateProjectVulnIgnoreWithResponse(ctx context.Context, projectID string, body CreateProjectVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateProjectVulnIgnoreResponse, error)
+
+	// DeleteProjectVulnIgnoreWithResponse Deletes vulnerability ignore
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /projects/{projectID}/vulnerability-ignores/{itemID} (the `DeleteProjectVulnIgnore` operationId).
+	DeleteProjectVulnIgnoreWithResponse(ctx context.Context, projectID string, itemID string, reqEditors ...RequestEditorFn) (*DeleteProjectVulnIgnoreResponse, error)
+
+	// GetProjectVulnIgnoreWithResponse Gets vulnerability ignore details
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /projects/{projectID}/vulnerability-ignores/{itemID} (the `GetProjectVulnIgnore` operationId).
+	GetProjectVulnIgnoreWithResponse(ctx context.Context, projectID string, itemID string, reqEditors ...RequestEditorFn) (*GetProjectVulnIgnoreResponse, error)
+
+	// UpdateProjectVulnIgnoreWithBodyWithResponse Updates vulnerability ignore
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /projects/{projectID}/vulnerability-ignores/{itemID} (the `UpdateProjectVulnIgnore` operationId).
+	UpdateProjectVulnIgnoreWithBodyWithResponse(ctx context.Context, projectID string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateProjectVulnIgnoreResponse, error)
+
+	// UpdateProjectVulnIgnoreWithResponse Updates vulnerability ignore
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /projects/{projectID}/vulnerability-ignores/{itemID} (the `UpdateProjectVulnIgnore` operationId).
+	UpdateProjectVulnIgnoreWithResponse(ctx context.Context, projectID string, itemID string, body UpdateProjectVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateProjectVulnIgnoreResponse, error)
+
+	// UpdateProjectVulnIgnoreStatusWithBodyWithResponse Updates vulnerability ignore status
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /projects/{projectID}/vulnerability-ignores/{itemID}/status (the `UpdateProjectVulnIgnoreStatus` operationId).
+	UpdateProjectVulnIgnoreStatusWithBodyWithResponse(ctx context.Context, projectID string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateProjectVulnIgnoreStatusResponse, error)
+
+	// UpdateProjectVulnIgnoreStatusWithResponse Updates vulnerability ignore status
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /projects/{projectID}/vulnerability-ignores/{itemID}/status (the `UpdateProjectVulnIgnoreStatus` operationId).
+	UpdateProjectVulnIgnoreStatusWithResponse(ctx context.Context, projectID string, itemID string, body UpdateProjectVulnIgnoreStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateProjectVulnIgnoreStatusResponse, error)
 
 	// GetProjectSettingUsagesWithResponse Lists what references a project's setting
 	//
@@ -91201,6 +94862,38 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/http-metrics (the `GetAppHTTPMetrics` operationId).
 	GetAppHTTPMetricsWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, params *GetAppHTTPMetricsParams, reqEditors ...RequestEditorFn) (*GetAppHTTPMetricsResponse, error)
 
+	// GetAppImageScanWithResponse Gets what an app's images carry
+	//
+	// The images the app's tasks ran when last scanned, each with its last scan; the findings no
+	// ignore of the app's scopes sets aside, the worst first; those one does, each with its ignore;
+	// and the app's scan queued or running, if any.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/image-scan (the `GetAppImageScan` operationId).
+	GetAppImageScanWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*GetAppImageScanResponse, error)
+
+	// ScanAppImagesWithResponse Scans an app's images now
+	//
+	// Queues a scan of the images the app's tasks run, scanning again those scanned within the hour.
+	// A scan of the app queued before and not started yet is the one answered.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/image-scan (the `ScanAppImages` operationId).
+	ScanAppImagesWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*ScanAppImagesResponse, error)
+
+	// GetAppImageSBOMWithResponse Downloads the SBOM of an image an app runs
+	//
+	// The image's packages as CycloneDX JSON, read as a scan reads the image - on the same node,
+	// with the same volume - and not kept: a few seconds once the image was scanned. Only an image
+	// the app's tasks run now.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/image-scan/sbom (the `GetAppImageSBOM` operationId).
+	GetAppImageSBOMWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, params *GetAppImageSBOMParams, reqEditors ...RequestEditorFn) (*GetAppImageSBOMResponse, error)
+
 	// GetAppKindSettingsWithResponse Gets app kind settings
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -91936,6 +95629,69 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/terminal/info (the `GetAppTerminalInfo` operationId).
 	GetAppTerminalInfoWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*GetAppTerminalInfoResponse, error)
+
+	// ListAppVulnIgnoreWithResponse Lists vulnerability ignores
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores (the `ListAppVulnIgnore` operationId).
+	ListAppVulnIgnoreWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, params *ListAppVulnIgnoreParams, reqEditors ...RequestEditorFn) (*ListAppVulnIgnoreResponse, error)
+
+	// CreateAppVulnIgnoreWithBodyWithResponse Creates a vulnerability ignore
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores (the `CreateAppVulnIgnore` operationId).
+	CreateAppVulnIgnoreWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAppVulnIgnoreResponse, error)
+
+	// CreateAppVulnIgnoreWithResponse Creates a vulnerability ignore
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores (the `CreateAppVulnIgnore` operationId).
+	CreateAppVulnIgnoreWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body CreateAppVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAppVulnIgnoreResponse, error)
+
+	// DeleteAppVulnIgnoreWithResponse Deletes vulnerability ignore
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID} (the `DeleteAppVulnIgnore` operationId).
+	DeleteAppVulnIgnoreWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, reqEditors ...RequestEditorFn) (*DeleteAppVulnIgnoreResponse, error)
+
+	// GetAppVulnIgnoreWithResponse Gets vulnerability ignore details
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID} (the `GetAppVulnIgnore` operationId).
+	GetAppVulnIgnoreWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, reqEditors ...RequestEditorFn) (*GetAppVulnIgnoreResponse, error)
+
+	// UpdateAppVulnIgnoreWithBodyWithResponse Updates vulnerability ignore
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID} (the `UpdateAppVulnIgnore` operationId).
+	UpdateAppVulnIgnoreWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateAppVulnIgnoreResponse, error)
+
+	// UpdateAppVulnIgnoreWithResponse Updates vulnerability ignore
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID} (the `UpdateAppVulnIgnore` operationId).
+	UpdateAppVulnIgnoreWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, body UpdateAppVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateAppVulnIgnoreResponse, error)
+
+	// UpdateAppVulnIgnoreStatusWithBodyWithResponse Updates vulnerability ignore status
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID}/status (the `UpdateAppVulnIgnoreStatus` operationId).
+	UpdateAppVulnIgnoreStatusWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateAppVulnIgnoreStatusResponse, error)
+
+	// UpdateAppVulnIgnoreStatusWithResponse Updates vulnerability ignore status
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID}/status (the `UpdateAppVulnIgnoreStatus` operationId).
+	UpdateAppVulnIgnoreStatusWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, body UpdateAppVulnIgnoreStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateAppVulnIgnoreStatusResponse, error)
 
 	// GetAppSettingUsagesWithResponse Lists what references an app's setting
 	//
@@ -93488,6 +97244,69 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /projects/{projectID}/{projectEnv}/tasks/{itemID}/status (the `GetProjectEnvTaskStatus` operationId).
 	GetProjectEnvTaskStatusWithResponse(ctx context.Context, projectID string, projectEnv string, itemID string, reqEditors ...RequestEditorFn) (*GetProjectEnvTaskStatusResponse, error)
+
+	// ListProjectEnvVulnIgnoreWithResponse Lists vulnerability ignores
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/vulnerability-ignores (the `ListProjectEnvVulnIgnore` operationId).
+	ListProjectEnvVulnIgnoreWithResponse(ctx context.Context, projectID string, projectEnv string, params *ListProjectEnvVulnIgnoreParams, reqEditors ...RequestEditorFn) (*ListProjectEnvVulnIgnoreResponse, error)
+
+	// CreateProjectEnvVulnIgnoreWithBodyWithResponse Creates a vulnerability ignore
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/vulnerability-ignores (the `CreateProjectEnvVulnIgnore` operationId).
+	CreateProjectEnvVulnIgnoreWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateProjectEnvVulnIgnoreResponse, error)
+
+	// CreateProjectEnvVulnIgnoreWithResponse Creates a vulnerability ignore
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/vulnerability-ignores (the `CreateProjectEnvVulnIgnore` operationId).
+	CreateProjectEnvVulnIgnoreWithResponse(ctx context.Context, projectID string, projectEnv string, body CreateProjectEnvVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateProjectEnvVulnIgnoreResponse, error)
+
+	// DeleteProjectEnvVulnIgnoreWithResponse Deletes vulnerability ignore
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID} (the `DeleteProjectEnvVulnIgnore` operationId).
+	DeleteProjectEnvVulnIgnoreWithResponse(ctx context.Context, projectID string, projectEnv string, itemID string, reqEditors ...RequestEditorFn) (*DeleteProjectEnvVulnIgnoreResponse, error)
+
+	// GetProjectEnvVulnIgnoreWithResponse Gets vulnerability ignore details
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID} (the `GetProjectEnvVulnIgnore` operationId).
+	GetProjectEnvVulnIgnoreWithResponse(ctx context.Context, projectID string, projectEnv string, itemID string, reqEditors ...RequestEditorFn) (*GetProjectEnvVulnIgnoreResponse, error)
+
+	// UpdateProjectEnvVulnIgnoreWithBodyWithResponse Updates vulnerability ignore
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID} (the `UpdateProjectEnvVulnIgnore` operationId).
+	UpdateProjectEnvVulnIgnoreWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateProjectEnvVulnIgnoreResponse, error)
+
+	// UpdateProjectEnvVulnIgnoreWithResponse Updates vulnerability ignore
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID} (the `UpdateProjectEnvVulnIgnore` operationId).
+	UpdateProjectEnvVulnIgnoreWithResponse(ctx context.Context, projectID string, projectEnv string, itemID string, body UpdateProjectEnvVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateProjectEnvVulnIgnoreResponse, error)
+
+	// UpdateProjectEnvVulnIgnoreStatusWithBodyWithResponse Updates vulnerability ignore status
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID}/status (the `UpdateProjectEnvVulnIgnoreStatus` operationId).
+	UpdateProjectEnvVulnIgnoreStatusWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateProjectEnvVulnIgnoreStatusResponse, error)
+
+	// UpdateProjectEnvVulnIgnoreStatusWithResponse Updates vulnerability ignore status
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID}/status (the `UpdateProjectEnvVulnIgnoreStatus` operationId).
+	UpdateProjectEnvVulnIgnoreStatusWithResponse(ctx context.Context, projectID string, projectEnv string, itemID string, body UpdateProjectEnvVulnIgnoreStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateProjectEnvVulnIgnoreStatusResponse, error)
 
 	// GetProjectEnvSettingUsagesWithResponse Lists what references an env's setting
 	//
@@ -95077,6 +98896,69 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with PUT /settings/ssl-providers/{itemID}/status (the `UpdateSettingSSLProviderStatus` operationId).
 	UpdateSettingSSLProviderStatusWithResponse(ctx context.Context, itemID string, body UpdateSettingSSLProviderStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateSettingSSLProviderStatusResponse, error)
 
+	// ListSettingVulnIgnoreWithResponse Lists vulnerability ignores
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /settings/vulnerability-ignores (the `ListSettingVulnIgnore` operationId).
+	ListSettingVulnIgnoreWithResponse(ctx context.Context, params *ListSettingVulnIgnoreParams, reqEditors ...RequestEditorFn) (*ListSettingVulnIgnoreResponse, error)
+
+	// CreateSettingVulnIgnoreWithBodyWithResponse Creates a vulnerability ignore
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /settings/vulnerability-ignores (the `CreateSettingVulnIgnore` operationId).
+	CreateSettingVulnIgnoreWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateSettingVulnIgnoreResponse, error)
+
+	// CreateSettingVulnIgnoreWithResponse Creates a vulnerability ignore
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /settings/vulnerability-ignores (the `CreateSettingVulnIgnore` operationId).
+	CreateSettingVulnIgnoreWithResponse(ctx context.Context, body CreateSettingVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateSettingVulnIgnoreResponse, error)
+
+	// DeleteSettingVulnIgnoreWithResponse Deletes vulnerability ignore
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /settings/vulnerability-ignores/{itemID} (the `DeleteSettingVulnIgnore` operationId).
+	DeleteSettingVulnIgnoreWithResponse(ctx context.Context, itemID string, reqEditors ...RequestEditorFn) (*DeleteSettingVulnIgnoreResponse, error)
+
+	// GetSettingVulnIgnoreWithResponse Gets vulnerability ignore details
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /settings/vulnerability-ignores/{itemID} (the `GetSettingVulnIgnore` operationId).
+	GetSettingVulnIgnoreWithResponse(ctx context.Context, itemID string, reqEditors ...RequestEditorFn) (*GetSettingVulnIgnoreResponse, error)
+
+	// UpdateSettingVulnIgnoreWithBodyWithResponse Updates vulnerability ignore
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /settings/vulnerability-ignores/{itemID} (the `UpdateSettingVulnIgnore` operationId).
+	UpdateSettingVulnIgnoreWithBodyWithResponse(ctx context.Context, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateSettingVulnIgnoreResponse, error)
+
+	// UpdateSettingVulnIgnoreWithResponse Updates vulnerability ignore
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /settings/vulnerability-ignores/{itemID} (the `UpdateSettingVulnIgnore` operationId).
+	UpdateSettingVulnIgnoreWithResponse(ctx context.Context, itemID string, body UpdateSettingVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateSettingVulnIgnoreResponse, error)
+
+	// UpdateSettingVulnIgnoreStatusWithBodyWithResponse Updates vulnerability ignore status
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /settings/vulnerability-ignores/{itemID}/status (the `UpdateSettingVulnIgnoreStatus` operationId).
+	UpdateSettingVulnIgnoreStatusWithBodyWithResponse(ctx context.Context, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateSettingVulnIgnoreStatusResponse, error)
+
+	// UpdateSettingVulnIgnoreStatusWithResponse Updates vulnerability ignore status
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /settings/vulnerability-ignores/{itemID}/status (the `UpdateSettingVulnIgnoreStatus` operationId).
+	UpdateSettingVulnIgnoreStatusWithResponse(ctx context.Context, itemID string, body UpdateSettingVulnIgnoreStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateSettingVulnIgnoreStatusResponse, error)
+
 	// GetSettingUsagesWithResponse Lists what references a setting
 	//
 	// Lists what still references a setting: the apps, projects and settings that use it. Deleting
@@ -95556,6 +99438,76 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /system/settings/cleanup/exec (the `ExecuteSystemCleanup` operationId).
 	ExecuteSystemCleanupWithResponse(ctx context.Context, body ExecuteSystemCleanupJSONRequestBody, reqEditors ...RequestEditorFn) (*ExecuteSystemCleanupResponse, error)
+
+	// GetSystemImageScanSettingsWithResponse Gets image scanning settings
+	//
+	// Gets image scanning's settings - the addon and its daily scan - and what runs: Trivy's server,
+	// the runner on the nodes, and the vulnerability DB of the last scan.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /system/settings/image-scan (the `GetSystemImageScanSettings` operationId).
+	GetSystemImageScanSettingsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSystemImageScanSettingsResponse, error)
+
+	// UpdateSystemImageScanSettingsWithBodyWithResponse Updates image scanning settings
+	//
+	// Switches image scanning on - Trivy's server and a runner on every node are made - or off -
+	// both are removed, the results kept - and sets its daily scan.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /system/settings/image-scan (the `UpdateSystemImageScanSettings` operationId).
+	UpdateSystemImageScanSettingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateSystemImageScanSettingsResponse, error)
+
+	// UpdateSystemImageScanSettingsWithResponse Updates image scanning settings
+	//
+	// Switches image scanning on - Trivy's server and a runner on every node are made - or off -
+	// both are removed, the results kept - and sets its daily scan.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /system/settings/image-scan (the `UpdateSystemImageScanSettings` operationId).
+	UpdateSystemImageScanSettingsWithResponse(ctx context.Context, body UpdateSystemImageScanSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateSystemImageScanSettingsResponse, error)
+
+	// ListSystemImageScanAppsWithResponse Lists every app's images and what they carry
+	//
+	// Every scanned app with its images and their findings counted by severity, after ignores; the
+	// worst first, by fixable CRITICAL then fixable HIGH.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /system/settings/image-scan/apps (the `ListSystemImageScanApps` operationId).
+	ListSystemImageScanAppsWithResponse(ctx context.Context, params *ListSystemImageScanAppsParams, reqEditors ...RequestEditorFn) (*ListSystemImageScanAppsResponse, error)
+
+	// ExecuteSystemImageScanWithResponse Runs the daily image scan now
+	//
+	// Scans again what every app runs, as the daily scan does.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /system/settings/image-scan/exec (the `ExecuteSystemImageScan` operationId).
+	ExecuteSystemImageScanWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ExecuteSystemImageScanResponse, error)
+
+	// ListSystemImageScanComponentsWithResponse Lists what HivePaaS's own parts run and carry
+	//
+	// HivePaaS's parts the daily scan found running - the app, the agent, the database, Redis,
+	// Traefik, the registry, the logging backend and collector, OBI - each with its images and their
+	// findings counted by severity, after the global ignores, in HivePaaS's order.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /system/settings/image-scan/hivepaas (the `ListSystemImageScanComponents` operationId).
+	ListSystemImageScanComponentsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListSystemImageScanComponentsResponse, error)
+
+	// GetSystemImageScanComponentWithResponse Gets what a part of HivePaaS runs and carries
+	//
+	// The images the part ran when last scanned, its findings no global ignore sets aside, the worst
+	// first, and those one does, each with its ignore.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /system/settings/image-scan/hivepaas/{component} (the `GetSystemImageScanComponent` operationId).
+	GetSystemImageScanComponentWithResponse(ctx context.Context, component string, reqEditors ...RequestEditorFn) (*GetSystemImageScanComponentResponse, error)
 
 	// GetSystemLoggingSettingsWithResponse Gets logging settings
 	//
@@ -105017,6 +108969,61 @@ func (r UpdateProjectImageBuildSettingsStatusResponse) ContentType() string {
 	return ""
 }
 
+type GetProjectImageScanResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppimagescandtoGetProjectImageScanResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetProjectImageScanResponse) GetJSON200() *AppimagescandtoGetProjectImageScanResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetProjectImageScanResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetProjectImageScanResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetProjectImageScanResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetProjectImageScanResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetProjectImageScanResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetProjectImageScanResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type ListProjectKeyAuthResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -108626,6 +112633,336 @@ func (r UpdateProjectUserAccessesResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r UpdateProjectUserAccessesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListProjectVulnIgnoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *VulnignoredtoListVulnIgnoreResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListProjectVulnIgnoreResponse) GetJSON200() *VulnignoredtoListVulnIgnoreResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ListProjectVulnIgnoreResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r ListProjectVulnIgnoreResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r ListProjectVulnIgnoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListProjectVulnIgnoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListProjectVulnIgnoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListProjectVulnIgnoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CreateProjectVulnIgnoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *VulnignoredtoCreateVulnIgnoreResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r CreateProjectVulnIgnoreResponse) GetJSON201() *VulnignoredtoCreateVulnIgnoreResp {
+	return r.JSON201
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r CreateProjectVulnIgnoreResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r CreateProjectVulnIgnoreResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r CreateProjectVulnIgnoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateProjectVulnIgnoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateProjectVulnIgnoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CreateProjectVulnIgnoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteProjectVulnIgnoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *VulnignoredtoDeleteVulnIgnoreResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r DeleteProjectVulnIgnoreResponse) GetJSON200() *VulnignoredtoDeleteVulnIgnoreResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r DeleteProjectVulnIgnoreResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r DeleteProjectVulnIgnoreResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteProjectVulnIgnoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteProjectVulnIgnoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteProjectVulnIgnoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteProjectVulnIgnoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetProjectVulnIgnoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *VulnignoredtoGetVulnIgnoreResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetProjectVulnIgnoreResponse) GetJSON200() *VulnignoredtoGetVulnIgnoreResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetProjectVulnIgnoreResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetProjectVulnIgnoreResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetProjectVulnIgnoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetProjectVulnIgnoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetProjectVulnIgnoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetProjectVulnIgnoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateProjectVulnIgnoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *VulnignoredtoUpdateVulnIgnoreResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateProjectVulnIgnoreResponse) GetJSON200() *VulnignoredtoUpdateVulnIgnoreResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r UpdateProjectVulnIgnoreResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r UpdateProjectVulnIgnoreResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateProjectVulnIgnoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateProjectVulnIgnoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateProjectVulnIgnoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateProjectVulnIgnoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateProjectVulnIgnoreStatusResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *VulnignoredtoUpdateVulnIgnoreStatusResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateProjectVulnIgnoreStatusResponse) GetJSON200() *VulnignoredtoUpdateVulnIgnoreStatusResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r UpdateProjectVulnIgnoreStatusResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r UpdateProjectVulnIgnoreStatusResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateProjectVulnIgnoreStatusResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateProjectVulnIgnoreStatusResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateProjectVulnIgnoreStatusResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateProjectVulnIgnoreStatusResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -112950,6 +117287,171 @@ func (r GetAppHTTPMetricsResponse) ContentType() string {
 	return ""
 }
 
+type GetAppImageScanResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppimagescandtoGetAppImageScanResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetAppImageScanResponse) GetJSON200() *AppimagescandtoGetAppImageScanResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetAppImageScanResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetAppImageScanResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetAppImageScanResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAppImageScanResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAppImageScanResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetAppImageScanResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ScanAppImagesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppimagescandtoScanAppImagesResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ScanAppImagesResponse) GetJSON200() *AppimagescandtoScanAppImagesResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ScanAppImagesResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r ScanAppImagesResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r ScanAppImagesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ScanAppImagesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ScanAppImagesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ScanAppImagesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetAppImageSBOMResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// ApplicationvndCyclonedxJSON200 the response for an HTTP 200 `application/vnd.cyclonedx+json` response
+	ApplicationvndCyclonedxJSON200 *openapi_types.File
+	// ApplicationvndCyclonedxJSON400 the response for an HTTP 400 `application/vnd.cyclonedx+json` response
+	ApplicationvndCyclonedxJSON400 *HperrorsErrorInfo
+	// ApplicationvndCyclonedxJSON500 the response for an HTTP 500 `application/vnd.cyclonedx+json` response
+	ApplicationvndCyclonedxJSON500 *HperrorsErrorInfo
+}
+
+// GetApplicationvndCyclonedxJSON200 returns the response for an HTTP 200 `application/vnd.cyclonedx+json` response
+func (r GetAppImageSBOMResponse) GetApplicationvndCyclonedxJSON200() *openapi_types.File {
+	return r.ApplicationvndCyclonedxJSON200
+}
+
+// GetApplicationvndCyclonedxJSON400 returns the response for an HTTP 400 `application/vnd.cyclonedx+json` response
+func (r GetAppImageSBOMResponse) GetApplicationvndCyclonedxJSON400() *HperrorsErrorInfo {
+	return r.ApplicationvndCyclonedxJSON400
+}
+
+// GetApplicationvndCyclonedxJSON500 returns the response for an HTTP 500 `application/vnd.cyclonedx+json` response
+func (r GetAppImageSBOMResponse) GetApplicationvndCyclonedxJSON500() *HperrorsErrorInfo {
+	return r.ApplicationvndCyclonedxJSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetAppImageSBOMResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAppImageSBOMResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAppImageSBOMResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetAppImageSBOMResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetAppKindSettingsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -116725,6 +121227,336 @@ func (r GetAppTerminalInfoResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetAppTerminalInfoResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListAppVulnIgnoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *VulnignoredtoListVulnIgnoreResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListAppVulnIgnoreResponse) GetJSON200() *VulnignoredtoListVulnIgnoreResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ListAppVulnIgnoreResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r ListAppVulnIgnoreResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r ListAppVulnIgnoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAppVulnIgnoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAppVulnIgnoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListAppVulnIgnoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CreateAppVulnIgnoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *VulnignoredtoCreateVulnIgnoreResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r CreateAppVulnIgnoreResponse) GetJSON201() *VulnignoredtoCreateVulnIgnoreResp {
+	return r.JSON201
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r CreateAppVulnIgnoreResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r CreateAppVulnIgnoreResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r CreateAppVulnIgnoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateAppVulnIgnoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateAppVulnIgnoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CreateAppVulnIgnoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteAppVulnIgnoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *VulnignoredtoDeleteVulnIgnoreResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r DeleteAppVulnIgnoreResponse) GetJSON200() *VulnignoredtoDeleteVulnIgnoreResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r DeleteAppVulnIgnoreResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r DeleteAppVulnIgnoreResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteAppVulnIgnoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteAppVulnIgnoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteAppVulnIgnoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteAppVulnIgnoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetAppVulnIgnoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *VulnignoredtoGetVulnIgnoreResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetAppVulnIgnoreResponse) GetJSON200() *VulnignoredtoGetVulnIgnoreResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetAppVulnIgnoreResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetAppVulnIgnoreResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetAppVulnIgnoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAppVulnIgnoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAppVulnIgnoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetAppVulnIgnoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateAppVulnIgnoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *VulnignoredtoUpdateVulnIgnoreResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateAppVulnIgnoreResponse) GetJSON200() *VulnignoredtoUpdateVulnIgnoreResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r UpdateAppVulnIgnoreResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r UpdateAppVulnIgnoreResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateAppVulnIgnoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateAppVulnIgnoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateAppVulnIgnoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateAppVulnIgnoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateAppVulnIgnoreStatusResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *VulnignoredtoUpdateVulnIgnoreStatusResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateAppVulnIgnoreStatusResponse) GetJSON200() *VulnignoredtoUpdateVulnIgnoreStatusResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r UpdateAppVulnIgnoreStatusResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r UpdateAppVulnIgnoreStatusResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateAppVulnIgnoreStatusResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateAppVulnIgnoreStatusResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateAppVulnIgnoreStatusResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateAppVulnIgnoreStatusResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -124877,6 +129709,336 @@ func (r GetProjectEnvTaskStatusResponse) ContentType() string {
 	return ""
 }
 
+type ListProjectEnvVulnIgnoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *VulnignoredtoListVulnIgnoreResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListProjectEnvVulnIgnoreResponse) GetJSON200() *VulnignoredtoListVulnIgnoreResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ListProjectEnvVulnIgnoreResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r ListProjectEnvVulnIgnoreResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r ListProjectEnvVulnIgnoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListProjectEnvVulnIgnoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListProjectEnvVulnIgnoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListProjectEnvVulnIgnoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CreateProjectEnvVulnIgnoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *VulnignoredtoCreateVulnIgnoreResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r CreateProjectEnvVulnIgnoreResponse) GetJSON201() *VulnignoredtoCreateVulnIgnoreResp {
+	return r.JSON201
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r CreateProjectEnvVulnIgnoreResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r CreateProjectEnvVulnIgnoreResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r CreateProjectEnvVulnIgnoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateProjectEnvVulnIgnoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateProjectEnvVulnIgnoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CreateProjectEnvVulnIgnoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteProjectEnvVulnIgnoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *VulnignoredtoDeleteVulnIgnoreResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r DeleteProjectEnvVulnIgnoreResponse) GetJSON200() *VulnignoredtoDeleteVulnIgnoreResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r DeleteProjectEnvVulnIgnoreResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r DeleteProjectEnvVulnIgnoreResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteProjectEnvVulnIgnoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteProjectEnvVulnIgnoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteProjectEnvVulnIgnoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteProjectEnvVulnIgnoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetProjectEnvVulnIgnoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *VulnignoredtoGetVulnIgnoreResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetProjectEnvVulnIgnoreResponse) GetJSON200() *VulnignoredtoGetVulnIgnoreResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetProjectEnvVulnIgnoreResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetProjectEnvVulnIgnoreResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetProjectEnvVulnIgnoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetProjectEnvVulnIgnoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetProjectEnvVulnIgnoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetProjectEnvVulnIgnoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateProjectEnvVulnIgnoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *VulnignoredtoUpdateVulnIgnoreResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateProjectEnvVulnIgnoreResponse) GetJSON200() *VulnignoredtoUpdateVulnIgnoreResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r UpdateProjectEnvVulnIgnoreResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r UpdateProjectEnvVulnIgnoreResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateProjectEnvVulnIgnoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateProjectEnvVulnIgnoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateProjectEnvVulnIgnoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateProjectEnvVulnIgnoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateProjectEnvVulnIgnoreStatusResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *VulnignoredtoUpdateVulnIgnoreStatusResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateProjectEnvVulnIgnoreStatusResponse) GetJSON200() *VulnignoredtoUpdateVulnIgnoreStatusResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r UpdateProjectEnvVulnIgnoreStatusResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r UpdateProjectEnvVulnIgnoreStatusResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateProjectEnvVulnIgnoreStatusResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateProjectEnvVulnIgnoreStatusResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateProjectEnvVulnIgnoreStatusResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateProjectEnvVulnIgnoreStatusResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetProjectEnvSettingUsagesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -132948,6 +138110,336 @@ func (r UpdateSettingSSLProviderStatusResponse) ContentType() string {
 	return ""
 }
 
+type ListSettingVulnIgnoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *VulnignoredtoListVulnIgnoreResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListSettingVulnIgnoreResponse) GetJSON200() *VulnignoredtoListVulnIgnoreResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ListSettingVulnIgnoreResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r ListSettingVulnIgnoreResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r ListSettingVulnIgnoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListSettingVulnIgnoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListSettingVulnIgnoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListSettingVulnIgnoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CreateSettingVulnIgnoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *VulnignoredtoCreateVulnIgnoreResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r CreateSettingVulnIgnoreResponse) GetJSON201() *VulnignoredtoCreateVulnIgnoreResp {
+	return r.JSON201
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r CreateSettingVulnIgnoreResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r CreateSettingVulnIgnoreResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r CreateSettingVulnIgnoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateSettingVulnIgnoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateSettingVulnIgnoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CreateSettingVulnIgnoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteSettingVulnIgnoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *VulnignoredtoDeleteVulnIgnoreResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r DeleteSettingVulnIgnoreResponse) GetJSON200() *VulnignoredtoDeleteVulnIgnoreResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r DeleteSettingVulnIgnoreResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r DeleteSettingVulnIgnoreResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteSettingVulnIgnoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteSettingVulnIgnoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteSettingVulnIgnoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteSettingVulnIgnoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetSettingVulnIgnoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *VulnignoredtoGetVulnIgnoreResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetSettingVulnIgnoreResponse) GetJSON200() *VulnignoredtoGetVulnIgnoreResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetSettingVulnIgnoreResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetSettingVulnIgnoreResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetSettingVulnIgnoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSettingVulnIgnoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSettingVulnIgnoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetSettingVulnIgnoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateSettingVulnIgnoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *VulnignoredtoUpdateVulnIgnoreResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateSettingVulnIgnoreResponse) GetJSON200() *VulnignoredtoUpdateVulnIgnoreResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r UpdateSettingVulnIgnoreResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r UpdateSettingVulnIgnoreResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateSettingVulnIgnoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateSettingVulnIgnoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateSettingVulnIgnoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateSettingVulnIgnoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateSettingVulnIgnoreStatusResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *VulnignoredtoUpdateVulnIgnoreStatusResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateSettingVulnIgnoreStatusResponse) GetJSON200() *VulnignoredtoUpdateVulnIgnoreStatusResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r UpdateSettingVulnIgnoreStatusResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r UpdateSettingVulnIgnoreStatusResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateSettingVulnIgnoreStatusResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateSettingVulnIgnoreStatusResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateSettingVulnIgnoreStatusResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateSettingVulnIgnoreStatusResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetSettingUsagesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -135176,6 +140668,336 @@ func (r ExecuteSystemCleanupResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r ExecuteSystemCleanupResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetSystemImageScanSettingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ImagescandtoGetImageScanSettingsResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetSystemImageScanSettingsResponse) GetJSON200() *ImagescandtoGetImageScanSettingsResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetSystemImageScanSettingsResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetSystemImageScanSettingsResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetSystemImageScanSettingsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSystemImageScanSettingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSystemImageScanSettingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetSystemImageScanSettingsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateSystemImageScanSettingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ImagescandtoUpdateImageScanSettingsResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateSystemImageScanSettingsResponse) GetJSON200() *ImagescandtoUpdateImageScanSettingsResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r UpdateSystemImageScanSettingsResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r UpdateSystemImageScanSettingsResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateSystemImageScanSettingsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateSystemImageScanSettingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateSystemImageScanSettingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateSystemImageScanSettingsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListSystemImageScanAppsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ImagescandtoListImageScanAppsResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListSystemImageScanAppsResponse) GetJSON200() *ImagescandtoListImageScanAppsResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ListSystemImageScanAppsResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r ListSystemImageScanAppsResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r ListSystemImageScanAppsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListSystemImageScanAppsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListSystemImageScanAppsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListSystemImageScanAppsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ExecuteSystemImageScanResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ImagescandtoExecuteImageScanResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ExecuteSystemImageScanResponse) GetJSON200() *ImagescandtoExecuteImageScanResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ExecuteSystemImageScanResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r ExecuteSystemImageScanResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r ExecuteSystemImageScanResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ExecuteSystemImageScanResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ExecuteSystemImageScanResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ExecuteSystemImageScanResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListSystemImageScanComponentsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ImagescandtoListImageScanComponentsResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListSystemImageScanComponentsResponse) GetJSON200() *ImagescandtoListImageScanComponentsResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ListSystemImageScanComponentsResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r ListSystemImageScanComponentsResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r ListSystemImageScanComponentsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListSystemImageScanComponentsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListSystemImageScanComponentsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListSystemImageScanComponentsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetSystemImageScanComponentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ImagescandtoGetImageScanComponentResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetSystemImageScanComponentResponse) GetJSON200() *ImagescandtoGetImageScanComponentResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetSystemImageScanComponentResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetSystemImageScanComponentResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetSystemImageScanComponentResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSystemImageScanComponentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSystemImageScanComponentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetSystemImageScanComponentResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -141394,6 +147216,23 @@ func (c *ClientWithResponses) UpdateProjectImageBuildSettingsStatusWithResponse(
 	return ParseUpdateProjectImageBuildSettingsStatusResponse(rsp)
 }
 
+// GetProjectImageScanWithResponse Gets what the images of a project's apps carry
+//
+// The project's scanned apps, each with its images and their counts after the ignores of its
+// scopes, the worst first: by fixable CRITICAL, then fixable HIGH. Only the envs and the apps the
+// caller may read are listed. enabled says whether image scanning is on.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /projects/{projectID}/image-scan (the `GetProjectImageScan` operationId).
+func (c *ClientWithResponses) GetProjectImageScanWithResponse(ctx context.Context, projectID string, reqEditors ...RequestEditorFn) (*GetProjectImageScanResponse, error) {
+	rsp, err := c.GetProjectImageScan(ctx, projectID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetProjectImageScanResponse(rsp)
+}
+
 // ListProjectKeyAuthWithResponse Lists key auth settings
 //
 // Returns a wrapper object for the known response body format(s).
@@ -142692,6 +148531,123 @@ func (c *ClientWithResponses) UpdateProjectUserAccessesWithResponse(ctx context.
 		return nil, err
 	}
 	return ParseUpdateProjectUserAccessesResponse(rsp)
+}
+
+// ListProjectVulnIgnoreWithResponse Lists vulnerability ignores
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /projects/{projectID}/vulnerability-ignores (the `ListProjectVulnIgnore` operationId).
+func (c *ClientWithResponses) ListProjectVulnIgnoreWithResponse(ctx context.Context, projectID string, params *ListProjectVulnIgnoreParams, reqEditors ...RequestEditorFn) (*ListProjectVulnIgnoreResponse, error) {
+	rsp, err := c.ListProjectVulnIgnore(ctx, projectID, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListProjectVulnIgnoreResponse(rsp)
+}
+
+// CreateProjectVulnIgnoreWithBodyWithResponse Creates a vulnerability ignore
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/vulnerability-ignores (the `CreateProjectVulnIgnore` operationId).
+func (c *ClientWithResponses) CreateProjectVulnIgnoreWithBodyWithResponse(ctx context.Context, projectID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateProjectVulnIgnoreResponse, error) {
+	rsp, err := c.CreateProjectVulnIgnoreWithBody(ctx, projectID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateProjectVulnIgnoreResponse(rsp)
+}
+
+// CreateProjectVulnIgnoreWithResponse Creates a vulnerability ignore
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/vulnerability-ignores (the `CreateProjectVulnIgnore` operationId).
+func (c *ClientWithResponses) CreateProjectVulnIgnoreWithResponse(ctx context.Context, projectID string, body CreateProjectVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateProjectVulnIgnoreResponse, error) {
+	rsp, err := c.CreateProjectVulnIgnore(ctx, projectID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateProjectVulnIgnoreResponse(rsp)
+}
+
+// DeleteProjectVulnIgnoreWithResponse Deletes vulnerability ignore
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /projects/{projectID}/vulnerability-ignores/{itemID} (the `DeleteProjectVulnIgnore` operationId).
+func (c *ClientWithResponses) DeleteProjectVulnIgnoreWithResponse(ctx context.Context, projectID string, itemID string, reqEditors ...RequestEditorFn) (*DeleteProjectVulnIgnoreResponse, error) {
+	rsp, err := c.DeleteProjectVulnIgnore(ctx, projectID, itemID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteProjectVulnIgnoreResponse(rsp)
+}
+
+// GetProjectVulnIgnoreWithResponse Gets vulnerability ignore details
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /projects/{projectID}/vulnerability-ignores/{itemID} (the `GetProjectVulnIgnore` operationId).
+func (c *ClientWithResponses) GetProjectVulnIgnoreWithResponse(ctx context.Context, projectID string, itemID string, reqEditors ...RequestEditorFn) (*GetProjectVulnIgnoreResponse, error) {
+	rsp, err := c.GetProjectVulnIgnore(ctx, projectID, itemID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetProjectVulnIgnoreResponse(rsp)
+}
+
+// UpdateProjectVulnIgnoreWithBodyWithResponse Updates vulnerability ignore
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /projects/{projectID}/vulnerability-ignores/{itemID} (the `UpdateProjectVulnIgnore` operationId).
+func (c *ClientWithResponses) UpdateProjectVulnIgnoreWithBodyWithResponse(ctx context.Context, projectID string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateProjectVulnIgnoreResponse, error) {
+	rsp, err := c.UpdateProjectVulnIgnoreWithBody(ctx, projectID, itemID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateProjectVulnIgnoreResponse(rsp)
+}
+
+// UpdateProjectVulnIgnoreWithResponse Updates vulnerability ignore
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /projects/{projectID}/vulnerability-ignores/{itemID} (the `UpdateProjectVulnIgnore` operationId).
+func (c *ClientWithResponses) UpdateProjectVulnIgnoreWithResponse(ctx context.Context, projectID string, itemID string, body UpdateProjectVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateProjectVulnIgnoreResponse, error) {
+	rsp, err := c.UpdateProjectVulnIgnore(ctx, projectID, itemID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateProjectVulnIgnoreResponse(rsp)
+}
+
+// UpdateProjectVulnIgnoreStatusWithBodyWithResponse Updates vulnerability ignore status
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /projects/{projectID}/vulnerability-ignores/{itemID}/status (the `UpdateProjectVulnIgnoreStatus` operationId).
+func (c *ClientWithResponses) UpdateProjectVulnIgnoreStatusWithBodyWithResponse(ctx context.Context, projectID string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateProjectVulnIgnoreStatusResponse, error) {
+	rsp, err := c.UpdateProjectVulnIgnoreStatusWithBody(ctx, projectID, itemID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateProjectVulnIgnoreStatusResponse(rsp)
+}
+
+// UpdateProjectVulnIgnoreStatusWithResponse Updates vulnerability ignore status
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /projects/{projectID}/vulnerability-ignores/{itemID}/status (the `UpdateProjectVulnIgnoreStatus` operationId).
+func (c *ClientWithResponses) UpdateProjectVulnIgnoreStatusWithResponse(ctx context.Context, projectID string, itemID string, body UpdateProjectVulnIgnoreStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateProjectVulnIgnoreStatusResponse, error) {
+	rsp, err := c.UpdateProjectVulnIgnoreStatus(ctx, projectID, itemID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateProjectVulnIgnoreStatusResponse(rsp)
 }
 
 // GetProjectSettingUsagesWithResponse Lists what references a project's setting
@@ -144224,6 +150180,56 @@ func (c *ClientWithResponses) GetAppHTTPMetricsWithResponse(ctx context.Context,
 	return ParseGetAppHTTPMetricsResponse(rsp)
 }
 
+// GetAppImageScanWithResponse Gets what an app's images carry
+//
+// The images the app's tasks ran when last scanned, each with its last scan; the findings no
+// ignore of the app's scopes sets aside, the worst first; those one does, each with its ignore;
+// and the app's scan queued or running, if any.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/image-scan (the `GetAppImageScan` operationId).
+func (c *ClientWithResponses) GetAppImageScanWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*GetAppImageScanResponse, error) {
+	rsp, err := c.GetAppImageScan(ctx, projectID, projectEnv, appID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAppImageScanResponse(rsp)
+}
+
+// ScanAppImagesWithResponse Scans an app's images now
+//
+// Queues a scan of the images the app's tasks run, scanning again those scanned within the hour.
+// A scan of the app queued before and not started yet is the one answered.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/image-scan (the `ScanAppImages` operationId).
+func (c *ClientWithResponses) ScanAppImagesWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*ScanAppImagesResponse, error) {
+	rsp, err := c.ScanAppImages(ctx, projectID, projectEnv, appID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseScanAppImagesResponse(rsp)
+}
+
+// GetAppImageSBOMWithResponse Downloads the SBOM of an image an app runs
+//
+// The image's packages as CycloneDX JSON, read as a scan reads the image - on the same node,
+// with the same volume - and not kept: a few seconds once the image was scanned. Only an image
+// the app's tasks run now.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/image-scan/sbom (the `GetAppImageSBOM` operationId).
+func (c *ClientWithResponses) GetAppImageSBOMWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, params *GetAppImageSBOMParams, reqEditors ...RequestEditorFn) (*GetAppImageSBOMResponse, error) {
+	rsp, err := c.GetAppImageSBOM(ctx, projectID, projectEnv, appID, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAppImageSBOMResponse(rsp)
+}
+
 // GetAppKindSettingsWithResponse Gets app kind settings
 //
 // Returns a wrapper object for the known response body format(s).
@@ -145552,6 +151558,123 @@ func (c *ClientWithResponses) GetAppTerminalInfoWithResponse(ctx context.Context
 		return nil, err
 	}
 	return ParseGetAppTerminalInfoResponse(rsp)
+}
+
+// ListAppVulnIgnoreWithResponse Lists vulnerability ignores
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores (the `ListAppVulnIgnore` operationId).
+func (c *ClientWithResponses) ListAppVulnIgnoreWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, params *ListAppVulnIgnoreParams, reqEditors ...RequestEditorFn) (*ListAppVulnIgnoreResponse, error) {
+	rsp, err := c.ListAppVulnIgnore(ctx, projectID, projectEnv, appID, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAppVulnIgnoreResponse(rsp)
+}
+
+// CreateAppVulnIgnoreWithBodyWithResponse Creates a vulnerability ignore
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores (the `CreateAppVulnIgnore` operationId).
+func (c *ClientWithResponses) CreateAppVulnIgnoreWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAppVulnIgnoreResponse, error) {
+	rsp, err := c.CreateAppVulnIgnoreWithBody(ctx, projectID, projectEnv, appID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAppVulnIgnoreResponse(rsp)
+}
+
+// CreateAppVulnIgnoreWithResponse Creates a vulnerability ignore
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores (the `CreateAppVulnIgnore` operationId).
+func (c *ClientWithResponses) CreateAppVulnIgnoreWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body CreateAppVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAppVulnIgnoreResponse, error) {
+	rsp, err := c.CreateAppVulnIgnore(ctx, projectID, projectEnv, appID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAppVulnIgnoreResponse(rsp)
+}
+
+// DeleteAppVulnIgnoreWithResponse Deletes vulnerability ignore
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID} (the `DeleteAppVulnIgnore` operationId).
+func (c *ClientWithResponses) DeleteAppVulnIgnoreWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, reqEditors ...RequestEditorFn) (*DeleteAppVulnIgnoreResponse, error) {
+	rsp, err := c.DeleteAppVulnIgnore(ctx, projectID, projectEnv, appID, itemID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteAppVulnIgnoreResponse(rsp)
+}
+
+// GetAppVulnIgnoreWithResponse Gets vulnerability ignore details
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID} (the `GetAppVulnIgnore` operationId).
+func (c *ClientWithResponses) GetAppVulnIgnoreWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, reqEditors ...RequestEditorFn) (*GetAppVulnIgnoreResponse, error) {
+	rsp, err := c.GetAppVulnIgnore(ctx, projectID, projectEnv, appID, itemID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAppVulnIgnoreResponse(rsp)
+}
+
+// UpdateAppVulnIgnoreWithBodyWithResponse Updates vulnerability ignore
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID} (the `UpdateAppVulnIgnore` operationId).
+func (c *ClientWithResponses) UpdateAppVulnIgnoreWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateAppVulnIgnoreResponse, error) {
+	rsp, err := c.UpdateAppVulnIgnoreWithBody(ctx, projectID, projectEnv, appID, itemID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateAppVulnIgnoreResponse(rsp)
+}
+
+// UpdateAppVulnIgnoreWithResponse Updates vulnerability ignore
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID} (the `UpdateAppVulnIgnore` operationId).
+func (c *ClientWithResponses) UpdateAppVulnIgnoreWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, body UpdateAppVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateAppVulnIgnoreResponse, error) {
+	rsp, err := c.UpdateAppVulnIgnore(ctx, projectID, projectEnv, appID, itemID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateAppVulnIgnoreResponse(rsp)
+}
+
+// UpdateAppVulnIgnoreStatusWithBodyWithResponse Updates vulnerability ignore status
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID}/status (the `UpdateAppVulnIgnoreStatus` operationId).
+func (c *ClientWithResponses) UpdateAppVulnIgnoreStatusWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateAppVulnIgnoreStatusResponse, error) {
+	rsp, err := c.UpdateAppVulnIgnoreStatusWithBody(ctx, projectID, projectEnv, appID, itemID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateAppVulnIgnoreStatusResponse(rsp)
+}
+
+// UpdateAppVulnIgnoreStatusWithResponse Updates vulnerability ignore status
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/vulnerability-ignores/{itemID}/status (the `UpdateAppVulnIgnoreStatus` operationId).
+func (c *ClientWithResponses) UpdateAppVulnIgnoreStatusWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, itemID string, body UpdateAppVulnIgnoreStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateAppVulnIgnoreStatusResponse, error) {
+	rsp, err := c.UpdateAppVulnIgnoreStatus(ctx, projectID, projectEnv, appID, itemID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateAppVulnIgnoreStatusResponse(rsp)
 }
 
 // GetAppSettingUsagesWithResponse Lists what references an app's setting
@@ -148394,6 +154517,123 @@ func (c *ClientWithResponses) GetProjectEnvTaskStatusWithResponse(ctx context.Co
 		return nil, err
 	}
 	return ParseGetProjectEnvTaskStatusResponse(rsp)
+}
+
+// ListProjectEnvVulnIgnoreWithResponse Lists vulnerability ignores
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/vulnerability-ignores (the `ListProjectEnvVulnIgnore` operationId).
+func (c *ClientWithResponses) ListProjectEnvVulnIgnoreWithResponse(ctx context.Context, projectID string, projectEnv string, params *ListProjectEnvVulnIgnoreParams, reqEditors ...RequestEditorFn) (*ListProjectEnvVulnIgnoreResponse, error) {
+	rsp, err := c.ListProjectEnvVulnIgnore(ctx, projectID, projectEnv, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListProjectEnvVulnIgnoreResponse(rsp)
+}
+
+// CreateProjectEnvVulnIgnoreWithBodyWithResponse Creates a vulnerability ignore
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/vulnerability-ignores (the `CreateProjectEnvVulnIgnore` operationId).
+func (c *ClientWithResponses) CreateProjectEnvVulnIgnoreWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateProjectEnvVulnIgnoreResponse, error) {
+	rsp, err := c.CreateProjectEnvVulnIgnoreWithBody(ctx, projectID, projectEnv, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateProjectEnvVulnIgnoreResponse(rsp)
+}
+
+// CreateProjectEnvVulnIgnoreWithResponse Creates a vulnerability ignore
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/vulnerability-ignores (the `CreateProjectEnvVulnIgnore` operationId).
+func (c *ClientWithResponses) CreateProjectEnvVulnIgnoreWithResponse(ctx context.Context, projectID string, projectEnv string, body CreateProjectEnvVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateProjectEnvVulnIgnoreResponse, error) {
+	rsp, err := c.CreateProjectEnvVulnIgnore(ctx, projectID, projectEnv, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateProjectEnvVulnIgnoreResponse(rsp)
+}
+
+// DeleteProjectEnvVulnIgnoreWithResponse Deletes vulnerability ignore
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID} (the `DeleteProjectEnvVulnIgnore` operationId).
+func (c *ClientWithResponses) DeleteProjectEnvVulnIgnoreWithResponse(ctx context.Context, projectID string, projectEnv string, itemID string, reqEditors ...RequestEditorFn) (*DeleteProjectEnvVulnIgnoreResponse, error) {
+	rsp, err := c.DeleteProjectEnvVulnIgnore(ctx, projectID, projectEnv, itemID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteProjectEnvVulnIgnoreResponse(rsp)
+}
+
+// GetProjectEnvVulnIgnoreWithResponse Gets vulnerability ignore details
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID} (the `GetProjectEnvVulnIgnore` operationId).
+func (c *ClientWithResponses) GetProjectEnvVulnIgnoreWithResponse(ctx context.Context, projectID string, projectEnv string, itemID string, reqEditors ...RequestEditorFn) (*GetProjectEnvVulnIgnoreResponse, error) {
+	rsp, err := c.GetProjectEnvVulnIgnore(ctx, projectID, projectEnv, itemID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetProjectEnvVulnIgnoreResponse(rsp)
+}
+
+// UpdateProjectEnvVulnIgnoreWithBodyWithResponse Updates vulnerability ignore
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID} (the `UpdateProjectEnvVulnIgnore` operationId).
+func (c *ClientWithResponses) UpdateProjectEnvVulnIgnoreWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateProjectEnvVulnIgnoreResponse, error) {
+	rsp, err := c.UpdateProjectEnvVulnIgnoreWithBody(ctx, projectID, projectEnv, itemID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateProjectEnvVulnIgnoreResponse(rsp)
+}
+
+// UpdateProjectEnvVulnIgnoreWithResponse Updates vulnerability ignore
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID} (the `UpdateProjectEnvVulnIgnore` operationId).
+func (c *ClientWithResponses) UpdateProjectEnvVulnIgnoreWithResponse(ctx context.Context, projectID string, projectEnv string, itemID string, body UpdateProjectEnvVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateProjectEnvVulnIgnoreResponse, error) {
+	rsp, err := c.UpdateProjectEnvVulnIgnore(ctx, projectID, projectEnv, itemID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateProjectEnvVulnIgnoreResponse(rsp)
+}
+
+// UpdateProjectEnvVulnIgnoreStatusWithBodyWithResponse Updates vulnerability ignore status
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID}/status (the `UpdateProjectEnvVulnIgnoreStatus` operationId).
+func (c *ClientWithResponses) UpdateProjectEnvVulnIgnoreStatusWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateProjectEnvVulnIgnoreStatusResponse, error) {
+	rsp, err := c.UpdateProjectEnvVulnIgnoreStatusWithBody(ctx, projectID, projectEnv, itemID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateProjectEnvVulnIgnoreStatusResponse(rsp)
+}
+
+// UpdateProjectEnvVulnIgnoreStatusWithResponse Updates vulnerability ignore status
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/vulnerability-ignores/{itemID}/status (the `UpdateProjectEnvVulnIgnoreStatus` operationId).
+func (c *ClientWithResponses) UpdateProjectEnvVulnIgnoreStatusWithResponse(ctx context.Context, projectID string, projectEnv string, itemID string, body UpdateProjectEnvVulnIgnoreStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateProjectEnvVulnIgnoreStatusResponse, error) {
+	rsp, err := c.UpdateProjectEnvVulnIgnoreStatus(ctx, projectID, projectEnv, itemID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateProjectEnvVulnIgnoreStatusResponse(rsp)
 }
 
 // GetProjectEnvSettingUsagesWithResponse Lists what references an env's setting
@@ -151304,6 +157544,123 @@ func (c *ClientWithResponses) UpdateSettingSSLProviderStatusWithResponse(ctx con
 	return ParseUpdateSettingSSLProviderStatusResponse(rsp)
 }
 
+// ListSettingVulnIgnoreWithResponse Lists vulnerability ignores
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /settings/vulnerability-ignores (the `ListSettingVulnIgnore` operationId).
+func (c *ClientWithResponses) ListSettingVulnIgnoreWithResponse(ctx context.Context, params *ListSettingVulnIgnoreParams, reqEditors ...RequestEditorFn) (*ListSettingVulnIgnoreResponse, error) {
+	rsp, err := c.ListSettingVulnIgnore(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListSettingVulnIgnoreResponse(rsp)
+}
+
+// CreateSettingVulnIgnoreWithBodyWithResponse Creates a vulnerability ignore
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /settings/vulnerability-ignores (the `CreateSettingVulnIgnore` operationId).
+func (c *ClientWithResponses) CreateSettingVulnIgnoreWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateSettingVulnIgnoreResponse, error) {
+	rsp, err := c.CreateSettingVulnIgnoreWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateSettingVulnIgnoreResponse(rsp)
+}
+
+// CreateSettingVulnIgnoreWithResponse Creates a vulnerability ignore
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /settings/vulnerability-ignores (the `CreateSettingVulnIgnore` operationId).
+func (c *ClientWithResponses) CreateSettingVulnIgnoreWithResponse(ctx context.Context, body CreateSettingVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateSettingVulnIgnoreResponse, error) {
+	rsp, err := c.CreateSettingVulnIgnore(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateSettingVulnIgnoreResponse(rsp)
+}
+
+// DeleteSettingVulnIgnoreWithResponse Deletes vulnerability ignore
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /settings/vulnerability-ignores/{itemID} (the `DeleteSettingVulnIgnore` operationId).
+func (c *ClientWithResponses) DeleteSettingVulnIgnoreWithResponse(ctx context.Context, itemID string, reqEditors ...RequestEditorFn) (*DeleteSettingVulnIgnoreResponse, error) {
+	rsp, err := c.DeleteSettingVulnIgnore(ctx, itemID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteSettingVulnIgnoreResponse(rsp)
+}
+
+// GetSettingVulnIgnoreWithResponse Gets vulnerability ignore details
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /settings/vulnerability-ignores/{itemID} (the `GetSettingVulnIgnore` operationId).
+func (c *ClientWithResponses) GetSettingVulnIgnoreWithResponse(ctx context.Context, itemID string, reqEditors ...RequestEditorFn) (*GetSettingVulnIgnoreResponse, error) {
+	rsp, err := c.GetSettingVulnIgnore(ctx, itemID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetSettingVulnIgnoreResponse(rsp)
+}
+
+// UpdateSettingVulnIgnoreWithBodyWithResponse Updates vulnerability ignore
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /settings/vulnerability-ignores/{itemID} (the `UpdateSettingVulnIgnore` operationId).
+func (c *ClientWithResponses) UpdateSettingVulnIgnoreWithBodyWithResponse(ctx context.Context, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateSettingVulnIgnoreResponse, error) {
+	rsp, err := c.UpdateSettingVulnIgnoreWithBody(ctx, itemID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateSettingVulnIgnoreResponse(rsp)
+}
+
+// UpdateSettingVulnIgnoreWithResponse Updates vulnerability ignore
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /settings/vulnerability-ignores/{itemID} (the `UpdateSettingVulnIgnore` operationId).
+func (c *ClientWithResponses) UpdateSettingVulnIgnoreWithResponse(ctx context.Context, itemID string, body UpdateSettingVulnIgnoreJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateSettingVulnIgnoreResponse, error) {
+	rsp, err := c.UpdateSettingVulnIgnore(ctx, itemID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateSettingVulnIgnoreResponse(rsp)
+}
+
+// UpdateSettingVulnIgnoreStatusWithBodyWithResponse Updates vulnerability ignore status
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /settings/vulnerability-ignores/{itemID}/status (the `UpdateSettingVulnIgnoreStatus` operationId).
+func (c *ClientWithResponses) UpdateSettingVulnIgnoreStatusWithBodyWithResponse(ctx context.Context, itemID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateSettingVulnIgnoreStatusResponse, error) {
+	rsp, err := c.UpdateSettingVulnIgnoreStatusWithBody(ctx, itemID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateSettingVulnIgnoreStatusResponse(rsp)
+}
+
+// UpdateSettingVulnIgnoreStatusWithResponse Updates vulnerability ignore status
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /settings/vulnerability-ignores/{itemID}/status (the `UpdateSettingVulnIgnoreStatus` operationId).
+func (c *ClientWithResponses) UpdateSettingVulnIgnoreStatusWithResponse(ctx context.Context, itemID string, body UpdateSettingVulnIgnoreStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateSettingVulnIgnoreStatusResponse, error) {
+	rsp, err := c.UpdateSettingVulnIgnoreStatus(ctx, itemID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateSettingVulnIgnoreStatusResponse(rsp)
+}
+
 // GetSettingUsagesWithResponse Lists what references a setting
 //
 // Lists what still references a setting: the apps, projects and settings that use it. Deleting
@@ -152154,6 +158511,118 @@ func (c *ClientWithResponses) ExecuteSystemCleanupWithResponse(ctx context.Conte
 		return nil, err
 	}
 	return ParseExecuteSystemCleanupResponse(rsp)
+}
+
+// GetSystemImageScanSettingsWithResponse Gets image scanning settings
+//
+// Gets image scanning's settings - the addon and its daily scan - and what runs: Trivy's server,
+// the runner on the nodes, and the vulnerability DB of the last scan.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /system/settings/image-scan (the `GetSystemImageScanSettings` operationId).
+func (c *ClientWithResponses) GetSystemImageScanSettingsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSystemImageScanSettingsResponse, error) {
+	rsp, err := c.GetSystemImageScanSettings(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetSystemImageScanSettingsResponse(rsp)
+}
+
+// UpdateSystemImageScanSettingsWithBodyWithResponse Updates image scanning settings
+//
+// Switches image scanning on - Trivy's server and a runner on every node are made - or off -
+// both are removed, the results kept - and sets its daily scan.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /system/settings/image-scan (the `UpdateSystemImageScanSettings` operationId).
+func (c *ClientWithResponses) UpdateSystemImageScanSettingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateSystemImageScanSettingsResponse, error) {
+	rsp, err := c.UpdateSystemImageScanSettingsWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateSystemImageScanSettingsResponse(rsp)
+}
+
+// UpdateSystemImageScanSettingsWithResponse Updates image scanning settings
+//
+// Switches image scanning on - Trivy's server and a runner on every node are made - or off -
+// both are removed, the results kept - and sets its daily scan.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /system/settings/image-scan (the `UpdateSystemImageScanSettings` operationId).
+func (c *ClientWithResponses) UpdateSystemImageScanSettingsWithResponse(ctx context.Context, body UpdateSystemImageScanSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateSystemImageScanSettingsResponse, error) {
+	rsp, err := c.UpdateSystemImageScanSettings(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateSystemImageScanSettingsResponse(rsp)
+}
+
+// ListSystemImageScanAppsWithResponse Lists every app's images and what they carry
+//
+// Every scanned app with its images and their findings counted by severity, after ignores; the
+// worst first, by fixable CRITICAL then fixable HIGH.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /system/settings/image-scan/apps (the `ListSystemImageScanApps` operationId).
+func (c *ClientWithResponses) ListSystemImageScanAppsWithResponse(ctx context.Context, params *ListSystemImageScanAppsParams, reqEditors ...RequestEditorFn) (*ListSystemImageScanAppsResponse, error) {
+	rsp, err := c.ListSystemImageScanApps(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListSystemImageScanAppsResponse(rsp)
+}
+
+// ExecuteSystemImageScanWithResponse Runs the daily image scan now
+//
+// Scans again what every app runs, as the daily scan does.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /system/settings/image-scan/exec (the `ExecuteSystemImageScan` operationId).
+func (c *ClientWithResponses) ExecuteSystemImageScanWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ExecuteSystemImageScanResponse, error) {
+	rsp, err := c.ExecuteSystemImageScan(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseExecuteSystemImageScanResponse(rsp)
+}
+
+// ListSystemImageScanComponentsWithResponse Lists what HivePaaS's own parts run and carry
+//
+// HivePaaS's parts the daily scan found running - the app, the agent, the database, Redis,
+// Traefik, the registry, the logging backend and collector, OBI - each with its images and their
+// findings counted by severity, after the global ignores, in HivePaaS's order.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /system/settings/image-scan/hivepaas (the `ListSystemImageScanComponents` operationId).
+func (c *ClientWithResponses) ListSystemImageScanComponentsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListSystemImageScanComponentsResponse, error) {
+	rsp, err := c.ListSystemImageScanComponents(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListSystemImageScanComponentsResponse(rsp)
+}
+
+// GetSystemImageScanComponentWithResponse Gets what a part of HivePaaS runs and carries
+//
+// The images the part ran when last scanned, its findings no global ignore sets aside, the worst
+// first, and those one does, each with its ignore.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /system/settings/image-scan/hivepaas/{component} (the `GetSystemImageScanComponent` operationId).
+func (c *ClientWithResponses) GetSystemImageScanComponentWithResponse(ctx context.Context, component string, reqEditors ...RequestEditorFn) (*GetSystemImageScanComponentResponse, error) {
+	rsp, err := c.GetSystemImageScanComponent(ctx, component, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetSystemImageScanComponentResponse(rsp)
 }
 
 // GetSystemLoggingSettingsWithResponse Gets logging settings
@@ -159722,6 +166191,46 @@ func ParseUpdateProjectImageBuildSettingsStatusResponse(rsp *http.Response) (*Up
 	return response, nil
 }
 
+// ParseGetProjectImageScanResponse parses an HTTP response from a GetProjectImageScanWithResponse call
+func ParseGetProjectImageScanResponse(rsp *http.Response) (*GetProjectImageScanResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetProjectImageScanResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppimagescandtoGetProjectImageScanResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListProjectKeyAuthResponse parses an HTTP response from a ListProjectKeyAuthWithResponse call
 func ParseListProjectKeyAuthResponse(rsp *http.Response) (*ListProjectKeyAuthResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -162306,6 +168815,246 @@ func ParseUpdateProjectUserAccessesResponse(rsp *http.Response) (*UpdateProjectU
 			return nil, err
 		}
 		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListProjectVulnIgnoreResponse parses an HTTP response from a ListProjectVulnIgnoreWithResponse call
+func ParseListProjectVulnIgnoreResponse(rsp *http.Response) (*ListProjectVulnIgnoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListProjectVulnIgnoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest VulnignoredtoListVulnIgnoreResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateProjectVulnIgnoreResponse parses an HTTP response from a CreateProjectVulnIgnoreWithResponse call
+func ParseCreateProjectVulnIgnoreResponse(rsp *http.Response) (*CreateProjectVulnIgnoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateProjectVulnIgnoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest VulnignoredtoCreateVulnIgnoreResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteProjectVulnIgnoreResponse parses an HTTP response from a DeleteProjectVulnIgnoreWithResponse call
+func ParseDeleteProjectVulnIgnoreResponse(rsp *http.Response) (*DeleteProjectVulnIgnoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteProjectVulnIgnoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest VulnignoredtoDeleteVulnIgnoreResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetProjectVulnIgnoreResponse parses an HTTP response from a GetProjectVulnIgnoreWithResponse call
+func ParseGetProjectVulnIgnoreResponse(rsp *http.Response) (*GetProjectVulnIgnoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetProjectVulnIgnoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest VulnignoredtoGetVulnIgnoreResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateProjectVulnIgnoreResponse parses an HTTP response from a UpdateProjectVulnIgnoreWithResponse call
+func ParseUpdateProjectVulnIgnoreResponse(rsp *http.Response) (*UpdateProjectVulnIgnoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateProjectVulnIgnoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest VulnignoredtoUpdateVulnIgnoreResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateProjectVulnIgnoreStatusResponse parses an HTTP response from a UpdateProjectVulnIgnoreStatusWithResponse call
+func ParseUpdateProjectVulnIgnoreStatusResponse(rsp *http.Response) (*UpdateProjectVulnIgnoreStatusResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateProjectVulnIgnoreStatusResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest VulnignoredtoUpdateVulnIgnoreStatusResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest HperrorsErrorInfo
@@ -165483,6 +172232,126 @@ func ParseGetAppHTTPMetricsResponse(rsp *http.Response) (*GetAppHTTPMetricsRespo
 	return response, nil
 }
 
+// ParseGetAppImageScanResponse parses an HTTP response from a GetAppImageScanWithResponse call
+func ParseGetAppImageScanResponse(rsp *http.Response) (*GetAppImageScanResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAppImageScanResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppimagescandtoGetAppImageScanResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseScanAppImagesResponse parses an HTTP response from a ScanAppImagesWithResponse call
+func ParseScanAppImagesResponse(rsp *http.Response) (*ScanAppImagesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ScanAppImagesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppimagescandtoScanAppImagesResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetAppImageSBOMResponse parses an HTTP response from a GetAppImageSBOMWithResponse call
+func ParseGetAppImageSBOMResponse(rsp *http.Response) (*GetAppImageSBOMResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAppImageSBOMResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest openapi_types.File
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationvndCyclonedxJSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationvndCyclonedxJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationvndCyclonedxJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetAppKindSettingsResponse parses an HTTP response from a GetAppKindSettingsWithResponse call
 func ParseGetAppKindSettingsResponse(rsp *http.Response) (*GetAppKindSettingsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -168202,6 +175071,246 @@ func ParseGetAppTerminalInfoResponse(rsp *http.Response) (*GetAppTerminalInfoRes
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest AppdtoGetTerminalInfoResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAppVulnIgnoreResponse parses an HTTP response from a ListAppVulnIgnoreWithResponse call
+func ParseListAppVulnIgnoreResponse(rsp *http.Response) (*ListAppVulnIgnoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAppVulnIgnoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest VulnignoredtoListVulnIgnoreResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateAppVulnIgnoreResponse parses an HTTP response from a CreateAppVulnIgnoreWithResponse call
+func ParseCreateAppVulnIgnoreResponse(rsp *http.Response) (*CreateAppVulnIgnoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateAppVulnIgnoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest VulnignoredtoCreateVulnIgnoreResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteAppVulnIgnoreResponse parses an HTTP response from a DeleteAppVulnIgnoreWithResponse call
+func ParseDeleteAppVulnIgnoreResponse(rsp *http.Response) (*DeleteAppVulnIgnoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteAppVulnIgnoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest VulnignoredtoDeleteVulnIgnoreResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetAppVulnIgnoreResponse parses an HTTP response from a GetAppVulnIgnoreWithResponse call
+func ParseGetAppVulnIgnoreResponse(rsp *http.Response) (*GetAppVulnIgnoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAppVulnIgnoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest VulnignoredtoGetVulnIgnoreResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateAppVulnIgnoreResponse parses an HTTP response from a UpdateAppVulnIgnoreWithResponse call
+func ParseUpdateAppVulnIgnoreResponse(rsp *http.Response) (*UpdateAppVulnIgnoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateAppVulnIgnoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest VulnignoredtoUpdateVulnIgnoreResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateAppVulnIgnoreStatusResponse parses an HTTP response from a UpdateAppVulnIgnoreStatusWithResponse call
+func ParseUpdateAppVulnIgnoreStatusResponse(rsp *http.Response) (*UpdateAppVulnIgnoreStatusResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateAppVulnIgnoreStatusResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest VulnignoredtoUpdateVulnIgnoreStatusResp
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -174128,6 +181237,246 @@ func ParseGetProjectEnvTaskStatusResponse(rsp *http.Response) (*GetProjectEnvTas
 	return response, nil
 }
 
+// ParseListProjectEnvVulnIgnoreResponse parses an HTTP response from a ListProjectEnvVulnIgnoreWithResponse call
+func ParseListProjectEnvVulnIgnoreResponse(rsp *http.Response) (*ListProjectEnvVulnIgnoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListProjectEnvVulnIgnoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest VulnignoredtoListVulnIgnoreResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateProjectEnvVulnIgnoreResponse parses an HTTP response from a CreateProjectEnvVulnIgnoreWithResponse call
+func ParseCreateProjectEnvVulnIgnoreResponse(rsp *http.Response) (*CreateProjectEnvVulnIgnoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateProjectEnvVulnIgnoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest VulnignoredtoCreateVulnIgnoreResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteProjectEnvVulnIgnoreResponse parses an HTTP response from a DeleteProjectEnvVulnIgnoreWithResponse call
+func ParseDeleteProjectEnvVulnIgnoreResponse(rsp *http.Response) (*DeleteProjectEnvVulnIgnoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteProjectEnvVulnIgnoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest VulnignoredtoDeleteVulnIgnoreResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetProjectEnvVulnIgnoreResponse parses an HTTP response from a GetProjectEnvVulnIgnoreWithResponse call
+func ParseGetProjectEnvVulnIgnoreResponse(rsp *http.Response) (*GetProjectEnvVulnIgnoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetProjectEnvVulnIgnoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest VulnignoredtoGetVulnIgnoreResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateProjectEnvVulnIgnoreResponse parses an HTTP response from a UpdateProjectEnvVulnIgnoreWithResponse call
+func ParseUpdateProjectEnvVulnIgnoreResponse(rsp *http.Response) (*UpdateProjectEnvVulnIgnoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateProjectEnvVulnIgnoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest VulnignoredtoUpdateVulnIgnoreResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateProjectEnvVulnIgnoreStatusResponse parses an HTTP response from a UpdateProjectEnvVulnIgnoreStatusWithResponse call
+func ParseUpdateProjectEnvVulnIgnoreStatusResponse(rsp *http.Response) (*UpdateProjectEnvVulnIgnoreStatusResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateProjectEnvVulnIgnoreStatusResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest VulnignoredtoUpdateVulnIgnoreStatusResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetProjectEnvSettingUsagesResponse parses an HTTP response from a GetProjectEnvSettingUsagesWithResponse call
 func ParseGetProjectEnvSettingUsagesResponse(rsp *http.Response) (*GetProjectEnvSettingUsagesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -179994,6 +187343,246 @@ func ParseUpdateSettingSSLProviderStatusResponse(rsp *http.Response) (*UpdateSet
 	return response, nil
 }
 
+// ParseListSettingVulnIgnoreResponse parses an HTTP response from a ListSettingVulnIgnoreWithResponse call
+func ParseListSettingVulnIgnoreResponse(rsp *http.Response) (*ListSettingVulnIgnoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListSettingVulnIgnoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest VulnignoredtoListVulnIgnoreResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateSettingVulnIgnoreResponse parses an HTTP response from a CreateSettingVulnIgnoreWithResponse call
+func ParseCreateSettingVulnIgnoreResponse(rsp *http.Response) (*CreateSettingVulnIgnoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateSettingVulnIgnoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest VulnignoredtoCreateVulnIgnoreResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteSettingVulnIgnoreResponse parses an HTTP response from a DeleteSettingVulnIgnoreWithResponse call
+func ParseDeleteSettingVulnIgnoreResponse(rsp *http.Response) (*DeleteSettingVulnIgnoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteSettingVulnIgnoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest VulnignoredtoDeleteVulnIgnoreResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetSettingVulnIgnoreResponse parses an HTTP response from a GetSettingVulnIgnoreWithResponse call
+func ParseGetSettingVulnIgnoreResponse(rsp *http.Response) (*GetSettingVulnIgnoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetSettingVulnIgnoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest VulnignoredtoGetVulnIgnoreResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateSettingVulnIgnoreResponse parses an HTTP response from a UpdateSettingVulnIgnoreWithResponse call
+func ParseUpdateSettingVulnIgnoreResponse(rsp *http.Response) (*UpdateSettingVulnIgnoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateSettingVulnIgnoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest VulnignoredtoUpdateVulnIgnoreResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateSettingVulnIgnoreStatusResponse parses an HTTP response from a UpdateSettingVulnIgnoreStatusWithResponse call
+func ParseUpdateSettingVulnIgnoreStatusResponse(rsp *http.Response) (*UpdateSettingVulnIgnoreStatusResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateSettingVulnIgnoreStatusResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest VulnignoredtoUpdateVulnIgnoreStatusResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetSettingUsagesResponse parses an HTTP response from a GetSettingUsagesWithResponse call
 func ParseGetSettingUsagesResponse(rsp *http.Response) (*GetSettingUsagesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -181586,6 +189175,246 @@ func ParseExecuteSystemCleanupResponse(rsp *http.Response) (*ExecuteSystemCleanu
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest SystemcleanupdtoExecuteSystemCleanupResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetSystemImageScanSettingsResponse parses an HTTP response from a GetSystemImageScanSettingsWithResponse call
+func ParseGetSystemImageScanSettingsResponse(rsp *http.Response) (*GetSystemImageScanSettingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetSystemImageScanSettingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ImagescandtoGetImageScanSettingsResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateSystemImageScanSettingsResponse parses an HTTP response from a UpdateSystemImageScanSettingsWithResponse call
+func ParseUpdateSystemImageScanSettingsResponse(rsp *http.Response) (*UpdateSystemImageScanSettingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateSystemImageScanSettingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ImagescandtoUpdateImageScanSettingsResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListSystemImageScanAppsResponse parses an HTTP response from a ListSystemImageScanAppsWithResponse call
+func ParseListSystemImageScanAppsResponse(rsp *http.Response) (*ListSystemImageScanAppsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListSystemImageScanAppsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ImagescandtoListImageScanAppsResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseExecuteSystemImageScanResponse parses an HTTP response from a ExecuteSystemImageScanWithResponse call
+func ParseExecuteSystemImageScanResponse(rsp *http.Response) (*ExecuteSystemImageScanResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ExecuteSystemImageScanResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ImagescandtoExecuteImageScanResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListSystemImageScanComponentsResponse parses an HTTP response from a ListSystemImageScanComponentsWithResponse call
+func ParseListSystemImageScanComponentsResponse(rsp *http.Response) (*ListSystemImageScanComponentsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListSystemImageScanComponentsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ImagescandtoListImageScanComponentsResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetSystemImageScanComponentResponse parses an HTTP response from a GetSystemImageScanComponentWithResponse call
+func ParseGetSystemImageScanComponentResponse(rsp *http.Response) (*GetSystemImageScanComponentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetSystemImageScanComponentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ImagescandtoGetImageScanComponentResp
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

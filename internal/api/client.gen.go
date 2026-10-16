@@ -694,6 +694,7 @@ const (
 	FunctionRuntimeBun1      BaseFunctionRuntime = "bun1"
 	FunctionRuntimeGo127     BaseFunctionRuntime = "go127"
 	FunctionRuntimeNode24    BaseFunctionRuntime = "node24"
+	FunctionRuntimePhp85     BaseFunctionRuntime = "php85"
 	FunctionRuntimePython313 BaseFunctionRuntime = "python313"
 )
 
@@ -705,6 +706,8 @@ func (e BaseFunctionRuntime) Valid() bool {
 	case FunctionRuntimeGo127:
 		return true
 	case FunctionRuntimeNode24:
+		return true
+	case FunctionRuntimePhp85:
 		return true
 	case FunctionRuntimePython313:
 		return true
@@ -3984,11 +3987,16 @@ type AppimagescandtoIgnoreRefResp struct {
 
 	// Inheritable Inheritable says the apps of the scope's children have it too; a global
 	// one that is not applies to HivePaaS's own parts alone.
-	Inheritable bool                `json:"inheritable"`
-	Package     *string             `json:"package,omitempty"`
-	Reason      string              `json:"reason"`
-	Scope       BaseObjectScopeType `json:"scope"`
-	SetBy       *string             `json:"setBy,omitempty"`
+	Inheritable bool `json:"inheritable"`
+
+	// ObjectId ObjectID is what the ignore is set on in its scope - the app, env or
+	// project. An app's own and its parent app's are both of the app scope:
+	// this tells them apart, and where to remove one.
+	ObjectId *string             `json:"objectId,omitempty"`
+	Package  *string             `json:"package,omitempty"`
+	Reason   string              `json:"reason"`
+	Scope    BaseObjectScopeType `json:"scope"`
+	SetBy    *string             `json:"setBy,omitempty"`
 }
 
 // AppimagescandtoIgnoredFindingResp defines model for appimagescandto.IgnoredFindingResp.
@@ -8432,7 +8440,7 @@ type EntityDeploymentFunctionSource struct {
 	// several nodes needs.
 	PushToRegistry string `json:"pushToRegistry"`
 
-	// Runtime Runtime is the language and its line: node24, bun1, python313, go127.
+	// Runtime Runtime is the language and its line: node24, bun1, python313, php85, go127.
 	Runtime BaseFunctionRuntime `json:"runtime"`
 
 	// SystemPackages SystemPackages are Debian packages installed before the libraries:
@@ -9176,7 +9184,7 @@ type HpappserviceReleaseInfo struct {
 	DbImage   string `json:"dbImage"`
 
 	// FunctionRuntimes FunctionRuntimes are the images functions are built on, by runtime
-	// (node24, go127; go127-build for the image Go functions compile in). A
+	// (node24, php85, go127; go127-build for the image Go functions compile in). A
 	// function built under a release uses the image this release names, and
 	// keeps it until it is deployed again. The images are released from the
 	// repository hivepaas/function-runtimes.
@@ -9810,7 +9818,11 @@ type ImagescandtoScanVolumeResp struct {
 	NodeId    *string `json:"nodeId,omitempty"`
 	NodeLabel *string `json:"nodeLabel,omitempty"`
 	NodeName  *string `json:"nodeName,omitempty"`
-	Shared    *bool   `json:"shared,omitempty"`
+
+	// Problem Problem is why no scan can run on the volume now: no ready node carries
+	// its label.
+	Problem *string `json:"problem,omitempty"`
+	Shared  *bool   `json:"shared,omitempty"`
 }
 
 // ImagescandtoScannedComponentResp defines model for imagescandto.ScannedComponentResp.

@@ -34,8 +34,8 @@ func (a *App) functionCreateCmd() *cobra.Command {
 			"repository's, and deploy it: the command waits for the deployment while following its logs, as\n" +
 			"deploy does. The directory is linked to the function, so that `function deploy` there needs no\n" +
 			"flags, unless --no-link or it is linked to another app already.\n\n" +
-			"What is sent of a directory leaves out .git, node_modules, __pycache__, .venv, venv, .hivepaas\n" +
-			"and what its .gitignore ignores; --list shows it.",
+			"What is sent of a directory leaves out .git, node_modules, __pycache__, .venv, venv, .hivepaas,\n" +
+			"vendor beside a composer.json and what its .gitignore ignores; --list shows it.",
 		Example: "  hivepaas function create hello ./hello -p shop -e staging --runtime node24\n" +
 			"  hivepaas function create resize -p shop -e staging --runtime python313 \\\n" +
 			"    --repo https://github.com/acme/functions.git --ref main --path resize --call-timeout 2m",
@@ -46,7 +46,7 @@ func (a *App) functionCreateCmd() *cobra.Command {
 	}
 	flags.functionFlags = addFunctionFlags(cmd)
 	f := cmd.Flags()
-	f.StringVar(&flags.runtime, "runtime", "", "node24, bun1, python313 or go127")
+	f.StringVar(&flags.runtime, "runtime", "", "node24, bun1, python313, php85 or go127")
 	f.StringVar(&flags.domain, "domain", "", "serve it at this domain, over HTTPS")
 	f.BoolVar(&flags.noLink, "no-link", false, "do not link the directory to the function")
 	f.BoolVar(&flags.noWait, "no-wait", false, "do not wait for the deployment")

@@ -29,7 +29,7 @@ func (a *App) functionCmd() *cobra.Command {
 		Use:     "function",
 		Aliases: []string{"fn", "functions"},
 		Short:   "Functions: code HivePaaS runs on a runtime, a handler answering one request",
-		Long: "Functions: code HivePaaS runs on one of its runtimes - node24, bun1, python313, go127 - a handler\n" +
+		Long: "Functions: code HivePaaS runs on one of its runtimes - node24, bun1, python313, php85, go127 - a handler\n" +
 			"that answers one request. The code is a directory's here: init writes a runtime's starter code,\n" +
 			"create makes a function of it, deploy sends it again, run calls it once before it is deployed.\n" +
 			"A function's logs and domains are its app's: hivepaas logs, hivepaas domain.",
@@ -82,7 +82,7 @@ func (a *App) functionInitCmd() *cobra.Command {
 			return a.functionInit(cmd.Context(), dirArg(args), runtime, typeScript, force)
 		},
 	}
-	cmd.Flags().StringVar(&runtime, "runtime", "", "node24, bun1, python313 or go127")
+	cmd.Flags().StringVar(&runtime, "runtime", "", "node24, bun1, python313, php85 or go127")
 	cmd.Flags().BoolVar(&typeScript, "typescript", false, "Node.js's starter code in TypeScript")
 	cmd.Flags().BoolVar(&force, "force", false, "overwrite the files there")
 	return cmd

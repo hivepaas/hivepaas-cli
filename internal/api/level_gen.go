@@ -7,4 +7,4 @@ package api
 const APILevel = 2
 
 // SpecRef is the hivepaas release, or commit, the spec was taken from.
-const SpecRef = "local 2026-10-15"
+const SpecRef = "local 2026-10-16"

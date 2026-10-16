@@ -13,15 +13,17 @@ const (
 	Node24    = "node24"
 	Bun1      = "bun1"
 	Python313 = "python313"
+	Php85     = "php85"
 	Go127     = "go127"
 )
 
 // Runtimes are the runtimes, in the order they are offered.
-var Runtimes = []string{Node24, Bun1, Python313, Go127}
+var Runtimes = []string{Node24, Bun1, Python313, Php85, Go127}
 
 // defaultEntrypoints are the files each runtime finds its handler in when a
 // function names none; Go's is the package, the code's root.
-var defaultEntrypoints = map[string]string{Node24: "index.js", Bun1: indexTS, Python313: "main.py", Go127: "."}
+var defaultEntrypoints = map[string]string{Node24: "index.js", Bun1: indexTS, Python313: "main.py",
+	Php85: "index.php", Go127: "."}
 
 // indexTS is the file of a handler in TypeScript.
 const indexTS = "index.ts"

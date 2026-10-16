@@ -10,7 +10,7 @@ import (
 // Each runtime's starter code is there, with the file its entrypoint names.
 func TestEachRuntimeHasItsStarterCode(t *testing.T) {
 	for runtime, entry := range map[string]string{"node24": "index.js", "bun1": "index.ts", "python313": "main.py",
-		"go127": "handler.go"} {
+		"php85": "index.php", "go127": "handler.go"} {
 		files, entrypoint, err := Template(runtime, false)
 		require.NoError(t, err, runtime)
 		assert.Empty(t, entrypoint, "the runtime's default: %s", runtime)
@@ -29,7 +29,12 @@ func TestEachRuntimeHasItsStarterCode(t *testing.T) {
 	_, _, err = Template("bun1", true)
 	assert.ErrorContains(t, err, "--typescript is for node24")
 	_, _, err = Template("ruby", false)
-	assert.ErrorContains(t, err, "node24, bun1, python313, go127")
+	assert.ErrorContains(t, err, "node24, bun1, python313, php85, go127")
+
+	files, _, _ = Template("php85", false)
+	assert.Equal(t, []string{"composer.json", "index.php"}, paths(files))
+	assert.Contains(t, files[1].Content, "use Hivepaas\\Request;\n")
+	assert.Contains(t, files[1].Content, "function handler(Request $req, Context $ctx): array\n")
 }
 
 // With no --entrypoint, the runtime's default file is the server's to fill; the

@@ -109,3 +109,21 @@ func TestCollectLeavesOutDotEnvAndRefusesNUL(t *testing.T) {
 	assert.Equal(t, exitcode.Invalid, exitcode.Of(err))
 	assert.ErrorContains(t, err, "data.txt is not text")
 }
+
+// Composer's vendor/ is its libraries, left out where composer.json is; a Go
+// module's vendor/ is code it builds from.
+func TestComposersVendorIsLeftOut(t *testing.T) {
+	php := t.TempDir()
+	write(t, php, map[string]string{"index.php": "<?php", "composer.json": "{}", "composer.lock": "{}",
+		"vendor/autoload.php": "<?php", "lib/vendor/keep.php": "<?php"})
+	code, err := Collect(php)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"composer.json", "composer.lock", "index.php", "lib/vendor/keep.php"}, paths(code.Files))
+
+	goModule := t.TempDir()
+	write(t, goModule, map[string]string{"go.mod": "module fn", "fn.go": "package fn",
+		"vendor/modules.txt": "# example.com/lib v1.0.0"})
+	code, err = Collect(goModule)
+	require.NoError(t, err)
+	assert.Contains(t, paths(code.Files), "vendor/modules.txt")
+}

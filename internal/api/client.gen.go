@@ -4258,6 +4258,12 @@ type AppmanageddtoGetManagedStatusResp struct {
 	Meta *BasedtoMeta                    `json:"meta"`
 }
 
+// AppmanageddtoGetManagedSwitchResp defines model for appmanageddto.GetManagedSwitchResp.
+type AppmanageddtoGetManagedSwitchResp struct {
+	Data *AppmanageddtoManagedSwitchDataResp `json:"data"`
+	Meta *BasedtoMeta                        `json:"meta"`
+}
+
 // AppmanageddtoManagedArchivingResp defines model for appmanageddto.ManagedArchivingResp.
 type AppmanageddtoManagedArchivingResp struct {
 	CheckedAt      *string `json:"checkedAt"`
@@ -4352,9 +4358,12 @@ type AppmanageddtoManagedRestorePointResp struct {
 
 // AppmanageddtoManagedRestoreResp defines model for appmanageddto.ManagedRestoreResp.
 type AppmanageddtoManagedRestoreResp struct {
-	ReadyAt   *string                                `json:"readyAt"`
-	SourceApp *BasedtoObjectIDResp                   `json:"sourceApp"`
-	Target    *AppmanageddtoManagedRestoreTargetResp `json:"target"`
+	ReadyAt   *string              `json:"readyAt"`
+	SourceApp *BasedtoObjectIDResp `json:"sourceApp"`
+
+	// SwitchedAt SwitchedAt is when the source's consumers were last switched to this one.
+	SwitchedAt *string                                `json:"switchedAt"`
+	Target     *AppmanageddtoManagedRestoreTargetResp `json:"target"`
 }
 
 // AppmanageddtoManagedRestoreTargetReq defines model for appmanageddto.ManagedRestoreTargetReq.
@@ -4426,7 +4435,11 @@ type AppmanageddtoManagedSettingsResp struct {
 	RestoreTestSchedule string                                 `json:"restoreTestSchedule"`
 	RetainFull          int                                    `json:"retainFull"`
 	Storage             *AppmanageddtoManagedStorageResp       `json:"storage"`
-	UpdateVer           int                                    `json:"updateVer"`
+
+	// SwitchedTo SwitchedTo is the database restored from this one that its consumers were
+	// switched to, null for none: this one's jobs are paused since.
+	SwitchedTo *AppmanageddtoManagedSwitchedToResp `json:"switchedTo"`
+	UpdateVer  int                                 `json:"updateVer"`
 }
 
 // AppmanageddtoManagedStatusResp defines model for appmanageddto.ManagedStatusResp.
@@ -4476,6 +4489,54 @@ type AppmanageddtoManagedStorageResp struct {
 	Prefix       string               `json:"prefix"`
 }
 
+// AppmanageddtoManagedSwitchAppResp defines model for appmanageddto.ManagedSwitchAppResp.
+type AppmanageddtoManagedSwitchAppResp struct {
+	Id   string `json:"id"`
+	Key  string `json:"key"`
+	Name string `json:"name"`
+}
+
+// AppmanageddtoManagedSwitchConsumerResp defines model for appmanageddto.ManagedSwitchConsumerResp.
+type AppmanageddtoManagedSwitchConsumerResp struct {
+	App *AppmanageddtoManagedSwitchAppResp `json:"app"`
+
+	// DeployRestorePoint DeployRestorePoint says the app's deployments mark a restore point on the
+	// source.
+	DeployRestorePoint bool `json:"deployRestorePoint"`
+
+	// EnvVars EnvVars are the app's variables that name the source's.
+	EnvVars *[]string `json:"envVars"`
+
+	// PreviewClone PreviewClone says the app's previews clone the source.
+	PreviewClone bool `json:"previewClone"`
+}
+
+// AppmanageddtoManagedSwitchDataResp defines model for appmanageddto.ManagedSwitchDataResp.
+type AppmanageddtoManagedSwitchDataResp struct {
+	// Consumers Consumers are the apps that name the source: by a variable's reference to
+	// its key, by its id among their previews' databases to clone, or as the
+	// database their deployments mark a restore point on.
+	Consumers *[]AppmanageddtoManagedSwitchConsumerResp `json:"consumers"`
+	Source    *AppmanageddtoManagedSwitchAppResp        `json:"source"`
+
+	// SwitchedAt SwitchedAt is when consumers were last switched to this database, null
+	// before the first time.
+	SwitchedAt *string `json:"switchedAt"`
+}
+
+// AppmanageddtoManagedSwitchDeploymentResp defines model for appmanageddto.ManagedSwitchDeploymentResp.
+type AppmanageddtoManagedSwitchDeploymentResp struct {
+	App        *BasedtoObjectIDResp `json:"app"`
+	Deployment *BasedtoObjectIDResp `json:"deployment"`
+	Task       *BasedtoObjectIDResp `json:"task"`
+}
+
+// AppmanageddtoManagedSwitchedToResp defines model for appmanageddto.ManagedSwitchedToResp.
+type AppmanageddtoManagedSwitchedToResp struct {
+	App *BasedtoObjectIDResp `json:"app"`
+	At  string               `json:"at"`
+}
+
 // AppmanageddtoManagedTimeWindowResp defines model for appmanageddto.ManagedTimeWindowResp.
 type AppmanageddtoManagedTimeWindowResp struct {
 	From string `json:"from"`
@@ -4523,6 +4584,27 @@ type AppmanageddtoRestoreManagedReq struct {
 type AppmanageddtoRestoreManagedResp struct {
 	Data *AppmanageddtoRestoreManagedDataResp `json:"data"`
 	Meta *BasedtoMeta                         `json:"meta"`
+}
+
+// AppmanageddtoSwitchManagedDataResp defines model for appmanageddto.SwitchManagedDataResp.
+type AppmanageddtoSwitchManagedDataResp struct {
+	// Deployments Deployments are the consumers' deployments queued, with redeploy.
+	Deployments *[]AppmanageddtoManagedSwitchDeploymentResp `json:"deployments"`
+
+	// Switched Switched are the consumers switched.
+	Switched *[]BasedtoObjectIDResp `json:"switched"`
+}
+
+// AppmanageddtoSwitchManagedReq defines model for appmanageddto.SwitchManagedReq.
+type AppmanageddtoSwitchManagedReq struct {
+	Consumers *[]BasedtoObjectIDReq `json:"consumers"`
+	Redeploy  bool                  `json:"redeploy"`
+}
+
+// AppmanageddtoSwitchManagedResp defines model for appmanageddto.SwitchManagedResp.
+type AppmanageddtoSwitchManagedResp struct {
+	Data *AppmanageddtoSwitchManagedDataResp `json:"data"`
+	Meta *BasedtoMeta                        `json:"meta"`
 }
 
 // AppmanageddtoUnmanageAppReq defines model for appmanageddto.UnmanageAppReq.
@@ -18365,6 +18447,9 @@ type AppManagedRestorePointCreateJSONRequestBody = AppmanageddtoCreateRestorePoi
 // AppManagedRestorePointUpdateJSONRequestBody defines body for AppManagedRestorePointUpdate for application/json ContentType.
 type AppManagedRestorePointUpdateJSONRequestBody = AppmanageddtoUpdateRestorePointReq
 
+// AppManagedSwitchJSONRequestBody defines body for AppManagedSwitch for application/json ContentType.
+type AppManagedSwitchJSONRequestBody = AppmanageddtoSwitchManagedReq
+
 // AppManagedUnmanageJSONRequestBody defines body for AppManagedUnmanage for application/json ContentType.
 type AppManagedUnmanageJSONRequestBody = AppmanageddtoUnmanageAppReq
 
@@ -22348,6 +22433,39 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/status (the `AppManagedStatusGet` operationId).
 	AppManagedStatusGet(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedSwitchGet Lists what switching to a restored database would repoint
+	//
+	// The database this one was restored from, and the apps of the environment that use it: by a
+	// variable naming its key, by its id among their previews' databases, or as their deployments'
+	// restore point. Only for a restored database, once it is ready.
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitchGet` operationId).
+	AppManagedSwitchGet(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedSwitchWithBody Switches consumers to a restored database
+	//
+	// The consumers chosen name this database instead of the one it was restored from: their
+	// variables, their previews' databases and their deployments' restore point. Their variables are
+	// applied to their running services; with redeploy, each whose variables changed is deployed too.
+	// The source keeps running, its jobs paused.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitch` operationId).
+	AppManagedSwitchWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedSwitch Switches consumers to a restored database
+	//
+	// The consumers chosen name this database instead of the one it was restored from: their
+	// variables, their previews' databases and their deployments' restore point. Their variables are
+	// applied to their running services; with redeploy, each whose variables changed is deployed too.
+	// The source keeps running, its jobs paused.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitch` operationId).
+	AppManagedSwitch(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedSwitchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// AppManagedUnmanageWithBody Makes a managed app an ordinary one
 	//
@@ -35114,6 +35232,69 @@ func (c *Client) AppManagedRestorePointUpdate(ctx context.Context, projectID str
 // Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/status (the `AppManagedStatusGet` operationId).
 func (c *Client) AppManagedStatusGet(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewAppManagedStatusGetRequest(c.Server, projectID, projectEnv, appID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedSwitchGet Lists what switching to a restored database would repoint
+//
+// The database this one was restored from, and the apps of the environment that use it: by a
+// variable naming its key, by its id among their previews' databases, or as their deployments'
+// restore point. Only for a restored database, once it is ready.
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitchGet` operationId).
+func (c *Client) AppManagedSwitchGet(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedSwitchGetRequest(c.Server, projectID, projectEnv, appID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedSwitchWithBody Switches consumers to a restored database
+//
+// The consumers chosen name this database instead of the one it was restored from: their
+// variables, their previews' databases and their deployments' restore point. Their variables are
+// applied to their running services; with redeploy, each whose variables changed is deployed too.
+// The source keeps running, its jobs paused.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitch` operationId).
+func (c *Client) AppManagedSwitchWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedSwitchRequestWithBody(c.Server, projectID, projectEnv, appID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedSwitch Switches consumers to a restored database
+//
+// The consumers chosen name this database instead of the one it was restored from: their
+// variables, their previews' databases and their deployments' restore point. Their variables are
+// applied to their running services; with redeploy, each whose variables changed is deployed too.
+// The source keeps running, its jobs paused.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitch` operationId).
+func (c *Client) AppManagedSwitch(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedSwitchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedSwitchRequest(c.Server, projectID, projectEnv, appID, body)
 	if err != nil {
 		return nil, err
 	}
@@ -66629,6 +66810,115 @@ func NewAppManagedStatusGetRequest(server string, projectID string, projectEnv s
 	return req, nil
 }
 
+// NewAppManagedSwitchGetRequest constructs an http.Request for the AppManagedSwitchGet method
+func NewAppManagedSwitchGetRequest(server string, projectID string, projectEnv string, appID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed/switch", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAppManagedSwitchRequest calls the generic AppManagedSwitch builder with application/json body
+func NewAppManagedSwitchRequest(server string, projectID string, projectEnv string, appID string, body AppManagedSwitchJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAppManagedSwitchRequestWithBody(server, projectID, projectEnv, appID, "application/json", bodyReader)
+}
+
+// NewAppManagedSwitchRequestWithBody constructs an http.Request for the AppManagedSwitch method, with any body, and a specified content type
+func NewAppManagedSwitchRequestWithBody(server string, projectID string, projectEnv string, appID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed/switch", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewAppManagedUnmanageRequest calls the generic AppManagedUnmanage builder with application/json body
 func NewAppManagedUnmanageRequest(server string, projectID string, projectEnv string, appID string, body AppManagedUnmanageJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -97048,6 +97338,41 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/status (the `AppManagedStatusGet` operationId).
 	AppManagedStatusGetWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*AppManagedStatusGetResponse, error)
 
+	// AppManagedSwitchGetWithResponse Lists what switching to a restored database would repoint
+	//
+	// The database this one was restored from, and the apps of the environment that use it: by a
+	// variable naming its key, by its id among their previews' databases, or as their deployments'
+	// restore point. Only for a restored database, once it is ready.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitchGet` operationId).
+	AppManagedSwitchGetWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*AppManagedSwitchGetResponse, error)
+
+	// AppManagedSwitchWithBodyWithResponse Switches consumers to a restored database
+	//
+	// The consumers chosen name this database instead of the one it was restored from: their
+	// variables, their previews' databases and their deployments' restore point. Their variables are
+	// applied to their running services; with redeploy, each whose variables changed is deployed too.
+	// The source keeps running, its jobs paused.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitch` operationId).
+	AppManagedSwitchWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedSwitchResponse, error)
+
+	// AppManagedSwitchWithResponse Switches consumers to a restored database
+	//
+	// The consumers chosen name this database instead of the one it was restored from: their
+	// variables, their previews' databases and their deployments' restore point. Their variables are
+	// applied to their running services; with redeploy, each whose variables changed is deployed too.
+	// The source keeps running, its jobs paused.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitch` operationId).
+	AppManagedSwitchWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedSwitchJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedSwitchResponse, error)
+
 	// AppManagedUnmanageWithBodyWithResponse Makes a managed app an ordinary one
 	//
 	// Removes the engine's state and the jobs it made, and with them the locks. The database keeps
@@ -120350,6 +120675,144 @@ func (r AppManagedStatusGetResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r AppManagedStatusGetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedSwitchGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppmanageddtoGetManagedSwitchResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON412 the response for an HTTP 412 `application/json` response
+	JSON412 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AppManagedSwitchGetResponse) GetJSON200() *AppmanageddtoGetManagedSwitchResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedSwitchGetResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedSwitchGetResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON412 returns the response for an HTTP 412 `application/json` response
+func (r AppManagedSwitchGetResponse) GetJSON412() *HperrorsErrorInfo {
+	return r.JSON412
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedSwitchGetResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedSwitchGetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedSwitchGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedSwitchGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedSwitchGetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedSwitchResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppmanageddtoSwitchManagedResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON412 the response for an HTTP 412 `application/json` response
+	JSON412 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AppManagedSwitchResponse) GetJSON200() *AppmanageddtoSwitchManagedResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedSwitchResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedSwitchResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON412 returns the response for an HTTP 412 `application/json` response
+func (r AppManagedSwitchResponse) GetJSON412() *HperrorsErrorInfo {
+	return r.JSON412
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedSwitchResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedSwitchResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedSwitchResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedSwitchResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedSwitchResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -153403,6 +153866,59 @@ func (c *ClientWithResponses) AppManagedStatusGetWithResponse(ctx context.Contex
 	return ParseAppManagedStatusGetResponse(rsp)
 }
 
+// AppManagedSwitchGetWithResponse Lists what switching to a restored database would repoint
+//
+// The database this one was restored from, and the apps of the environment that use it: by a
+// variable naming its key, by its id among their previews' databases, or as their deployments'
+// restore point. Only for a restored database, once it is ready.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitchGet` operationId).
+func (c *ClientWithResponses) AppManagedSwitchGetWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*AppManagedSwitchGetResponse, error) {
+	rsp, err := c.AppManagedSwitchGet(ctx, projectID, projectEnv, appID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedSwitchGetResponse(rsp)
+}
+
+// AppManagedSwitchWithBodyWithResponse Switches consumers to a restored database
+//
+// The consumers chosen name this database instead of the one it was restored from: their
+// variables, their previews' databases and their deployments' restore point. Their variables are
+// applied to their running services; with redeploy, each whose variables changed is deployed too.
+// The source keeps running, its jobs paused.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitch` operationId).
+func (c *ClientWithResponses) AppManagedSwitchWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedSwitchResponse, error) {
+	rsp, err := c.AppManagedSwitchWithBody(ctx, projectID, projectEnv, appID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedSwitchResponse(rsp)
+}
+
+// AppManagedSwitchWithResponse Switches consumers to a restored database
+//
+// The consumers chosen name this database instead of the one it was restored from: their
+// variables, their previews' databases and their deployments' restore point. Their variables are
+// applied to their running services; with redeploy, each whose variables changed is deployed too.
+// The source keeps running, its jobs paused.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitch` operationId).
+func (c *ClientWithResponses) AppManagedSwitchWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedSwitchJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedSwitchResponse, error) {
+	rsp, err := c.AppManagedSwitch(ctx, projectID, projectEnv, appID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedSwitchResponse(rsp)
+}
+
 // AppManagedUnmanageWithBodyWithResponse Makes a managed app an ordinary one
 //
 // Removes the engine's state and the jobs it made, and with them the locks. The database keeps
@@ -176049,6 +176565,114 @@ func ParseAppManagedStatusGetResponse(rsp *http.Response) (*AppManagedStatusGetR
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedSwitchGetResponse parses an HTTP response from a AppManagedSwitchGetWithResponse call
+func ParseAppManagedSwitchGetResponse(rsp *http.Response) (*AppManagedSwitchGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedSwitchGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppmanageddtoGetManagedSwitchResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON412 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedSwitchResponse parses an HTTP response from a AppManagedSwitchWithResponse call
+func ParseAppManagedSwitchResponse(rsp *http.Response) (*AppManagedSwitchResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedSwitchResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppmanageddtoSwitchManagedResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON412 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest HperrorsErrorInfo

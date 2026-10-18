@@ -4287,6 +4287,20 @@ type AppmanageddtoManagedBackupResp struct {
 	Succeeded bool    `json:"succeeded"`
 }
 
+// AppmanageddtoManagedDumpCfgResp defines model for appmanageddto.ManagedDumpCfgResp.
+type AppmanageddtoManagedDumpCfgResp struct {
+	Repo     *BasedtoObjectIDResp `json:"repo"`
+	Schedule string               `json:"schedule"`
+}
+
+// AppmanageddtoManagedDumpResp defines model for appmanageddto.ManagedDumpResp.
+type AppmanageddtoManagedDumpResp struct {
+	Bytes      int    `json:"bytes"`
+	EndedAt    string `json:"endedAt"`
+	SnapshotId string `json:"snapshotId"`
+	Succeeded  bool   `json:"succeeded"`
+}
+
 // AppmanageddtoManagedHeldBackResp defines model for appmanageddto.ManagedHeldBackResp.
 type AppmanageddtoManagedHeldBackResp struct {
 	Backups int `json:"backups"`
@@ -4295,6 +4309,8 @@ type AppmanageddtoManagedHeldBackResp struct {
 
 // AppmanageddtoManagedJobsResp defines model for appmanageddto.ManagedJobsResp.
 type AppmanageddtoManagedJobsResp struct {
+	// Dump Dump is null while dumps are off.
+	Dump        *BasedtoObjectIDResp `json:"dump"`
 	Health      *BasedtoObjectIDResp `json:"health"`
 	Nightly     *BasedtoObjectIDResp `json:"nightly"`
 	RestoreTest *BasedtoObjectIDResp `json:"restoreTest"`
@@ -4395,12 +4411,13 @@ type AppmanageddtoManagedRestoreTestResp struct {
 
 // AppmanageddtoManagedSettingsResp defines model for appmanageddto.ManagedSettingsResp.
 type AppmanageddtoManagedSettingsResp struct {
-	ArchiveTimeout     string                         `json:"archiveTimeout"`
-	BaseBackupSchedule string                         `json:"baseBackupSchedule"`
-	Engine             string                         `json:"engine"`
-	EngineApi          int                            `json:"engineApi"`
-	Jobs               *AppmanageddtoManagedJobsResp  `json:"jobs"`
-	Locks              *AppmanageddtoManagedLocksResp `json:"locks"`
+	ArchiveTimeout     string                           `json:"archiveTimeout"`
+	BaseBackupSchedule string                           `json:"baseBackupSchedule"`
+	Dump               *AppmanageddtoManagedDumpCfgResp `json:"dump"`
+	Engine             string                           `json:"engine"`
+	EngineApi          int                              `json:"engineApi"`
+	Jobs               *AppmanageddtoManagedJobsResp    `json:"jobs"`
+	Locks              *AppmanageddtoManagedLocksResp   `json:"locks"`
 
 	// Restore Restore is where the database was restored from, null for one that was
 	// not; it is restoring until readyAt is set.
@@ -4425,8 +4442,12 @@ type AppmanageddtoManagedStatusResp struct {
 	// HeldBack HeldBack is what the kept points make retention keep beyond its own: the
 	// base backups and their size, the WAL after them not counted. Null when
 	// they keep nothing more.
-	HeldBack        *AppmanageddtoManagedHeldBackResp    `json:"heldBack"`
-	LastBackup      *AppmanageddtoManagedBackupResp      `json:"lastBackup"`
+	HeldBack   *AppmanageddtoManagedHeldBackResp `json:"heldBack"`
+	LastBackup *AppmanageddtoManagedBackupResp   `json:"lastBackup"`
+
+	// LastDump LastDump is the dump's last run, null while dumps are off or before the
+	// first.
+	LastDump        *AppmanageddtoManagedDumpResp        `json:"lastDump"`
 	LastRestoreTest *AppmanageddtoManagedRestoreTestResp `json:"lastRestoreTest"`
 
 	// Placement Placement is where the archive is from the database: off-site, shared or
@@ -4441,7 +4462,8 @@ type AppmanageddtoManagedStatusResp struct {
 	RestoreWindow *AppmanageddtoManagedTimeWindowResp `json:"restoreWindow"`
 
 	// Suggestions Suggestions are changes worth making: verifier, to run the restore test
-	// in a verifier app.
+	// in a verifier app; dump-apart, to dump at another time than the base
+	// backup, as both read the whole database.
 	Suggestions *[]string `json:"suggestions"`
 }
 
@@ -4514,6 +4536,14 @@ type AppmanageddtoUnmanageAppResp struct {
 // AppmanageddtoUpdateManagedSettingsReq defines model for appmanageddto.UpdateManagedSettingsReq.
 type AppmanageddtoUpdateManagedSettingsReq struct {
 	BaseBackupSchedule *string `json:"baseBackupSchedule,omitempty"`
+
+	// DumpRepo DumpRepo is the backup repository the database is dumped into: one turns
+	// dumps on, {"id": ""} turns them off.
+	DumpRepo *BasedtoObjectIDReq `json:"dumpRepo,omitempty"`
+
+	// DumpSchedule DumpSchedule is when the dump runs, a cron expression read in the
+	// installation's timezone; kept while dumps are off.
+	DumpSchedule *string `json:"dumpSchedule,omitempty"`
 
 	// RestoreTest RestoreTest moves the restore test: into a verifier app, made for it, or
 	// back into the database's container, which deletes the verifier.
@@ -7049,12 +7079,24 @@ type ApptemplatedtoListAppTemplatesResp struct {
 
 // ApptemplatedtoManagedCreateReq defines model for apptemplatedto.ManagedCreateReq.
 type ApptemplatedtoManagedCreateReq struct {
-	ArchiveTimeout      *string                         `json:"archiveTimeout,omitempty"`
-	BaseBackupSchedule  *string                         `json:"baseBackupSchedule,omitempty"`
+	ArchiveTimeout     *string `json:"archiveTimeout,omitempty"`
+	BaseBackupSchedule *string `json:"baseBackupSchedule,omitempty"`
+
+	// Dump Dump is the database's pg_dump into a backup repository. Left out, a
+	// database that archives into a backup repository is dumped into it too, and
+	// one that archives into cloud storage is not dumped until a repository is
+	// chosen.
+	Dump                *ApptemplatedtoManagedDumpReq   `json:"dump,omitempty"`
 	RestoreTestQuery    *string                         `json:"restoreTestQuery,omitempty"`
 	RestoreTestSchedule *string                         `json:"restoreTestSchedule,omitempty"`
 	RetainFull          *int                            `json:"retainFull,omitempty"`
 	Storage             ApptemplatedtoManagedStorageReq `json:"storage"`
+}
+
+// ApptemplatedtoManagedDumpReq defines model for apptemplatedto.ManagedDumpReq.
+type ApptemplatedtoManagedDumpReq struct {
+	Repo     *BasedtoObjectIDReq `json:"repo"`
+	Schedule *string             `json:"schedule,omitempty"`
 }
 
 // ApptemplatedtoManagedStorageReq defines model for apptemplatedto.ManagedStorageReq.

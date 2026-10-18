@@ -6720,6 +6720,14 @@ type ApptemplatedtoAppTemplateLinksResp struct {
 	Website       *string `json:"website,omitempty"`
 }
 
+// ApptemplatedtoAppTemplateManagedDefaultsResp defines model for apptemplatedto.AppTemplateManagedDefaultsResp.
+type ApptemplatedtoAppTemplateManagedDefaultsResp struct {
+	ArchiveTimeout      string `json:"archiveTimeout"`
+	BaseBackupSchedule  string `json:"baseBackupSchedule"`
+	RestoreTestSchedule string `json:"restoreTestSchedule"`
+	RetainFull          int    `json:"retainFull"`
+}
+
 // ApptemplatedtoAppTemplateParamOptionResp defines model for apptemplatedto.AppTemplateParamOptionResp.
 type ApptemplatedtoAppTemplateParamOptionResp struct {
 	Title string `json:"title"`
@@ -6796,10 +6804,14 @@ type ApptemplatedtoAppTemplateResp struct {
 	Links     *ApptemplatedtoAppTemplateLinksResp     `json:"links"`
 
 	// Managed Managed, RequiresFeatures and MissingFeatures are the listing's.
-	Managed         string                                `json:"managed"`
-	MissingFeatures *[]string                             `json:"missingFeatures"`
-	Name            string                                `json:"name"`
-	Parameters      *[]ApptemplatedtoAppTemplateParamResp `json:"parameters"`
+	Managed string `json:"managed"`
+
+	// ManagedDefaults ManagedDefaults are what a managed template's create form starts from; null
+	// for any other template. A zero field is the engine's own default.
+	ManagedDefaults *ApptemplatedtoAppTemplateManagedDefaultsResp `json:"managedDefaults"`
+	MissingFeatures *[]string                                     `json:"missingFeatures"`
+	Name            string                                        `json:"name"`
+	Parameters      *[]ApptemplatedtoAppTemplateParamResp         `json:"parameters"`
 
 	// PublishedPorts PublishedPorts are the addresses this app claims on the cluster itself,
 	// beside the web addresses the reverse proxy serves. Two apps cannot share

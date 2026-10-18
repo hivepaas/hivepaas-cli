@@ -4465,7 +4465,11 @@ type AppmanageddtoManagedRestoreTestResp struct {
 
 // AppmanageddtoManagedSettingsResp defines model for appmanageddto.ManagedSettingsResp.
 type AppmanageddtoManagedSettingsResp struct {
-	ArchiveTimeout     string                           `json:"archiveTimeout"`
+	ArchiveTimeout string `json:"archiveTimeout"`
+
+	// BackupFrom BackupFrom is the replica the base backups are taken on, null for the
+	// database itself.
+	BackupFrom         *BasedtoObjectIDResp             `json:"backupFrom"`
 	BaseBackupSchedule string                           `json:"baseBackupSchedule"`
 	Dump               *AppmanageddtoManagedDumpCfgResp `json:"dump"`
 	Engine             string                           `json:"engine"`
@@ -4677,7 +4681,11 @@ type AppmanageddtoUnmanageAppResp struct {
 
 // AppmanageddtoUpdateManagedSettingsReq defines model for appmanageddto.UpdateManagedSettingsReq.
 type AppmanageddtoUpdateManagedSettingsReq struct {
-	BaseBackupSchedule *string `json:"baseBackupSchedule,omitempty"`
+	// BackupFrom BackupFrom is the replica the base backups are taken on, sparing the
+	// database: {"id": ""} takes them on the database again. Retention runs on the
+	// database either way.
+	BackupFrom         *BasedtoObjectIDReq `json:"backupFrom,omitempty"`
+	BaseBackupSchedule *string             `json:"baseBackupSchedule,omitempty"`
 
 	// DumpRepo DumpRepo is the backup repository the database is dumped into: one turns
 	// dumps on, {"id": ""} turns them off.

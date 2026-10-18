@@ -4487,7 +4487,7 @@ type AppmanageddtoRestoreManagedReq struct {
 	// a node the archive can be reached from.
 	DataVolume *BasedtoObjectIDReq `json:"dataVolume"`
 
-	// Name Name is the new app's: <app>-restored-<yyyymmdd-hhmm> when empty.
+	// Name Name is the new app's: <app>-restored-<yyyymmdd-hhmmss> when empty.
 	Name   *string                              `json:"name,omitempty"`
 	Target AppmanageddtoManagedRestoreTargetReq `json:"target"`
 }

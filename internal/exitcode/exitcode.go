@@ -19,6 +19,9 @@ const (
 	Deployment  = 8
 	Timeout     = 9
 	CLIOutdated = 10
+	// Vulnerable is app vulns --fail-on's: the app runs a fixable finding of
+	// the severity given, or worse, that no ignore sets aside.
+	Vulnerable  = 11
 	Interrupted = 130
 )
 

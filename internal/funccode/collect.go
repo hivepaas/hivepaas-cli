@@ -51,7 +51,8 @@ type Code struct {
 }
 
 // Never sent: libraries, git's, HivePaaS's own - .hivepaas is its directory in
-// a function's source, .hivepaas.json the CLI's link.
+// a function's source, .hivepaas.json the CLI's link. Composer's vendor/ is left
+// out too, where composer.json is.
 var (
 	skippedDirs  = []string{".git", "node_modules", "__pycache__", ".venv", "venv", ".hivepaas"}
 	skippedFiles = []string{".hivepaas.json", ".DS_Store"}
@@ -75,6 +76,10 @@ func Collect(dir string) (*Code, error) {
 	}
 	defer root.Close()
 	files := root.FS()
+	// Composer's libraries are in vendor/ beside composer.json; a Go module's
+	// vendor/ is its code, and goes.
+	_, composerErr := fs.Stat(files, "composer.json")
+	composer := composerErr == nil
 	code := &Code{}
 	err = fs.WalkDir(files, ".", func(rel string, entry fs.DirEntry, err error) error {
 		if err != nil {
@@ -85,7 +90,7 @@ func Collect(dir string) (*Code, error) {
 		}
 		switch {
 		case entry.IsDir():
-			if slices.Contains(skippedDirs, entry.Name()) || ig.Match(rel, true) {
+			if slices.Contains(skippedDirs, entry.Name()) || ig.Match(rel, true) || (composer && rel == "vendor") {
 				return filepath.SkipDir
 			}
 			return nil

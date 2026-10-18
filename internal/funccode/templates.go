@@ -18,6 +18,10 @@ var templates = map[string][]File{
 	Python313: {
 		{Path: "main.py", Content: "# A function answers one request: it returns a dict of status, headers, body.\n# A body that is a dict is sent as JSON. An async def handler is the fastest,\n# but must not block: blocking code (time.sleep, requests) belongs in a def.\ndef handler(req, ctx):\n    ctx.log(f\"{req.method} {req.path}\")\n    name = req.query.get(\"name\", \"world\")\n\n    return {\"status\": 200, \"body\": {\"hello\": name}}\n"},
 	},
+	Php85: {
+		{Path: "composer.json", Content: "{\n    \"require\": {}\n}\n"},
+		{Path: "index.php", Content: "<?php\n\n// A function answers one request: it returns ['status', 'headers', 'body'].\n// A body that is an array is sent as JSON. Each process keeps this file\n// loaded: what a variable holds lasts from one call to the next, and echo goes\n// to the log.\n\nuse Hivepaas\\Context;\nuse Hivepaas\\Request;\n\nfunction handler(Request $req, Context $ctx): array\n{\n    $ctx->log(\"{$req->method} {$req->path}\");\n    $name = $req->query['name'] ?? 'world';\n\n    return ['status' => 200, 'body' => ['hello' => $name]];\n}\n"},
+	},
 	Go127: {
 		{Path: "go.mod", Content: "module example.com/function\n\ngo 1.27\n"},
 		{Path: "handler.go", Content: "package function\n\nimport (\n\t\"context\"\n\n\t\"github.com/hivepaas/function-runtimes/hivepaas\"\n)\n\n// Handle answers one request.\nfunc Handle(ctx context.Context, req *hivepaas.Request) (*hivepaas.Response, error) {\n\thivepaas.Log(ctx, \"%s %s\", req.Method, req.Path)\n\tname := req.Query.Get(\"name\")\n\tif name == \"\" {\n\t\tname = \"world\"\n\t}\n\n\treturn hivepaas.JSON(200, map[string]string{\"hello\": name})\n}\n"},

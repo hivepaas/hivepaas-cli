@@ -44,6 +44,7 @@ hivepaas secret set SENTRY_DSN --scope project   # the project's, for its apps
 hivepaas logs -f --since 10m
 hivepaas status                            # what needs attention on the installation
 hivepaas backup ls && hivepaas backup restore a1b2c3d4 --stop-app
+hivepaas db mark before-v42 -a shop-db   # a managed database's moment, to restore to exactly
 hivepaas preview create --ref feature/checkout
 hivepaas compose up -p shop -e staging     # a compose file's services as apps
 hivepaas env set LOG_LEVEL=debug

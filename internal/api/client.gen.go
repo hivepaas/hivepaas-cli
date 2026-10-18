@@ -4226,6 +4226,23 @@ type AppimagescandtoSummaryResp struct {
 	Unknown AppimagescandtoCountResp `json:"unknown"`
 }
 
+// AppmanageddtoAddManagedReplicaDataResp defines model for appmanageddto.AddManagedReplicaDataResp.
+type AppmanageddtoAddManagedReplicaDataResp struct {
+	App  *BasedtoObjectIDResp `json:"app"`
+	Task *BasedtoObjectIDResp `json:"task"`
+}
+
+// AppmanageddtoAddManagedReplicaReq defines model for appmanageddto.AddManagedReplicaReq.
+type AppmanageddtoAddManagedReplicaReq struct {
+	DataVolume *BasedtoObjectIDReq `json:"dataVolume"`
+}
+
+// AppmanageddtoAddManagedReplicaResp defines model for appmanageddto.AddManagedReplicaResp.
+type AppmanageddtoAddManagedReplicaResp struct {
+	Data *AppmanageddtoAddManagedReplicaDataResp `json:"data"`
+	Meta *BasedtoMeta                            `json:"meta"`
+}
+
 // AppmanageddtoCreateRestorePointReq defines model for appmanageddto.CreateRestorePointReq.
 type AppmanageddtoCreateRestorePointReq struct {
 	// KeepUntil KeepUntil holds retention back for the point until then, at most 90 days
@@ -4332,6 +4349,34 @@ type AppmanageddtoManagedLocksResp struct {
 	Settings  *[]string `json:"settings"`
 }
 
+// AppmanageddtoManagedMemberOfResp defines model for appmanageddto.ManagedMemberOfResp.
+type AppmanageddtoManagedMemberOfResp struct {
+	App  *BasedtoObjectIDResp `json:"app"`
+	Role string               `json:"role"`
+}
+
+// AppmanageddtoManagedMemberResp defines model for appmanageddto.ManagedMemberResp.
+type AppmanageddtoManagedMemberResp struct {
+	App    *BasedtoObjectIDResp `json:"app"`
+	At     string               `json:"at"`
+	Key    string               `json:"key"`
+	Node   string               `json:"node"`
+	Role   string               `json:"role"`
+	Volume *BasedtoObjectIDResp `json:"volume"`
+}
+
+// AppmanageddtoManagedMemberStatusResp defines model for appmanageddto.ManagedMemberStatusResp.
+type AppmanageddtoManagedMemberStatusResp struct {
+	App        *BasedtoObjectIDResp `json:"app"`
+	CheckedAt  *string              `json:"checkedAt"`
+	Key        string               `json:"key"`
+	LagBytes   int                  `json:"lagBytes"`
+	LagSeconds *float32             `json:"lagSeconds"`
+	Node       string               `json:"node"`
+	Role       string               `json:"role"`
+	State      string               `json:"state"`
+}
+
 // AppmanageddtoManagedRestorePointResp defines model for appmanageddto.ManagedRestorePointResp.
 type AppmanageddtoManagedRestorePointResp struct {
 	At string `json:"at"`
@@ -4428,6 +4473,13 @@ type AppmanageddtoManagedSettingsResp struct {
 	Jobs               *AppmanageddtoManagedJobsResp    `json:"jobs"`
 	Locks              *AppmanageddtoManagedLocksResp   `json:"locks"`
 
+	// MemberOf MemberOf is the primary this database is a replica of, null for a
+	// database of its own.
+	MemberOf *AppmanageddtoManagedMemberOfResp `json:"memberOf"`
+
+	// Members Members are the database's replicas.
+	Members *[]AppmanageddtoManagedMemberResp `json:"members"`
+
 	// Restore Restore is where the database was restored from, null for one that was
 	// not; it is restoring until readyAt is set.
 	Restore             *AppmanageddtoManagedRestoreResp       `json:"restore"`
@@ -4462,6 +4514,9 @@ type AppmanageddtoManagedStatusResp struct {
 	// first.
 	LastDump        *AppmanageddtoManagedDumpResp        `json:"lastDump"`
 	LastRestoreTest *AppmanageddtoManagedRestoreTestResp `json:"lastRestoreTest"`
+
+	// Members Members are the replicas, each as the database's last health check saw it.
+	Members *[]AppmanageddtoManagedMemberStatusResp `json:"members"`
 
 	// Placement Placement is where the archive is from the database: off-site, shared or
 	// same-node, which the dashboard warns about.
@@ -4557,6 +4612,11 @@ type AppmanageddtoRefreshManagedCredentialsReq = map[string]interface{}
 type AppmanageddtoRefreshManagedCredentialsResp struct {
 	Data *AppmanageddtoRefreshManagedCredentialsDataResp `json:"data"`
 	Meta *BasedtoMeta                                    `json:"meta"`
+}
+
+// AppmanageddtoRemoveManagedReplicaResp defines model for appmanageddto.RemoveManagedReplicaResp.
+type AppmanageddtoRemoveManagedReplicaResp struct {
+	Meta *BasedtoMeta `json:"meta"`
 }
 
 // AppmanageddtoRestoreManagedDataResp defines model for appmanageddto.RestoreManagedDataResp.
@@ -18438,6 +18498,9 @@ type AppManagedSettingsUpdateJSONRequestBody = AppmanageddtoUpdateManagedSetting
 // AppManagedCredentialsRefreshJSONRequestBody defines body for AppManagedCredentialsRefresh for application/json ContentType.
 type AppManagedCredentialsRefreshJSONRequestBody = AppmanageddtoRefreshManagedCredentialsReq
 
+// AppManagedReplicaAddJSONRequestBody defines body for AppManagedReplicaAdd for application/json ContentType.
+type AppManagedReplicaAddJSONRequestBody = AppmanageddtoAddManagedReplicaReq
+
 // AppManagedRestoreJSONRequestBody defines body for AppManagedRestore for application/json ContentType.
 type AppManagedRestoreJSONRequestBody = AppmanageddtoRestoreManagedReq
 
@@ -22356,6 +22419,35 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/refresh-credentials (the `AppManagedCredentialsRefresh` operationId).
 	AppManagedCredentialsRefresh(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedCredentialsRefreshJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedReplicaAddWithBody Adds a read replica to a managed database
+	//
+	// An asynchronous replica on a volume of its own, pinned to a node: seeded from the database's
+	// archive, which must be in object storage, then streaming from the database, which is told to
+	// let it in first. The database's scripts must be ones that can run a replica.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas (the `AppManagedReplicaAdd` operationId).
+	AppManagedReplicaAddWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedReplicaAdd Adds a read replica to a managed database
+	//
+	// An asynchronous replica on a volume of its own, pinned to a node: seeded from the database's
+	// archive, which must be in object storage, then streaming from the database, which is told to
+	// let it in first. The database's scripts must be ones that can run a replica.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas (the `AppManagedReplicaAdd` operationId).
+	AppManagedReplicaAdd(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedReplicaAddJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedReplicaRemove Removes a read replica from a managed database
+	//
+	// The replica's app is deleted, with its directory of its volume.
+	//
+	// Corresponds with DELETE /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas/{memberID} (the `AppManagedReplicaRemove` operationId).
+	AppManagedReplicaRemove(ctx context.Context, projectID string, projectEnv string, appID string, memberID string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// AppManagedRestoreWithBody Restores a managed database into a new app
 	//
@@ -35075,6 +35167,65 @@ func (c *Client) AppManagedCredentialsRefreshWithBody(ctx context.Context, proje
 // Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/refresh-credentials (the `AppManagedCredentialsRefresh` operationId).
 func (c *Client) AppManagedCredentialsRefresh(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedCredentialsRefreshJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewAppManagedCredentialsRefreshRequest(c.Server, projectID, projectEnv, appID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedReplicaAddWithBody Adds a read replica to a managed database
+//
+// An asynchronous replica on a volume of its own, pinned to a node: seeded from the database's
+// archive, which must be in object storage, then streaming from the database, which is told to
+// let it in first. The database's scripts must be ones that can run a replica.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas (the `AppManagedReplicaAdd` operationId).
+func (c *Client) AppManagedReplicaAddWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedReplicaAddRequestWithBody(c.Server, projectID, projectEnv, appID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedReplicaAdd Adds a read replica to a managed database
+//
+// An asynchronous replica on a volume of its own, pinned to a node: seeded from the database's
+// archive, which must be in object storage, then streaming from the database, which is told to
+// let it in first. The database's scripts must be ones that can run a replica.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas (the `AppManagedReplicaAdd` operationId).
+func (c *Client) AppManagedReplicaAdd(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedReplicaAddJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedReplicaAddRequest(c.Server, projectID, projectEnv, appID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedReplicaRemove Removes a read replica from a managed database
+//
+// The replica's app is deleted, with its directory of its volume.
+//
+// Corresponds with DELETE /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas/{memberID} (the `AppManagedReplicaRemove` operationId).
+func (c *Client) AppManagedReplicaRemove(ctx context.Context, projectID string, projectEnv string, appID string, memberID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedReplicaRemoveRequest(c.Server, projectID, projectEnv, appID, memberID)
 	if err != nil {
 		return nil, err
 	}
@@ -66517,6 +66668,122 @@ func NewAppManagedCredentialsRefreshRequestWithBody(server string, projectID str
 	return req, nil
 }
 
+// NewAppManagedReplicaAddRequest calls the generic AppManagedReplicaAdd builder with application/json body
+func NewAppManagedReplicaAddRequest(server string, projectID string, projectEnv string, appID string, body AppManagedReplicaAddJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAppManagedReplicaAddRequestWithBody(server, projectID, projectEnv, appID, "application/json", bodyReader)
+}
+
+// NewAppManagedReplicaAddRequestWithBody constructs an http.Request for the AppManagedReplicaAdd method, with any body, and a specified content type
+func NewAppManagedReplicaAddRequestWithBody(server string, projectID string, projectEnv string, appID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed/replicas", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewAppManagedReplicaRemoveRequest constructs an http.Request for the AppManagedReplicaRemove method
+func NewAppManagedReplicaRemoveRequest(server string, projectID string, projectEnv string, appID string, memberID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam3 string
+
+	pathParam3, err = runtime.StyleParamWithOptions("simple", false, "memberID", memberID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed/replicas/%s", pathParam0, pathParam1, pathParam2, pathParam3)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewAppManagedRestoreRequest calls the generic AppManagedRestore builder with application/json body
 func NewAppManagedRestoreRequest(server string, projectID string, projectEnv string, appID string, body AppManagedRestoreJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -97257,6 +97524,37 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/refresh-credentials (the `AppManagedCredentialsRefresh` operationId).
 	AppManagedCredentialsRefreshWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedCredentialsRefreshJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedCredentialsRefreshResponse, error)
 
+	// AppManagedReplicaAddWithBodyWithResponse Adds a read replica to a managed database
+	//
+	// An asynchronous replica on a volume of its own, pinned to a node: seeded from the database's
+	// archive, which must be in object storage, then streaming from the database, which is told to
+	// let it in first. The database's scripts must be ones that can run a replica.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas (the `AppManagedReplicaAdd` operationId).
+	AppManagedReplicaAddWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedReplicaAddResponse, error)
+
+	// AppManagedReplicaAddWithResponse Adds a read replica to a managed database
+	//
+	// An asynchronous replica on a volume of its own, pinned to a node: seeded from the database's
+	// archive, which must be in object storage, then streaming from the database, which is told to
+	// let it in first. The database's scripts must be ones that can run a replica.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas (the `AppManagedReplicaAdd` operationId).
+	AppManagedReplicaAddWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedReplicaAddJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedReplicaAddResponse, error)
+
+	// AppManagedReplicaRemoveWithResponse Removes a read replica from a managed database
+	//
+	// The replica's app is deleted, with its directory of its volume.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas/{memberID} (the `AppManagedReplicaRemove` operationId).
+	AppManagedReplicaRemoveWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, memberID string, reqEditors ...RequestEditorFn) (*AppManagedReplicaRemoveResponse, error)
+
 	// AppManagedRestoreWithBodyWithResponse Restores a managed database into a new app
 	//
 	// To the latest, a time, a restore point or a base backup, inside its restore window. The new app is
@@ -120365,6 +120663,137 @@ func (r AppManagedCredentialsRefreshResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r AppManagedCredentialsRefreshResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedReplicaAddResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *AppmanageddtoAddManagedReplicaResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON412 the response for an HTTP 412 `application/json` response
+	JSON412 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r AppManagedReplicaAddResponse) GetJSON201() *AppmanageddtoAddManagedReplicaResp {
+	return r.JSON201
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedReplicaAddResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedReplicaAddResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON412 returns the response for an HTTP 412 `application/json` response
+func (r AppManagedReplicaAddResponse) GetJSON412() *HperrorsErrorInfo {
+	return r.JSON412
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedReplicaAddResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedReplicaAddResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedReplicaAddResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedReplicaAddResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedReplicaAddResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedReplicaRemoveResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppmanageddtoRemoveManagedReplicaResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AppManagedReplicaRemoveResponse) GetJSON200() *AppmanageddtoRemoveManagedReplicaResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedReplicaRemoveResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedReplicaRemoveResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedReplicaRemoveResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedReplicaRemoveResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedReplicaRemoveResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedReplicaRemoveResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedReplicaRemoveResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -153737,6 +154166,55 @@ func (c *ClientWithResponses) AppManagedCredentialsRefreshWithResponse(ctx conte
 	return ParseAppManagedCredentialsRefreshResponse(rsp)
 }
 
+// AppManagedReplicaAddWithBodyWithResponse Adds a read replica to a managed database
+//
+// An asynchronous replica on a volume of its own, pinned to a node: seeded from the database's
+// archive, which must be in object storage, then streaming from the database, which is told to
+// let it in first. The database's scripts must be ones that can run a replica.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas (the `AppManagedReplicaAdd` operationId).
+func (c *ClientWithResponses) AppManagedReplicaAddWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedReplicaAddResponse, error) {
+	rsp, err := c.AppManagedReplicaAddWithBody(ctx, projectID, projectEnv, appID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedReplicaAddResponse(rsp)
+}
+
+// AppManagedReplicaAddWithResponse Adds a read replica to a managed database
+//
+// An asynchronous replica on a volume of its own, pinned to a node: seeded from the database's
+// archive, which must be in object storage, then streaming from the database, which is told to
+// let it in first. The database's scripts must be ones that can run a replica.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas (the `AppManagedReplicaAdd` operationId).
+func (c *ClientWithResponses) AppManagedReplicaAddWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedReplicaAddJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedReplicaAddResponse, error) {
+	rsp, err := c.AppManagedReplicaAdd(ctx, projectID, projectEnv, appID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedReplicaAddResponse(rsp)
+}
+
+// AppManagedReplicaRemoveWithResponse Removes a read replica from a managed database
+//
+// The replica's app is deleted, with its directory of its volume.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas/{memberID} (the `AppManagedReplicaRemove` operationId).
+func (c *ClientWithResponses) AppManagedReplicaRemoveWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, memberID string, reqEditors ...RequestEditorFn) (*AppManagedReplicaRemoveResponse, error) {
+	rsp, err := c.AppManagedReplicaRemove(ctx, projectID, projectEnv, appID, memberID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedReplicaRemoveResponse(rsp)
+}
+
 // AppManagedRestoreWithBodyWithResponse Restores a managed database into a new app
 //
 // To the latest, a time, a restore point or a base backup, inside its restore window. The new app is
@@ -176312,6 +176790,107 @@ func ParseAppManagedCredentialsRefreshResponse(rsp *http.Response) (*AppManagedC
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest AppmanageddtoRefreshManagedCredentialsResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedReplicaAddResponse parses an HTTP response from a AppManagedReplicaAddWithResponse call
+func ParseAppManagedReplicaAddResponse(rsp *http.Response) (*AppManagedReplicaAddResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedReplicaAddResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest AppmanageddtoAddManagedReplicaResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON412 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedReplicaRemoveResponse parses an HTTP response from a AppManagedReplicaRemoveWithResponse call
+func ParseAppManagedReplicaRemoveResponse(rsp *http.Response) (*AppManagedReplicaRemoveResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedReplicaRemoveResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppmanageddtoRemoveManagedReplicaResp
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

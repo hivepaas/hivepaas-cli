@@ -4324,6 +4324,11 @@ type AppmanageddtoManagedRestorePointResp struct {
 	Name string `json:"name"`
 	Note string `json:"note"`
 
+	// Origin Origin is what made it: person, or deploy for a deployment of an app that
+	// asks for a point before each of its deploys, which the engine removes once
+	// it cannot be restored.
+	Origin string `json:"origin"`
+
 	// RestorableUntil RestorableUntil is until when it can be restored, as retention's next runs
 	// go; null when no base backup kept reaches it, or the schedule says nothing.
 	RestorableUntil *string `json:"restorableUntil"`
@@ -5440,8 +5445,12 @@ type AppsettingsdtoDeploymentSettingsResp struct {
 	PostDeploymentCommand *string                                  `json:"postDeploymentCommand,omitempty"`
 	PreDeploymentCommand  *string                                  `json:"preDeploymentCommand,omitempty"`
 	RepoSource            *AppsettingsdtoDeploymentRepoSourceResp  `json:"repoSource,omitempty"`
-	UpdateVer             int                                      `json:"updateVer"`
-	WorkingDir            *string                                  `json:"workingDir,omitempty"`
+
+	// RestorePointBeforeDeploy RestorePointBeforeDeploy is the managed database each deployment marks a
+	// restore point on first, null for none.
+	RestorePointBeforeDeploy *BasedtoObjectIDResp `json:"restorePointBeforeDeploy"`
+	UpdateVer                int                  `json:"updateVer"`
+	WorkingDir               *string              `json:"workingDir,omitempty"`
 }
 
 // AppsettingsdtoDockerfileTemplateResp defines model for appsettingsdto.DockerfileTemplateResp.
@@ -6372,8 +6381,13 @@ type AppsettingsdtoUpdateAppDeploymentSettingsReq struct {
 	PostDeploymentCommand string                                     `json:"postDeploymentCommand"`
 	PreDeploymentCommand  string                                     `json:"preDeploymentCommand"`
 	RepoSource            *AppsettingsdtoDeploymentRepoSourceReq     `json:"repoSource"`
-	UpdateVer             int                                        `json:"updateVer"`
-	WorkingDir            string                                     `json:"workingDir"`
+
+	// RestorePointBeforeDeploy RestorePointBeforeDeploy is a managed database of the app's environment
+	// that each deployment marks a restore point on before its pre-deploy
+	// command. Left out, or null, marks none.
+	RestorePointBeforeDeploy *BasedtoObjectIDReq `json:"restorePointBeforeDeploy"`
+	UpdateVer                int                 `json:"updateVer"`
+	WorkingDir               string              `json:"workingDir"`
 }
 
 // AppsettingsdtoUpdateAppDeploymentSettingsResp defines model for appsettingsdto.UpdateAppDeploymentSettingsResp.
@@ -8927,7 +8941,13 @@ type EntityAppDeploymentSettings struct {
 	PostDeploymentCommand *string                         `json:"postDeploymentCommand,omitempty"`
 	PreDeploymentCommand  *string                         `json:"preDeploymentCommand,omitempty"`
 	RepoSource            *EntityDeploymentRepoSource     `json:"repoSource"`
-	WorkingDir            *string                         `json:"workingDir,omitempty"`
+
+	// RestorePointBeforeDeploy RestorePointBeforeDeploy is a managed database of the app's environment
+	// that each deployment marks a restore point on before its pre-deploy
+	// command, so that a migration that breaks data has its way back already
+	// marked. Empty marks none.
+	RestorePointBeforeDeploy string  `json:"restorePointBeforeDeploy"`
+	WorkingDir               *string `json:"workingDir,omitempty"`
 }
 
 // EntityBaseEventNotification defines model for entity.BaseEventNotification.

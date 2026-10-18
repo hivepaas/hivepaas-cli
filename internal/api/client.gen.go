@@ -4474,6 +4474,7 @@ type AppmanageddtoManagedSettingsResp struct {
 	Dump               *AppmanageddtoManagedDumpCfgResp `json:"dump"`
 	Engine             string                           `json:"engine"`
 	EngineApi          int                              `json:"engineApi"`
+	FencedAt           *string                          `json:"fencedAt"`
 	Jobs               *AppmanageddtoManagedJobsResp    `json:"jobs"`
 	Locks              *AppmanageddtoManagedLocksResp   `json:"locks"`
 
@@ -4496,6 +4497,10 @@ type AppmanageddtoManagedSettingsResp struct {
 	// switched to, null for none: this one's jobs are paused since.
 	SwitchedTo *AppmanageddtoManagedSwitchedToResp `json:"switchedTo"`
 	UpdateVer  int                                 `json:"updateVer"`
+
+	// Writer Writer is the member promoted to the cluster's primary, null while this
+	// database is; FencedAt is when this one was fenced for it.
+	Writer *BasedtoObjectIDResp `json:"writer"`
 }
 
 // AppmanageddtoManagedStatusResp defines model for appmanageddto.ManagedStatusResp.
@@ -4600,6 +4605,24 @@ type AppmanageddtoManagedSwitchedToResp struct {
 type AppmanageddtoManagedTimeWindowResp struct {
 	From string `json:"from"`
 	To   string `json:"to"`
+}
+
+// AppmanageddtoPromoteManagedMemberDataResp defines model for appmanageddto.PromoteManagedMemberDataResp.
+type AppmanageddtoPromoteManagedMemberDataResp struct {
+	Fenced    *BasedtoObjectIDResp   `json:"fenced"`
+	Restarted *[]BasedtoObjectIDResp `json:"restarted"`
+	Writer    *BasedtoObjectIDResp   `json:"writer"`
+}
+
+// AppmanageddtoPromoteManagedMemberReq defines model for appmanageddto.PromoteManagedMemberReq.
+type AppmanageddtoPromoteManagedMemberReq struct {
+	Member *BasedtoObjectIDReq `json:"member"`
+}
+
+// AppmanageddtoPromoteManagedMemberResp defines model for appmanageddto.PromoteManagedMemberResp.
+type AppmanageddtoPromoteManagedMemberResp struct {
+	Data *AppmanageddtoPromoteManagedMemberDataResp `json:"data"`
+	Meta *BasedtoMeta                               `json:"meta"`
 }
 
 // AppmanageddtoRefreshManagedCredentialsDataResp defines model for appmanageddto.RefreshManagedCredentialsDataResp.
@@ -18503,6 +18526,9 @@ type UpdateAppKindSettingsJSONRequestBody = AppsettingsdtoUpdateAppKindSettingsR
 // AppManagedSettingsUpdateJSONRequestBody defines body for AppManagedSettingsUpdate for application/json ContentType.
 type AppManagedSettingsUpdateJSONRequestBody = AppmanageddtoUpdateManagedSettingsReq
 
+// AppManagedPromoteJSONRequestBody defines body for AppManagedPromote for application/json ContentType.
+type AppManagedPromoteJSONRequestBody = AppmanageddtoPromoteManagedMemberReq
+
 // AppManagedCredentialsRefreshJSONRequestBody defines body for AppManagedCredentialsRefresh for application/json ContentType.
 type AppManagedCredentialsRefreshJSONRequestBody = AppmanageddtoRefreshManagedCredentialsReq
 
@@ -22407,6 +22433,30 @@ type ClientInterface interface {
 	//
 	// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/managed (the `AppManagedSettingsUpdate` operationId).
 	AppManagedSettingsUpdate(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedSettingsUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedPromoteWithBody Promotes a replica to a managed database's primary
+	//
+	// In order: what writes now is fenced - kept from starting its server, its service stopped, and
+	// seen stopped; the replica is promoted; the engine's jobs move to it, and the other replicas are
+	// restarted to follow it. Before the replica is promoted, a failure lifts the fence; once whether it
+	// was is not known, the fence stays, and promoting it again finishes the promotion.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/promote (the `AppManagedPromote` operationId).
+	AppManagedPromoteWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedPromote Promotes a replica to a managed database's primary
+	//
+	// In order: what writes now is fenced - kept from starting its server, its service stopped, and
+	// seen stopped; the replica is promoted; the engine's jobs move to it, and the other replicas are
+	// restarted to follow it. Before the replica is promoted, a failure lifts the fence; once whether it
+	// was is not known, the fence stays, and promoting it again finishes the promotion.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/promote (the `AppManagedPromote` operationId).
+	AppManagedPromote(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedPromoteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// AppManagedCredentialsRefreshWithBody Gives a managed app its archive storage's current credentials
 	//
@@ -35135,6 +35185,50 @@ func (c *Client) AppManagedSettingsUpdateWithBody(ctx context.Context, projectID
 // Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/managed (the `AppManagedSettingsUpdate` operationId).
 func (c *Client) AppManagedSettingsUpdate(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedSettingsUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewAppManagedSettingsUpdateRequest(c.Server, projectID, projectEnv, appID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedPromoteWithBody Promotes a replica to a managed database's primary
+//
+// In order: what writes now is fenced - kept from starting its server, its service stopped, and
+// seen stopped; the replica is promoted; the engine's jobs move to it, and the other replicas are
+// restarted to follow it. Before the replica is promoted, a failure lifts the fence; once whether it
+// was is not known, the fence stays, and promoting it again finishes the promotion.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/promote (the `AppManagedPromote` operationId).
+func (c *Client) AppManagedPromoteWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedPromoteRequestWithBody(c.Server, projectID, projectEnv, appID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedPromote Promotes a replica to a managed database's primary
+//
+// In order: what writes now is fenced - kept from starting its server, its service stopped, and
+// seen stopped; the replica is promoted; the engine's jobs move to it, and the other replicas are
+// restarted to follow it. Before the replica is promoted, a failure lifts the fence; once whether it
+// was is not known, the fence stays, and promoting it again finishes the promotion.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/promote (the `AppManagedPromote` operationId).
+func (c *Client) AppManagedPromote(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedPromoteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedPromoteRequest(c.Server, projectID, projectEnv, appID, body)
 	if err != nil {
 		return nil, err
 	}
@@ -66615,6 +66709,67 @@ func NewAppManagedSettingsUpdateRequestWithBody(server string, projectID string,
 	return req, nil
 }
 
+// NewAppManagedPromoteRequest calls the generic AppManagedPromote builder with application/json body
+func NewAppManagedPromoteRequest(server string, projectID string, projectEnv string, appID string, body AppManagedPromoteJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAppManagedPromoteRequestWithBody(server, projectID, projectEnv, appID, "application/json", bodyReader)
+}
+
+// NewAppManagedPromoteRequestWithBody constructs an http.Request for the AppManagedPromote method, with any body, and a specified content type
+func NewAppManagedPromoteRequestWithBody(server string, projectID string, projectEnv string, appID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed/promote", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewAppManagedCredentialsRefreshRequest calls the generic AppManagedCredentialsRefresh builder with application/json body
 func NewAppManagedCredentialsRefreshRequest(server string, projectID string, projectEnv string, appID string, body AppManagedCredentialsRefreshJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -97512,6 +97667,30 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/managed (the `AppManagedSettingsUpdate` operationId).
 	AppManagedSettingsUpdateWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedSettingsUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedSettingsUpdateResponse, error)
 
+	// AppManagedPromoteWithBodyWithResponse Promotes a replica to a managed database's primary
+	//
+	// In order: what writes now is fenced - kept from starting its server, its service stopped, and
+	// seen stopped; the replica is promoted; the engine's jobs move to it, and the other replicas are
+	// restarted to follow it. Before the replica is promoted, a failure lifts the fence; once whether it
+	// was is not known, the fence stays, and promoting it again finishes the promotion.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/promote (the `AppManagedPromote` operationId).
+	AppManagedPromoteWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedPromoteResponse, error)
+
+	// AppManagedPromoteWithResponse Promotes a replica to a managed database's primary
+	//
+	// In order: what writes now is fenced - kept from starting its server, its service stopped, and
+	// seen stopped; the replica is promoted; the engine's jobs move to it, and the other replicas are
+	// restarted to follow it. Before the replica is promoted, a failure lifts the fence; once whether it
+	// was is not known, the fence stays, and promoting it again finishes the promotion.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/promote (the `AppManagedPromote` operationId).
+	AppManagedPromoteWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedPromoteJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedPromoteResponse, error)
+
 	// AppManagedCredentialsRefreshWithBodyWithResponse Gives a managed app its archive storage's current credentials
 	//
 	// The credentials were copied into the app when it was made: after rotating the storage's key, this
@@ -120609,6 +120788,75 @@ func (r AppManagedSettingsUpdateResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r AppManagedSettingsUpdateResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedPromoteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppmanageddtoPromoteManagedMemberResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON412 the response for an HTTP 412 `application/json` response
+	JSON412 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AppManagedPromoteResponse) GetJSON200() *AppmanageddtoPromoteManagedMemberResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedPromoteResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedPromoteResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON412 returns the response for an HTTP 412 `application/json` response
+func (r AppManagedPromoteResponse) GetJSON412() *HperrorsErrorInfo {
+	return r.JSON412
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedPromoteResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedPromoteResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedPromoteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedPromoteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedPromoteResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -154142,6 +154390,42 @@ func (c *ClientWithResponses) AppManagedSettingsUpdateWithResponse(ctx context.C
 	return ParseAppManagedSettingsUpdateResponse(rsp)
 }
 
+// AppManagedPromoteWithBodyWithResponse Promotes a replica to a managed database's primary
+//
+// In order: what writes now is fenced - kept from starting its server, its service stopped, and
+// seen stopped; the replica is promoted; the engine's jobs move to it, and the other replicas are
+// restarted to follow it. Before the replica is promoted, a failure lifts the fence; once whether it
+// was is not known, the fence stays, and promoting it again finishes the promotion.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/promote (the `AppManagedPromote` operationId).
+func (c *ClientWithResponses) AppManagedPromoteWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedPromoteResponse, error) {
+	rsp, err := c.AppManagedPromoteWithBody(ctx, projectID, projectEnv, appID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedPromoteResponse(rsp)
+}
+
+// AppManagedPromoteWithResponse Promotes a replica to a managed database's primary
+//
+// In order: what writes now is fenced - kept from starting its server, its service stopped, and
+// seen stopped; the replica is promoted; the engine's jobs move to it, and the other replicas are
+// restarted to follow it. Before the replica is promoted, a failure lifts the fence; once whether it
+// was is not known, the fence stays, and promoting it again finishes the promotion.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/promote (the `AppManagedPromote` operationId).
+func (c *ClientWithResponses) AppManagedPromoteWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedPromoteJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedPromoteResponse, error) {
+	rsp, err := c.AppManagedPromote(ctx, projectID, projectEnv, appID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedPromoteResponse(rsp)
+}
+
 // AppManagedCredentialsRefreshWithBodyWithResponse Gives a managed app its archive storage's current credentials
 //
 // The credentials were copied into the app when it was made: after rotating the storage's key, this
@@ -176769,6 +177053,60 @@ func ParseAppManagedSettingsUpdateResponse(rsp *http.Response) (*AppManagedSetti
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedPromoteResponse parses an HTTP response from a AppManagedPromoteWithResponse call
+func ParseAppManagedPromoteResponse(rsp *http.Response) (*AppManagedPromoteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedPromoteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppmanageddtoPromoteManagedMemberResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON412 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest HperrorsErrorInfo

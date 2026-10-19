@@ -16526,6 +16526,9 @@ type ListProjectEnvAppParams struct {
 type DeleteAppParams struct {
 	// RemoveStorage `removeStorage=true` also deletes the data the app keeps on volumes
 	RemoveStorage *bool `form:"removeStorage,omitempty" json:"removeStorage,omitempty"`
+
+	// DeleteCluster `deleteCluster=true` deletes a promoted-over database with its cluster
+	DeleteCluster *bool `form:"deleteCluster,omitempty" json:"deleteCluster,omitempty"`
 }
 
 // GetAppParams defines parameters for GetApp.
@@ -61834,6 +61837,18 @@ func NewDeleteAppRequestWithBody(server string, projectID string, projectEnv str
 		if params.RemoveStorage != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "removeStorage", *params.RemoveStorage, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.DeleteCluster != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "deleteCluster", *params.DeleteCluster, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {

@@ -175,6 +175,19 @@ func TestAppDelete(t *testing.T) {
 	assert.Contains(t, r.stderr, "Deleted api (shop / production), and its data on the volumes.")
 }
 
+// A promoted-over database is deleted with its cluster when that is asked for.
+func TestAppDeleteWithItsCluster(t *testing.T) {
+	f := newFakeAPI(t)
+	f.handle("DELETE "+appPath, func(w http.ResponseWriter, r *http.Request, _ int) {
+		assert.Equal(t, "true", r.URL.Query().Get("deleteCluster"))
+		_, _ = w.Write([]byte(`{"meta":null}`))
+	})
+
+	r := f.run(args("app delete --delete-cluster --yes " + shopAPI)...)
+	require.Equal(t, exitcode.OK, r.code, r.stderr)
+	assert.Equal(t, 1, f.called("DELETE "+appPath))
+}
+
 func TestGoingWith(t *testing.T) {
 	app := api.AppdtoAppResp{Name: "directus",
 		LogicalChildApps: &[]api.AppdtoAppResp{{Name: "directus-db"}},

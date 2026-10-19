@@ -847,6 +847,7 @@ func (e BaseIMServiceKind) Valid() bool {
 
 // Defines values for BaseImageScanSource.
 const (
+	ImageScanSourceArtifact BaseImageScanSource = "artifact"
 	ImageScanSourceNode     BaseImageScanSource = "node"
 	ImageScanSourceRegistry BaseImageScanSource = "registry"
 )
@@ -854,6 +855,8 @@ const (
 // Valid indicates whether the value is a known member of the BaseImageScanSource enum.
 func (e BaseImageScanSource) Valid() bool {
 	switch e {
+	case ImageScanSourceArtifact:
+		return true
 	case ImageScanSourceNode:
 		return true
 	case ImageScanSourceRegistry:

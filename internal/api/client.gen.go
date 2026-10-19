@@ -4291,7 +4291,7 @@ type AppmanageddtoManagedArchivingResp struct {
 	LastArchivedAt *string `json:"lastArchivedAt"`
 
 	// PendingBytes PendingBytes is what waits on the node to be archived: pg_wal for
-	// Postgres.
+	// Postgres, the binary logs not yet pushed for MariaDB.
 	PendingBytes int `json:"pendingBytes"`
 
 	// Stale Stale says the health check has not run for a while.
@@ -7279,7 +7279,8 @@ type ApptemplatedtoManagedCreateReq struct {
 	ArchiveTimeout     *string `json:"archiveTimeout,omitempty"`
 	BaseBackupSchedule *string `json:"baseBackupSchedule,omitempty"`
 
-	// Dump Dump is the database's pg_dump into a backup repository. Left out, a
+	// Dump Dump is the database's logical dump (pg_dump, mariadb-dump) into a backup
+	// repository. Left out, a
 	// database that archives into a backup repository is dumped into it too, and
 	// one that archives into cloud storage is not dumped until a repository is
 	// chosen.

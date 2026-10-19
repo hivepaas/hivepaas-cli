@@ -180,22 +180,26 @@ func routingWriter(c *client.Client, sel *selection) func(context.Context,
 }
 
 func (a *App) appDeleteCmd() *cobra.Command {
-	var removeStorage, yes bool
+	var removeStorage, deleteCluster, yes bool
 	cmd := &cobra.Command{
 		Use:   "delete [APP]",
 		Short: "Delete an app, with the apps that go with it",
 		Long: "Delete an app, and the apps that go with it: its previews, and what a template created for\n" +
 			"it. Its data on the volumes stays unless --remove-storage.\n\n" +
+			"A managed database a replica was promoted over holds its cluster, the primary among its\n" +
+			"members: it is deleted only with all of it, with --delete-cluster.\n\n" +
 			"At a terminal it asks for the app's name to be typed; elsewhere it needs --yes.",
 		Args: usageArgs(cobra.MaximumNArgs(1)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 1 {
 				a.app = args[0]
 			}
-			return a.appDelete(cmd.Context(), removeStorage, yes)
+			return a.appDelete(cmd.Context(), removeStorage, deleteCluster, yes)
 		},
 	}
 	cmd.Flags().BoolVar(&removeStorage, "remove-storage", false, "delete the data the apps keep on volumes too")
+	cmd.Flags().BoolVar(&deleteCluster, "delete-cluster", false,
+		"delete a promoted-over database with its whole cluster, the primary among its members")
 	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "do not ask: for a script")
 	return cmd
 }
@@ -204,7 +208,7 @@ func (a *App) appDeleteCmd() *cobra.Command {
 // and with --remove-storage their data, before it answers.
 const deleteTimeout = 10 * time.Minute
 
-func (a *App) appDelete(ctx context.Context, removeStorage, yes bool) error {
+func (a *App) appDelete(ctx context.Context, removeStorage, deleteCluster, yes bool) error {
 	c, err := a.clientWithTimeout(deleteTimeout)
 	if err != nil {
 		return err
@@ -213,12 +217,14 @@ func (a *App) appDelete(ctx context.Context, removeStorage, yes bool) error {
 	if err != nil {
 		return err
 	}
-	return a.deleteApp(ctx, c, sel, removeStorage, yes)
+	return a.deleteApp(ctx, c, sel, removeStorage, deleteCluster, yes)
 }
 
 // deleteApp deletes the selected app, and the apps that go with it: asked at a
-// terminal, given yes elsewhere.
-func (a *App) deleteApp(ctx context.Context, c *client.Client, sel *selection, removeStorage, yes bool) error {
+// terminal, given yes elsewhere. deleteCluster deletes a managed database a
+// replica was promoted over with its whole cluster.
+func (a *App) deleteApp(ctx context.Context, c *client.Client, sel *selection, removeStorage, deleteCluster,
+	yes bool) error {
 	with := goingWith(*sel.App)
 	what := sel.where()
 	if len(with) > 0 {
@@ -243,7 +249,7 @@ func (a *App) deleteApp(ctx context.Context, c *client.Client, sel *selection, r
 	}
 	a.printer.Infof("Deleting %s ...", sel.App.Name)
 	resp, err := c.DeleteAppWithResponse(ctx, sel.Project.Id, sel.Env, sel.App.Id,
-		&api.DeleteAppParams{RemoveStorage: &removeStorage}, api.AppdtoDeleteAppReq{})
+		&api.DeleteAppParams{RemoveStorage: &removeStorage, DeleteCluster: &deleteCluster}, api.AppdtoDeleteAppReq{})
 	if err = client.Check(resp, err); err != nil {
 		return err
 	}

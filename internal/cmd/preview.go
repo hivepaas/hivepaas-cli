@@ -220,7 +220,7 @@ func (a *App) previewRmCmd() *cobra.Command {
 			}
 			previewSel := *sel
 			previewSel.App = preview
-			return a.deleteApp(ctx, c, &previewSel, removeStorage, yes)
+			return a.deleteApp(ctx, c, &previewSel, removeStorage, false, yes)
 		},
 	}
 	cmd.Flags().BoolVar(&removeStorage, "remove-storage", false, "delete the data it keeps on volumes too")

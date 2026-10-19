@@ -12,8 +12,8 @@ import (
 )
 
 // markTimeout is how long mark waits for its answer: the server answers once
-// the WAL the point is in is archived, which it waits twice the database's
-// archive timeout for.
+// the log the point is in (the WAL, for PostgreSQL) is archived, which it waits
+// twice the database's archive timeout for.
 const markTimeout = 5 * time.Minute
 
 func (a *App) dbCmd() *cobra.Command {
@@ -33,7 +33,7 @@ func (a *App) dbMarkCmd() *cobra.Command {
 		Use:   "mark NAME",
 		Short: "Name this moment of a managed database, to restore to it exactly",
 		Long: "Name this moment of a managed database: a restore point, which a restore into a new app\n" +
-			"recovers to exactly. It is listed once the WAL it is in is archived. It can be restored to\n" +
+			"recovers to exactly. It is listed once the log it is in is archived. It can be restored to\n" +
 			"for as long as retention keeps the base backup before it - about retainFull nights - or\n" +
 			"until --keep-until, at most 90 days ahead, which holds retention back and costs the\n" +
 			"storage of everything archived from it on. A name is letters, digits, '.', '_' and '-',\n" +
@@ -74,7 +74,7 @@ func (a *App) dbMarkCmd() *cobra.Command {
 			if point.KeepUntil != nil {
 				kept = ", kept until " + *point.KeepUntil
 			}
-			a.printer.Successf("Marked %s at %s on %s%s.", point.Name, point.Lsn, sel.where(), kept)
+			a.printer.Successf("Marked %s at %s on %s%s.", point.Name, point.Position, sel.where(), kept)
 			return nil
 		},
 	}

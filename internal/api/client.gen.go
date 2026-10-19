@@ -4289,7 +4289,10 @@ type AppmanageddtoManagedArchivingResp struct {
 	CheckedAt      *string `json:"checkedAt"`
 	FailedCount    int     `json:"failedCount"`
 	LastArchivedAt *string `json:"lastArchivedAt"`
-	PgWalBytes     int     `json:"pgWalBytes"`
+
+	// PendingBytes PendingBytes is what waits on the node to be archived: pg_wal for
+	// Postgres.
+	PendingBytes int `json:"pendingBytes"`
 
 	// Stale Stale says the health check has not run for a while.
 	Stale bool `json:"stale"`
@@ -4311,6 +4314,16 @@ type AppmanageddtoManagedBackupResp struct {
 	EndedAt   string  `json:"endedAt"`
 	Name      string  `json:"name"`
 	Succeeded bool    `json:"succeeded"`
+}
+
+// AppmanageddtoManagedCapabilitiesResp defines model for appmanageddto.ManagedCapabilitiesResp.
+type AppmanageddtoManagedCapabilitiesResp struct {
+	// Replicas Replicas are read replicas: adding and removing them, taking the base
+	// backups on one, promoting one.
+	Replicas bool `json:"replicas"`
+
+	// VerifierApp VerifierApp is the restore test in an app of its own.
+	VerifierApp bool `json:"verifierApp"`
 }
 
 // AppmanageddtoManagedDumpCfgResp defines model for appmanageddto.ManagedDumpCfgResp.
@@ -4390,7 +4403,6 @@ type AppmanageddtoManagedRestorePointResp struct {
 
 	// Kept Kept says retention is held back for it now.
 	Kept bool   `json:"kept"`
-	Lsn  string `json:"lsn"`
 	Name string `json:"name"`
 	Note string `json:"note"`
 
@@ -4398,6 +4410,9 @@ type AppmanageddtoManagedRestorePointResp struct {
 	// asks for a point before each of its deploys, which the engine removes once
 	// it cannot be restored.
 	Origin string `json:"origin"`
+
+	// Position Position is where the point is, as the engine wrote it: a Postgres LSN.
+	Position string `json:"position"`
 
 	// RestorableUntil RestorableUntil is until when it can be restored, as retention's next runs
 	// go; null when no base backup kept reaches it, or the schedule says nothing.
@@ -4424,11 +4439,13 @@ type AppmanageddtoManagedRestoreTargetReq struct {
 
 // AppmanageddtoManagedRestoreTargetResp defines model for appmanageddto.ManagedRestoreTargetResp.
 type AppmanageddtoManagedRestoreTargetResp struct {
-	Backup string  `json:"backup"`
-	Kind   string  `json:"kind"`
-	Lsn    string  `json:"lsn"`
-	Point  string  `json:"point"`
-	Time   *string `json:"time"`
+	Backup string `json:"backup"`
+	Kind   string `json:"kind"`
+	Point  string `json:"point"`
+
+	// Position Position is where the point is, as the engine wrote it: a Postgres LSN.
+	Position string  `json:"position"`
+	Time     *string `json:"time"`
 }
 
 // AppmanageddtoManagedRestoreTestCfgRsp defines model for appmanageddto.ManagedRestoreTestCfgRsp.
@@ -4472,14 +4489,18 @@ type AppmanageddtoManagedSettingsResp struct {
 
 	// BackupFrom BackupFrom is the replica the base backups are taken on, null for the
 	// database itself.
-	BackupFrom         *BasedtoObjectIDResp             `json:"backupFrom"`
-	BaseBackupSchedule string                           `json:"baseBackupSchedule"`
-	Dump               *AppmanageddtoManagedDumpCfgResp `json:"dump"`
-	Engine             string                           `json:"engine"`
-	EngineApi          int                              `json:"engineApi"`
-	FencedAt           *string                          `json:"fencedAt"`
-	Jobs               *AppmanageddtoManagedJobsResp    `json:"jobs"`
-	Locks              *AppmanageddtoManagedLocksResp   `json:"locks"`
+	BackupFrom         *BasedtoObjectIDResp `json:"backupFrom"`
+	BaseBackupSchedule string               `json:"baseBackupSchedule"`
+
+	// Capabilities Capabilities are what the engine can do that not every engine can: what
+	// it cannot is refused, and not offered.
+	Capabilities AppmanageddtoManagedCapabilitiesResp `json:"capabilities"`
+	Dump         *AppmanageddtoManagedDumpCfgResp     `json:"dump"`
+	Engine       string                               `json:"engine"`
+	EngineApi    int                                  `json:"engineApi"`
+	FencedAt     *string                              `json:"fencedAt"`
+	Jobs         *AppmanageddtoManagedJobsResp        `json:"jobs"`
+	Locks        *AppmanageddtoManagedLocksResp       `json:"locks"`
 
 	// MemberOf MemberOf is the primary this database is a replica of, null for a
 	// database of its own.
@@ -4517,7 +4538,7 @@ type AppmanageddtoManagedStatusResp struct {
 	EngineApi int                                  `json:"engineApi"`
 
 	// HeldBack HeldBack is what the kept points make retention keep beyond its own: the
-	// base backups and their size, the WAL after them not counted. Null when
+	// base backups and their size, the log after them not counted. Null when
 	// they keep nothing more.
 	HeldBack   *AppmanageddtoManagedHeldBackResp `json:"heldBack"`
 	LastBackup *AppmanageddtoManagedBackupResp   `json:"lastBackup"`
@@ -22537,9 +22558,10 @@ type ClientInterface interface {
 
 	// AppManagedRestorePointCreateWithBody Names a moment of a managed database, to restore to exactly
 	//
-	// The point is made, and listed once the WAL it is in is archived; it can then be restored to for
-	// as long as retention keeps the base backup before it, or until keepUntil, which holds retention
-	// back. Names are labels: letters, digits, '.', '_' and '-', at most 63, not starting with "hp-".
+	// The point is made, and listed once the log it is in (the WAL, for Postgres) is archived; it can
+	// then be restored to for as long as retention keeps the base backup before it, or until keepUntil,
+	// which holds retention back. Names are labels: letters, digits, '.', '_' and '-', at most the
+	// engine's limit (63 for Postgres), not starting with "hp-".
 	//
 	// Takes any type of body and a specified content type.
 	//
@@ -22548,9 +22570,10 @@ type ClientInterface interface {
 
 	// AppManagedRestorePointCreate Names a moment of a managed database, to restore to exactly
 	//
-	// The point is made, and listed once the WAL it is in is archived; it can then be restored to for
-	// as long as retention keeps the base backup before it, or until keepUntil, which holds retention
-	// back. Names are labels: letters, digits, '.', '_' and '-', at most 63, not starting with "hp-".
+	// The point is made, and listed once the log it is in (the WAL, for Postgres) is archived; it can
+	// then be restored to for as long as retention keeps the base backup before it, or until keepUntil,
+	// which holds retention back. Names are labels: letters, digits, '.', '_' and '-', at most the
+	// engine's limit (63 for Postgres), not starting with "hp-".
 	//
 	// Takes a body of the `application/json` content type.
 	//
@@ -22559,7 +22582,8 @@ type ClientInterface interface {
 
 	// AppManagedRestorePointDelete Removes a restore point's record
 	//
-	// The archive is not touched, and the mark stays in the WAL, harmlessly: restores target an LSN.
+	// The archive is not touched, and the mark stays in the database's log, harmlessly: restores target
+	// the point's position, never its name.
 	//
 	// Corresponds with DELETE /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points/{name} (the `AppManagedRestorePointDelete` operationId).
 	AppManagedRestorePointDelete(ctx context.Context, projectID string, projectEnv string, appID string, name string, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -35388,9 +35412,10 @@ func (c *Client) AppManagedRestore(ctx context.Context, projectID string, projec
 
 // AppManagedRestorePointCreateWithBody Names a moment of a managed database, to restore to exactly
 //
-// The point is made, and listed once the WAL it is in is archived; it can then be restored to for
-// as long as retention keeps the base backup before it, or until keepUntil, which holds retention
-// back. Names are labels: letters, digits, '.', '_' and '-', at most 63, not starting with "hp-".
+// The point is made, and listed once the log it is in (the WAL, for Postgres) is archived; it can
+// then be restored to for as long as retention keeps the base backup before it, or until keepUntil,
+// which holds retention back. Names are labels: letters, digits, '.', '_' and '-', at most the
+// engine's limit (63 for Postgres), not starting with "hp-".
 //
 // Takes any type of body and a specified content type.
 //
@@ -35409,9 +35434,10 @@ func (c *Client) AppManagedRestorePointCreateWithBody(ctx context.Context, proje
 
 // AppManagedRestorePointCreate Names a moment of a managed database, to restore to exactly
 //
-// The point is made, and listed once the WAL it is in is archived; it can then be restored to for
-// as long as retention keeps the base backup before it, or until keepUntil, which holds retention
-// back. Names are labels: letters, digits, '.', '_' and '-', at most 63, not starting with "hp-".
+// The point is made, and listed once the log it is in (the WAL, for Postgres) is archived; it can
+// then be restored to for as long as retention keeps the base backup before it, or until keepUntil,
+// which holds retention back. Names are labels: letters, digits, '.', '_' and '-', at most the
+// engine's limit (63 for Postgres), not starting with "hp-".
 //
 // Takes a body of the `application/json` content type.
 //
@@ -35430,7 +35456,8 @@ func (c *Client) AppManagedRestorePointCreate(ctx context.Context, projectID str
 
 // AppManagedRestorePointDelete Removes a restore point's record
 //
-// The archive is not touched, and the mark stays in the WAL, harmlessly: restores target an LSN.
+// The archive is not touched, and the mark stays in the database's log, harmlessly: restores target
+// the point's position, never its name.
 //
 // Corresponds with DELETE /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points/{name} (the `AppManagedRestorePointDelete` operationId).
 func (c *Client) AppManagedRestorePointDelete(ctx context.Context, projectID string, projectEnv string, appID string, name string, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -97784,9 +97811,10 @@ type ClientWithResponsesInterface interface {
 
 	// AppManagedRestorePointCreateWithBodyWithResponse Names a moment of a managed database, to restore to exactly
 	//
-	// The point is made, and listed once the WAL it is in is archived; it can then be restored to for
-	// as long as retention keeps the base backup before it, or until keepUntil, which holds retention
-	// back. Names are labels: letters, digits, '.', '_' and '-', at most 63, not starting with "hp-".
+	// The point is made, and listed once the log it is in (the WAL, for Postgres) is archived; it can
+	// then be restored to for as long as retention keeps the base backup before it, or until keepUntil,
+	// which holds retention back. Names are labels: letters, digits, '.', '_' and '-', at most the
+	// engine's limit (63 for Postgres), not starting with "hp-".
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -97795,9 +97823,10 @@ type ClientWithResponsesInterface interface {
 
 	// AppManagedRestorePointCreateWithResponse Names a moment of a managed database, to restore to exactly
 	//
-	// The point is made, and listed once the WAL it is in is archived; it can then be restored to for
-	// as long as retention keeps the base backup before it, or until keepUntil, which holds retention
-	// back. Names are labels: letters, digits, '.', '_' and '-', at most 63, not starting with "hp-".
+	// The point is made, and listed once the log it is in (the WAL, for Postgres) is archived; it can
+	// then be restored to for as long as retention keeps the base backup before it, or until keepUntil,
+	// which holds retention back. Names are labels: letters, digits, '.', '_' and '-', at most the
+	// engine's limit (63 for Postgres), not starting with "hp-".
 	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -97806,7 +97835,8 @@ type ClientWithResponsesInterface interface {
 
 	// AppManagedRestorePointDeleteWithResponse Removes a restore point's record
 	//
-	// The archive is not touched, and the mark stays in the WAL, harmlessly: restores target an LSN.
+	// The archive is not touched, and the mark stays in the database's log, harmlessly: restores target
+	// the point's position, never its name.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -154561,9 +154591,10 @@ func (c *ClientWithResponses) AppManagedRestoreWithResponse(ctx context.Context,
 
 // AppManagedRestorePointCreateWithBodyWithResponse Names a moment of a managed database, to restore to exactly
 //
-// The point is made, and listed once the WAL it is in is archived; it can then be restored to for
-// as long as retention keeps the base backup before it, or until keepUntil, which holds retention
-// back. Names are labels: letters, digits, '.', '_' and '-', at most 63, not starting with "hp-".
+// The point is made, and listed once the log it is in (the WAL, for Postgres) is archived; it can
+// then be restored to for as long as retention keeps the base backup before it, or until keepUntil,
+// which holds retention back. Names are labels: letters, digits, '.', '_' and '-', at most the
+// engine's limit (63 for Postgres), not starting with "hp-".
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 //
@@ -154578,9 +154609,10 @@ func (c *ClientWithResponses) AppManagedRestorePointCreateWithBodyWithResponse(c
 
 // AppManagedRestorePointCreateWithResponse Names a moment of a managed database, to restore to exactly
 //
-// The point is made, and listed once the WAL it is in is archived; it can then be restored to for
-// as long as retention keeps the base backup before it, or until keepUntil, which holds retention
-// back. Names are labels: letters, digits, '.', '_' and '-', at most 63, not starting with "hp-".
+// The point is made, and listed once the log it is in (the WAL, for Postgres) is archived; it can
+// then be restored to for as long as retention keeps the base backup before it, or until keepUntil,
+// which holds retention back. Names are labels: letters, digits, '.', '_' and '-', at most the
+// engine's limit (63 for Postgres), not starting with "hp-".
 //
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 //
@@ -154595,7 +154627,8 @@ func (c *ClientWithResponses) AppManagedRestorePointCreateWithResponse(ctx conte
 
 // AppManagedRestorePointDeleteWithResponse Removes a restore point's record
 //
-// The archive is not touched, and the mark stays in the WAL, harmlessly: restores target an LSN.
+// The archive is not touched, and the mark stays in the database's log, harmlessly: restores target
+// the point's position, never its name.
 //
 // Returns a wrapper object for the known response body format(s).
 //

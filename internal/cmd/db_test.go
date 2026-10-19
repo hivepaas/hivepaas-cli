@@ -13,7 +13,7 @@ import (
 func TestDBMarkNamesTheMoment(t *testing.T) {
 	f := newFakeAPI(t)
 	f.json("POST "+appPath+"/managed/restore-points", http.StatusOK,
-		`{"data":{"name":"before-v42","lsn":"0/3000060","at":"2026-10-18T14:00:00Z",
+		`{"data":{"name":"before-v42","position":"0/3000060","at":"2026-10-18T14:00:00Z",
 			"keepUntil":"2026-12-31T00:00:00Z","kept":true,"note":"migration 42"}}`)
 
 	r := f.run(append(args("db mark before-v42 --keep-until 2026-12-31 "+shopAPI), "--note", "migration 42")...)

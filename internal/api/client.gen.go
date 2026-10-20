@@ -4411,7 +4411,8 @@ type AppmanageddtoManagedRestorePointResp struct {
 	// it cannot be restored.
 	Origin string `json:"origin"`
 
-	// Position Position is where the point is, as the engine wrote it: a Postgres LSN.
+	// Position Position is where the point is, as the engine wrote it: a Postgres LSN, or a
+	// MariaDB GTID list (FILE:OFFSET for a point made before points kept their GTID).
 	Position string `json:"position"`
 
 	// RestorableUntil RestorableUntil is until when it can be restored, as retention's next runs
@@ -4443,7 +4444,8 @@ type AppmanageddtoManagedRestoreTargetResp struct {
 	Kind   string `json:"kind"`
 	Point  string `json:"point"`
 
-	// Position Position is where the point is, as the engine wrote it: a Postgres LSN.
+	// Position Position is where the point is, as the engine wrote it: a Postgres LSN, or a
+	// MariaDB GTID list (FILE:OFFSET for a point made before points kept their GTID).
 	Position string  `json:"position"`
 	Time     *string `json:"time"`
 }

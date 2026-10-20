@@ -4266,6 +4266,12 @@ type AppmanageddtoDeleteRestorePointResp struct {
 	Meta *BasedtoMeta `json:"meta"`
 }
 
+// AppmanageddtoGetManagedScriptsResp defines model for appmanageddto.GetManagedScriptsResp.
+type AppmanageddtoGetManagedScriptsResp struct {
+	Data *AppmanageddtoManagedScriptsResp `json:"data"`
+	Meta *BasedtoMeta                     `json:"meta"`
+}
+
 // AppmanageddtoGetManagedSettingsResp defines model for appmanageddto.GetManagedSettingsResp.
 type AppmanageddtoGetManagedSettingsResp struct {
 	Data *AppmanageddtoManagedSettingsResp `json:"data"`
@@ -4324,6 +4330,13 @@ type AppmanageddtoManagedCapabilitiesResp struct {
 
 	// VerifierApp VerifierApp is the restore test in an app of its own.
 	VerifierApp bool `json:"verifierApp"`
+}
+
+// AppmanageddtoManagedDeploymentResp defines model for appmanageddto.ManagedDeploymentResp.
+type AppmanageddtoManagedDeploymentResp struct {
+	App        *BasedtoObjectIDResp `json:"app"`
+	Deployment *BasedtoObjectIDResp `json:"deployment"`
+	Task       *BasedtoObjectIDResp `json:"task"`
 }
 
 // AppmanageddtoManagedDumpCfgResp defines model for appmanageddto.ManagedDumpCfgResp.
@@ -4483,6 +4496,59 @@ type AppmanageddtoManagedRestoreTestResp struct {
 	EndedAt         string `json:"endedAt"`
 	Passed          bool   `json:"passed"`
 	RestoredTo      string `json:"restoredTo"`
+}
+
+// AppmanageddtoManagedScriptChangeResp defines model for appmanageddto.ManagedScriptChangeResp.
+type AppmanageddtoManagedScriptChangeResp struct {
+	// Change Change is added, changed or removed.
+	Change string `json:"change"`
+
+	// From From and To are an artifact's versions.
+	From *string `json:"from,omitempty"`
+
+	// Kind Kind is script or artifact.
+	Kind string `json:"kind"`
+
+	// Name Name is a script's path, or an artifact's name.
+	Name string  `json:"name"`
+	To   *string `json:"to,omitempty"`
+}
+
+// AppmanageddtoManagedScriptsMemberResp defines model for appmanageddto.ManagedScriptsMemberResp.
+type AppmanageddtoManagedScriptsMemberResp struct {
+	App *BasedtoObjectIDResp `json:"app"`
+	Key string               `json:"key"`
+}
+
+// AppmanageddtoManagedScriptsResp defines model for appmanageddto.ManagedScriptsResp.
+type AppmanageddtoManagedScriptsResp struct {
+	// Available Available is the installation's revision of the template and the fingerprint
+	// of what it offers: null when it offers nothing.
+	Available *AppmanageddtoManagedScriptsRevisionResp `json:"available"`
+
+	// Changes Changes are what applying it changes: each script by its path, then each
+	// artifact by its name.
+	Changes *[]AppmanageddtoManagedScriptChangeResp `json:"changes"`
+
+	// Current Current is what the database runs: the revision its scripts came from, empty
+	// when that is not known, and their fingerprint.
+	Current *AppmanageddtoManagedScriptsRevisionResp `json:"current"`
+
+	// OutOfStep OutOfStep are the database's members and verifier whose scripts differ from
+	// the database's.
+	OutOfStep *[]AppmanageddtoManagedScriptsMemberResp `json:"outOfStep"`
+
+	// Reason Reason says why the revision is incompatible or unavailable.
+	Reason string `json:"reason"`
+
+	// State State is up-to-date, update-available, incompatible or unavailable.
+	State string `json:"state"`
+}
+
+// AppmanageddtoManagedScriptsRevisionResp defines model for appmanageddto.ManagedScriptsRevisionResp.
+type AppmanageddtoManagedScriptsRevisionResp struct {
+	Fingerprint string `json:"fingerprint"`
+	Revision    string `json:"revision"`
 }
 
 // AppmanageddtoManagedSettingsResp defines model for appmanageddto.ManagedSettingsResp.
@@ -4767,6 +4833,26 @@ type AppmanageddtoUpdateRestorePointReq struct {
 // AppmanageddtoUpdateRestorePointResp defines model for appmanageddto.UpdateRestorePointResp.
 type AppmanageddtoUpdateRestorePointResp struct {
 	Meta *BasedtoMeta `json:"meta"`
+}
+
+// AppmanageddtoUpgradeManagedScriptsDataResp defines model for appmanageddto.UpgradeManagedScriptsDataResp.
+type AppmanageddtoUpgradeManagedScriptsDataResp struct {
+	Deployments *[]AppmanageddtoManagedDeploymentResp `json:"deployments"`
+	Fingerprint string                                `json:"fingerprint"`
+	Revision    string                                `json:"revision"`
+}
+
+// AppmanageddtoUpgradeManagedScriptsReq defines model for appmanageddto.UpgradeManagedScriptsReq.
+type AppmanageddtoUpgradeManagedScriptsReq struct {
+	// Fingerprint Fingerprint is the available fingerprint the person reviewed: the upgrade is
+	// refused when the revision offers another since.
+	Fingerprint string `json:"fingerprint"`
+}
+
+// AppmanageddtoUpgradeManagedScriptsResp defines model for appmanageddto.UpgradeManagedScriptsResp.
+type AppmanageddtoUpgradeManagedScriptsResp struct {
+	Data *AppmanageddtoUpgradeManagedScriptsDataResp `json:"data"`
+	Meta *BasedtoMeta                                `json:"meta"`
 }
 
 // AppmetricsdtoAppDependencyAppResp defines model for appmetricsdto.AppDependencyAppResp.
@@ -18574,6 +18660,9 @@ type AppManagedRestorePointCreateJSONRequestBody = AppmanageddtoCreateRestorePoi
 // AppManagedRestorePointUpdateJSONRequestBody defines body for AppManagedRestorePointUpdate for application/json ContentType.
 type AppManagedRestorePointUpdateJSONRequestBody = AppmanageddtoUpdateRestorePointReq
 
+// AppManagedScriptsUpgradeJSONRequestBody defines body for AppManagedScriptsUpgrade for application/json ContentType.
+type AppManagedScriptsUpgradeJSONRequestBody = AppmanageddtoUpgradeManagedScriptsReq
+
 // AppManagedSwitchJSONRequestBody defines body for AppManagedSwitch for application/json ContentType.
 type AppManagedSwitchJSONRequestBody = AppmanageddtoSwitchManagedReq
 
@@ -22608,6 +22697,42 @@ type ClientInterface interface {
 	//
 	// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points/{name} (the `AppManagedRestorePointUpdate` operationId).
 	AppManagedRestorePointUpdate(ctx context.Context, projectID string, projectEnv string, appID string, name string, body AppManagedRestorePointUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedScriptsGet Gets what a managed database's template offers its engine's scripts
+	//
+	// What the installation's revision of the database's template offers of what its engine owns -
+	// its scripts and artifacts - against what the database runs: up-to-date, update-available,
+	// incompatible or unavailable, the changes, and the members out of step. A cluster is read on its
+	// app; a member is refused.
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts (the `AppManagedScriptsGet` operationId).
+	AppManagedScriptsGet(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedScriptsUpgradeWithBody Upgrades a managed database's engine scripts
+	//
+	// Replaces the scripts and artifacts of the database, its members and its verifier with what the
+	// installation's revision of its template offers, in one transaction, then deploys each, the member
+	// that writes last: each restarts once. The fingerprint is the one reviewed (GET .../managed/scripts);
+	// another is refused. A member, a database still restoring, and scripts with nothing to apply are
+	// refused.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts/upgrade (the `AppManagedScriptsUpgrade` operationId).
+	AppManagedScriptsUpgradeWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedScriptsUpgrade Upgrades a managed database's engine scripts
+	//
+	// Replaces the scripts and artifacts of the database, its members and its verifier with what the
+	// installation's revision of its template offers, in one transaction, then deploys each, the member
+	// that writes last: each restarts once. The fingerprint is the one reviewed (GET .../managed/scripts);
+	// another is refused. A member, a database still restoring, and scripts with nothing to apply are
+	// refused.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts/upgrade (the `AppManagedScriptsUpgrade` operationId).
+	AppManagedScriptsUpgrade(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedScriptsUpgradeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// AppManagedStatusGet Gets a managed app's state
 	//
@@ -35503,6 +35628,72 @@ func (c *Client) AppManagedRestorePointUpdateWithBody(ctx context.Context, proje
 // Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points/{name} (the `AppManagedRestorePointUpdate` operationId).
 func (c *Client) AppManagedRestorePointUpdate(ctx context.Context, projectID string, projectEnv string, appID string, name string, body AppManagedRestorePointUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewAppManagedRestorePointUpdateRequest(c.Server, projectID, projectEnv, appID, name, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedScriptsGet Gets what a managed database's template offers its engine's scripts
+//
+// What the installation's revision of the database's template offers of what its engine owns -
+// its scripts and artifacts - against what the database runs: up-to-date, update-available,
+// incompatible or unavailable, the changes, and the members out of step. A cluster is read on its
+// app; a member is refused.
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts (the `AppManagedScriptsGet` operationId).
+func (c *Client) AppManagedScriptsGet(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedScriptsGetRequest(c.Server, projectID, projectEnv, appID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedScriptsUpgradeWithBody Upgrades a managed database's engine scripts
+//
+// Replaces the scripts and artifacts of the database, its members and its verifier with what the
+// installation's revision of its template offers, in one transaction, then deploys each, the member
+// that writes last: each restarts once. The fingerprint is the one reviewed (GET .../managed/scripts);
+// another is refused. A member, a database still restoring, and scripts with nothing to apply are
+// refused.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts/upgrade (the `AppManagedScriptsUpgrade` operationId).
+func (c *Client) AppManagedScriptsUpgradeWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedScriptsUpgradeRequestWithBody(c.Server, projectID, projectEnv, appID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedScriptsUpgrade Upgrades a managed database's engine scripts
+//
+// Replaces the scripts and artifacts of the database, its members and its verifier with what the
+// installation's revision of its template offers, in one transaction, then deploys each, the member
+// that writes last: each restarts once. The fingerprint is the one reviewed (GET .../managed/scripts);
+// another is refused. A member, a database still restoring, and scripts with nothing to apply are
+// refused.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts/upgrade (the `AppManagedScriptsUpgrade` operationId).
+func (c *Client) AppManagedScriptsUpgrade(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedScriptsUpgradeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedScriptsUpgradeRequest(c.Server, projectID, projectEnv, appID, body)
 	if err != nil {
 		return nil, err
 	}
@@ -67240,6 +67431,115 @@ func NewAppManagedRestorePointUpdateRequestWithBody(server string, projectID str
 	return req, nil
 }
 
+// NewAppManagedScriptsGetRequest constructs an http.Request for the AppManagedScriptsGet method
+func NewAppManagedScriptsGetRequest(server string, projectID string, projectEnv string, appID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed/scripts", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAppManagedScriptsUpgradeRequest calls the generic AppManagedScriptsUpgrade builder with application/json body
+func NewAppManagedScriptsUpgradeRequest(server string, projectID string, projectEnv string, appID string, body AppManagedScriptsUpgradeJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAppManagedScriptsUpgradeRequestWithBody(server, projectID, projectEnv, appID, "application/json", bodyReader)
+}
+
+// NewAppManagedScriptsUpgradeRequestWithBody constructs an http.Request for the AppManagedScriptsUpgrade method, with any body, and a specified content type
+func NewAppManagedScriptsUpgradeRequestWithBody(server string, projectID string, projectEnv string, appID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed/scripts/upgrade", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewAppManagedStatusGetRequest constructs an http.Request for the AppManagedStatusGet method
 func NewAppManagedStatusGetRequest(server string, projectID string, projectEnv string, appID string) (*http.Request, error) {
 	var err error
@@ -97864,6 +98164,44 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points/{name} (the `AppManagedRestorePointUpdate` operationId).
 	AppManagedRestorePointUpdateWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, name string, body AppManagedRestorePointUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedRestorePointUpdateResponse, error)
 
+	// AppManagedScriptsGetWithResponse Gets what a managed database's template offers its engine's scripts
+	//
+	// What the installation's revision of the database's template offers of what its engine owns -
+	// its scripts and artifacts - against what the database runs: up-to-date, update-available,
+	// incompatible or unavailable, the changes, and the members out of step. A cluster is read on its
+	// app; a member is refused.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts (the `AppManagedScriptsGet` operationId).
+	AppManagedScriptsGetWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*AppManagedScriptsGetResponse, error)
+
+	// AppManagedScriptsUpgradeWithBodyWithResponse Upgrades a managed database's engine scripts
+	//
+	// Replaces the scripts and artifacts of the database, its members and its verifier with what the
+	// installation's revision of its template offers, in one transaction, then deploys each, the member
+	// that writes last: each restarts once. The fingerprint is the one reviewed (GET .../managed/scripts);
+	// another is refused. A member, a database still restoring, and scripts with nothing to apply are
+	// refused.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts/upgrade (the `AppManagedScriptsUpgrade` operationId).
+	AppManagedScriptsUpgradeWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedScriptsUpgradeResponse, error)
+
+	// AppManagedScriptsUpgradeWithResponse Upgrades a managed database's engine scripts
+	//
+	// Replaces the scripts and artifacts of the database, its members and its verifier with what the
+	// installation's revision of its template offers, in one transaction, then deploys each, the member
+	// that writes last: each restarts once. The fingerprint is the one reviewed (GET .../managed/scripts);
+	// another is refused. A member, a database still restoring, and scripts with nothing to apply are
+	// refused.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts/upgrade (the `AppManagedScriptsUpgrade` operationId).
+	AppManagedScriptsUpgradeWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedScriptsUpgradeJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedScriptsUpgradeResponse, error)
+
 	// AppManagedStatusGetWithResponse Gets a managed app's state
 	//
 	// Archiving, the restore window, the last base backup and restore test, where the archive is,
@@ -121349,6 +121687,137 @@ func (r AppManagedRestorePointUpdateResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r AppManagedRestorePointUpdateResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedScriptsGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppmanageddtoGetManagedScriptsResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AppManagedScriptsGetResponse) GetJSON200() *AppmanageddtoGetManagedScriptsResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedScriptsGetResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedScriptsGetResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedScriptsGetResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedScriptsGetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedScriptsGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedScriptsGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedScriptsGetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedScriptsUpgradeResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppmanageddtoUpgradeManagedScriptsResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AppManagedScriptsUpgradeResponse) GetJSON200() *AppmanageddtoUpgradeManagedScriptsResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedScriptsUpgradeResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedScriptsUpgradeResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r AppManagedScriptsUpgradeResponse) GetJSON409() *HperrorsErrorInfo {
+	return r.JSON409
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedScriptsUpgradeResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedScriptsUpgradeResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedScriptsUpgradeResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedScriptsUpgradeResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedScriptsUpgradeResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -154674,6 +155143,62 @@ func (c *ClientWithResponses) AppManagedRestorePointUpdateWithResponse(ctx conte
 	return ParseAppManagedRestorePointUpdateResponse(rsp)
 }
 
+// AppManagedScriptsGetWithResponse Gets what a managed database's template offers its engine's scripts
+//
+// What the installation's revision of the database's template offers of what its engine owns -
+// its scripts and artifacts - against what the database runs: up-to-date, update-available,
+// incompatible or unavailable, the changes, and the members out of step. A cluster is read on its
+// app; a member is refused.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts (the `AppManagedScriptsGet` operationId).
+func (c *ClientWithResponses) AppManagedScriptsGetWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*AppManagedScriptsGetResponse, error) {
+	rsp, err := c.AppManagedScriptsGet(ctx, projectID, projectEnv, appID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedScriptsGetResponse(rsp)
+}
+
+// AppManagedScriptsUpgradeWithBodyWithResponse Upgrades a managed database's engine scripts
+//
+// Replaces the scripts and artifacts of the database, its members and its verifier with what the
+// installation's revision of its template offers, in one transaction, then deploys each, the member
+// that writes last: each restarts once. The fingerprint is the one reviewed (GET .../managed/scripts);
+// another is refused. A member, a database still restoring, and scripts with nothing to apply are
+// refused.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts/upgrade (the `AppManagedScriptsUpgrade` operationId).
+func (c *ClientWithResponses) AppManagedScriptsUpgradeWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedScriptsUpgradeResponse, error) {
+	rsp, err := c.AppManagedScriptsUpgradeWithBody(ctx, projectID, projectEnv, appID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedScriptsUpgradeResponse(rsp)
+}
+
+// AppManagedScriptsUpgradeWithResponse Upgrades a managed database's engine scripts
+//
+// Replaces the scripts and artifacts of the database, its members and its verifier with what the
+// installation's revision of its template offers, in one transaction, then deploys each, the member
+// that writes last: each restarts once. The fingerprint is the one reviewed (GET .../managed/scripts);
+// another is refused. A member, a database still restoring, and scripts with nothing to apply are
+// refused.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts/upgrade (the `AppManagedScriptsUpgrade` operationId).
+func (c *ClientWithResponses) AppManagedScriptsUpgradeWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedScriptsUpgradeJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedScriptsUpgradeResponse, error) {
+	rsp, err := c.AppManagedScriptsUpgrade(ctx, projectID, projectEnv, appID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedScriptsUpgradeResponse(rsp)
+}
+
 // AppManagedStatusGetWithResponse Gets a managed app's state
 //
 // Archiving, the restore window, the last base backup and restore test, where the archive is,
@@ -177497,6 +178022,107 @@ func ParseAppManagedRestorePointUpdateResponse(rsp *http.Response) (*AppManagedR
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedScriptsGetResponse parses an HTTP response from a AppManagedScriptsGetWithResponse call
+func ParseAppManagedScriptsGetResponse(rsp *http.Response) (*AppManagedScriptsGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedScriptsGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppmanageddtoGetManagedScriptsResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedScriptsUpgradeResponse parses an HTTP response from a AppManagedScriptsUpgradeWithResponse call
+func ParseAppManagedScriptsUpgradeResponse(rsp *http.Response) (*AppManagedScriptsUpgradeResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedScriptsUpgradeResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppmanageddtoUpgradeManagedScriptsResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest HperrorsErrorInfo

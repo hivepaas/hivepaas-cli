@@ -29,7 +29,7 @@ import (
 var env = struct {
 	baseURL, username, password, ingressHTTP, ingressHTTPS string
 }{
-	baseURL:      getenv("HP_E2E_BASE_URL", "http://localhost:10100"),
+	baseURL:      getenv("HP_E2E_BASE_URL", "http://localhost:10010"),
 	username:     getenv("HP_E2E_USERNAME", "admin"),
 	password:     getenv("HP_E2E_PASSWORD", "abc123"),
 	ingressHTTP:  getenv("HP_E2E_INGRESS_HTTP", "127.0.0.1:10180"),
@@ -62,7 +62,7 @@ func runAll(m *testing.M) int {
 	if isLocalBackend(env.baseURL) {
 		fmt.Fprintf(os.Stderr, "%s is the local backend, a developer's own data: these tests make, deploy and "+
 			"remove things. Run them on the throwaway installation - the dashboard's e2e/env/up.sh - with "+
-			"HP_E2E_BASE_URL=http://localhost:10100.\n", env.baseURL)
+			"HP_E2E_BASE_URL=http://localhost:10010.\n", env.baseURL)
 		return 1
 	}
 	dir, err := os.MkdirTemp("", "hivepaas-e2e-")

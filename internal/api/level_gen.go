@@ -4,7 +4,7 @@ package api
 
 // APILevel is the API level of the spec this client was generated from. A server
 // whose level is higher refuses the CLI's writes.
-const APILevel = 2
+const APILevel = 4
 
 // SpecRef is the hivepaas release, or commit, the spec was taken from.
-const SpecRef = "local 2026-10-16"
+const SpecRef = "v1.0.0-beta5"

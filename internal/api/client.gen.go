@@ -847,6 +847,7 @@ func (e BaseIMServiceKind) Valid() bool {
 
 // Defines values for BaseImageScanSource.
 const (
+	ImageScanSourceArtifact BaseImageScanSource = "artifact"
 	ImageScanSourceNode     BaseImageScanSource = "node"
 	ImageScanSourceRegistry BaseImageScanSource = "registry"
 )
@@ -854,6 +855,8 @@ const (
 // Valid indicates whether the value is a known member of the BaseImageScanSource enum.
 func (e BaseImageScanSource) Valid() bool {
 	switch e {
+	case ImageScanSourceArtifact:
+		return true
 	case ImageScanSourceNode:
 		return true
 	case ImageScanSourceRegistry:
@@ -875,6 +878,132 @@ func (e BaseImageScanStatus) Valid() bool {
 	case ImageScanStatusDone:
 		return true
 	case ImageScanStatusFailed:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for BaseLicenseLimit.
+const (
+	LicenseLimitApps            BaseLicenseLimit = "apps"
+	LicenseLimitFunctions       BaseLicenseLimit = "functions"
+	LicenseLimitNodes           BaseLicenseLimit = "nodes"
+	LicenseLimitPreviews        BaseLicenseLimit = "previews"
+	LicenseLimitSignInProviders BaseLicenseLimit = "sign-in-providers"
+	LicenseLimitUsers           BaseLicenseLimit = "users"
+)
+
+// Valid indicates whether the value is a known member of the BaseLicenseLimit enum.
+func (e BaseLicenseLimit) Valid() bool {
+	switch e {
+	case LicenseLimitApps:
+		return true
+	case LicenseLimitFunctions:
+		return true
+	case LicenseLimitNodes:
+		return true
+	case LicenseLimitPreviews:
+		return true
+	case LicenseLimitSignInProviders:
+		return true
+	case LicenseLimitUsers:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for BaseLicensePlan.
+const (
+	LicensePlanApiary BaseLicensePlan = "apiary"
+	LicensePlanBee    BaseLicensePlan = "bee"
+	LicensePlanColony BaseLicensePlan = "colony"
+	LicensePlanComb   BaseLicensePlan = "comb"
+	LicensePlanHive   BaseLicensePlan = "hive"
+)
+
+// Valid indicates whether the value is a known member of the BaseLicensePlan enum.
+func (e BaseLicensePlan) Valid() bool {
+	switch e {
+	case LicensePlanApiary:
+		return true
+	case LicensePlanBee:
+		return true
+	case LicensePlanColony:
+		return true
+	case LicensePlanComb:
+		return true
+	case LicensePlanHive:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for BaseLicenseRefreshResult.
+const (
+	LicenseRefreshCurrent  BaseLicenseRefreshResult = "current"
+	LicenseRefreshDisabled BaseLicenseRefreshResult = "disabled"
+	LicenseRefreshFailed   BaseLicenseRefreshResult = "failed"
+	LicenseRefreshMoved    BaseLicenseRefreshResult = "moved"
+	LicenseRefreshNewer    BaseLicenseRefreshResult = "newer"
+	LicenseRefreshNone     BaseLicenseRefreshResult = "none"
+	LicenseRefreshUnknown  BaseLicenseRefreshResult = "unknown"
+)
+
+// Valid indicates whether the value is a known member of the BaseLicenseRefreshResult enum.
+func (e BaseLicenseRefreshResult) Valid() bool {
+	switch e {
+	case LicenseRefreshCurrent:
+		return true
+	case LicenseRefreshDisabled:
+		return true
+	case LicenseRefreshFailed:
+		return true
+	case LicenseRefreshMoved:
+		return true
+	case LicenseRefreshNewer:
+		return true
+	case LicenseRefreshNone:
+		return true
+	case LicenseRefreshUnknown:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for BaseLicenseStatus.
+const (
+	LicenseStatusExpired           BaseLicenseStatus = "expired"
+	LicenseStatusGrace             BaseLicenseStatus = "grace"
+	LicenseStatusInvalid           BaseLicenseStatus = "invalid"
+	LicenseStatusMoved             BaseLicenseStatus = "moved"
+	LicenseStatusNone              BaseLicenseStatus = "none"
+	LicenseStatusOtherInstallation BaseLicenseStatus = "other-installation"
+	LicenseStatusTrial             BaseLicenseStatus = "trial"
+	LicenseStatusValid             BaseLicenseStatus = "valid"
+)
+
+// Valid indicates whether the value is a known member of the BaseLicenseStatus enum.
+func (e BaseLicenseStatus) Valid() bool {
+	switch e {
+	case LicenseStatusExpired:
+		return true
+	case LicenseStatusGrace:
+		return true
+	case LicenseStatusInvalid:
+		return true
+	case LicenseStatusMoved:
+		return true
+	case LicenseStatusNone:
+		return true
+	case LicenseStatusOtherInstallation:
+		return true
+	case LicenseStatusTrial:
+		return true
+	case LicenseStatusValid:
 		return true
 	default:
 		return false
@@ -1676,12 +1805,14 @@ const (
 	SettingTypeAccessToken         BaseSettingType = "access-token"
 	SettingTypeAcmeDnsProvider     BaseSettingType = "acme-dns-provider"
 	SettingTypeApp                 BaseSettingType = "app"
+	SettingTypeAppArtifacts        BaseSettingType = "app-artifacts"
 	SettingTypeAppAutoscale        BaseSettingType = "app-autoscale"
 	SettingTypeAppClone            BaseSettingType = "app-clone"
 	SettingTypeAppDeployment       BaseSettingType = "app-deployment"
 	SettingTypeAppDockerAPI        BaseSettingType = "app-docker-api"
 	SettingTypeAppFeatures         BaseSettingType = "app-features"
 	SettingTypeAppKind             BaseSettingType = "app-kind"
+	SettingTypeAppManaged          BaseSettingType = "app-managed"
 	SettingTypeAppPlacement        BaseSettingType = "app-placement"
 	SettingTypeAppRouting          BaseSettingType = "app-routing"
 	SettingTypeAppSettingMount     BaseSettingType = "app-setting-mount"
@@ -1706,6 +1837,7 @@ const (
 	SettingTypeImageBuild          BaseSettingType = "image-build"
 	SettingTypeImageScan           BaseSettingType = "image-scan"
 	SettingTypeKeyAuth             BaseSettingType = "key-auth"
+	SettingTypeLicense             BaseSettingType = "license"
 	SettingTypeLogging             BaseSettingType = "logging"
 	SettingTypeMCP                 BaseSettingType = "mcp"
 	SettingTypeNotification        BaseSettingType = "notification"
@@ -1741,6 +1873,8 @@ func (e BaseSettingType) Valid() bool {
 		return true
 	case SettingTypeApp:
 		return true
+	case SettingTypeAppArtifacts:
+		return true
 	case SettingTypeAppAutoscale:
 		return true
 	case SettingTypeAppClone:
@@ -1752,6 +1886,8 @@ func (e BaseSettingType) Valid() bool {
 	case SettingTypeAppFeatures:
 		return true
 	case SettingTypeAppKind:
+		return true
+	case SettingTypeAppManaged:
 		return true
 	case SettingTypeAppPlacement:
 		return true
@@ -1800,6 +1936,8 @@ func (e BaseSettingType) Valid() bool {
 	case SettingTypeImageScan:
 		return true
 	case SettingTypeKeyAuth:
+		return true
+	case SettingTypeLicense:
 		return true
 	case SettingTypeLogging:
 		return true
@@ -1962,6 +2100,7 @@ const (
 	TaskTypeDataFileLoad        BaseTaskType = "task:data-file-load"
 	TaskTypeDummy               BaseTaskType = "task:dummy"
 	TaskTypeImageScan           BaseTaskType = "task:image-scan"
+	TaskTypeManagedRestore      BaseTaskType = "task:managed-restore"
 	TaskTypePeriodicExec        BaseTaskType = "task:periodic-exec"
 	TaskTypeSSLObtain           BaseTaskType = "task:ssl-obtain"
 	TaskTypeSchedJobExec        BaseTaskType = "task:sched-job-exec"
@@ -1989,6 +2128,8 @@ func (e BaseTaskType) Valid() bool {
 	case TaskTypeDummy:
 		return true
 	case TaskTypeImageScan:
+		return true
+	case TaskTypeManagedRestore:
 		return true
 	case TaskTypePeriodicExec:
 		return true
@@ -4088,6 +4229,632 @@ type AppimagescandtoSummaryResp struct {
 	Unknown AppimagescandtoCountResp `json:"unknown"`
 }
 
+// AppmanageddtoAddManagedReplicaDataResp defines model for appmanageddto.AddManagedReplicaDataResp.
+type AppmanageddtoAddManagedReplicaDataResp struct {
+	App  *BasedtoObjectIDResp `json:"app"`
+	Task *BasedtoObjectIDResp `json:"task"`
+}
+
+// AppmanageddtoAddManagedReplicaReq defines model for appmanageddto.AddManagedReplicaReq.
+type AppmanageddtoAddManagedReplicaReq struct {
+	DataVolume *BasedtoObjectIDReq `json:"dataVolume"`
+}
+
+// AppmanageddtoAddManagedReplicaResp defines model for appmanageddto.AddManagedReplicaResp.
+type AppmanageddtoAddManagedReplicaResp struct {
+	Data *AppmanageddtoAddManagedReplicaDataResp `json:"data"`
+	Meta *BasedtoMeta                            `json:"meta"`
+}
+
+// AppmanageddtoCreateRestorePointReq defines model for appmanageddto.CreateRestorePointReq.
+type AppmanageddtoCreateRestorePointReq struct {
+	// KeepUntil KeepUntil holds retention back for the point until then, at most 90 days
+	// ahead; without it, the point lasts as long as retention keeps what it needs.
+	KeepUntil *string `json:"keepUntil,omitempty"`
+	Name      string  `json:"name"`
+	Note      *string `json:"note,omitempty"`
+}
+
+// AppmanageddtoCreateRestorePointResp defines model for appmanageddto.CreateRestorePointResp.
+type AppmanageddtoCreateRestorePointResp struct {
+	Data *AppmanageddtoManagedRestorePointResp `json:"data"`
+	Meta *BasedtoMeta                          `json:"meta"`
+}
+
+// AppmanageddtoDeleteRestorePointResp defines model for appmanageddto.DeleteRestorePointResp.
+type AppmanageddtoDeleteRestorePointResp struct {
+	Meta *BasedtoMeta `json:"meta"`
+}
+
+// AppmanageddtoGetManagedScriptsResp defines model for appmanageddto.GetManagedScriptsResp.
+type AppmanageddtoGetManagedScriptsResp struct {
+	Data *AppmanageddtoManagedScriptsResp `json:"data"`
+	Meta *BasedtoMeta                     `json:"meta"`
+}
+
+// AppmanageddtoGetManagedSettingsResp defines model for appmanageddto.GetManagedSettingsResp.
+type AppmanageddtoGetManagedSettingsResp struct {
+	Data *AppmanageddtoManagedSettingsResp `json:"data"`
+	Meta *BasedtoMeta                      `json:"meta"`
+}
+
+// AppmanageddtoGetManagedStatusResp defines model for appmanageddto.GetManagedStatusResp.
+type AppmanageddtoGetManagedStatusResp struct {
+	Data *AppmanageddtoManagedStatusResp `json:"data"`
+	Meta *BasedtoMeta                    `json:"meta"`
+}
+
+// AppmanageddtoGetManagedSwitchResp defines model for appmanageddto.GetManagedSwitchResp.
+type AppmanageddtoGetManagedSwitchResp struct {
+	Data *AppmanageddtoManagedSwitchDataResp `json:"data"`
+	Meta *BasedtoMeta                        `json:"meta"`
+}
+
+// AppmanageddtoManagedArchivingResp defines model for appmanageddto.ManagedArchivingResp.
+type AppmanageddtoManagedArchivingResp struct {
+	CheckedAt      *string `json:"checkedAt"`
+	FailedCount    int     `json:"failedCount"`
+	LastArchivedAt *string `json:"lastArchivedAt"`
+
+	// PendingBytes PendingBytes is what waits on the node to be archived: pg_wal for
+	// Postgres, the binary logs not yet pushed for MariaDB.
+	PendingBytes int `json:"pendingBytes"`
+
+	// Stale Stale says the health check has not run for a while.
+	Stale bool `json:"stale"`
+
+	// State State is ok, failing, or unknown before the first health check.
+	State string `json:"state"`
+}
+
+// AppmanageddtoManagedBackupRefResp defines model for appmanageddto.ManagedBackupRefResp.
+type AppmanageddtoManagedBackupRefResp struct {
+	At   string `json:"at"`
+	Name string `json:"name"`
+}
+
+// AppmanageddtoManagedBackupResp defines model for appmanageddto.ManagedBackupResp.
+type AppmanageddtoManagedBackupResp struct {
+	At        *string `json:"at"`
+	Bytes     int     `json:"bytes"`
+	EndedAt   string  `json:"endedAt"`
+	Name      string  `json:"name"`
+	Succeeded bool    `json:"succeeded"`
+}
+
+// AppmanageddtoManagedCapabilitiesResp defines model for appmanageddto.ManagedCapabilitiesResp.
+type AppmanageddtoManagedCapabilitiesResp struct {
+	// Replicas Replicas are read replicas: adding and removing them, taking the base
+	// backups on one, promoting one.
+	Replicas bool `json:"replicas"`
+
+	// VerifierApp VerifierApp is the restore test in an app of its own.
+	VerifierApp bool `json:"verifierApp"`
+}
+
+// AppmanageddtoManagedDeploymentResp defines model for appmanageddto.ManagedDeploymentResp.
+type AppmanageddtoManagedDeploymentResp struct {
+	App        *BasedtoObjectIDResp `json:"app"`
+	Deployment *BasedtoObjectIDResp `json:"deployment"`
+	Task       *BasedtoObjectIDResp `json:"task"`
+}
+
+// AppmanageddtoManagedDumpCfgResp defines model for appmanageddto.ManagedDumpCfgResp.
+type AppmanageddtoManagedDumpCfgResp struct {
+	Repo     *BasedtoObjectIDResp `json:"repo"`
+	Schedule string               `json:"schedule"`
+}
+
+// AppmanageddtoManagedDumpResp defines model for appmanageddto.ManagedDumpResp.
+type AppmanageddtoManagedDumpResp struct {
+	Bytes      int    `json:"bytes"`
+	EndedAt    string `json:"endedAt"`
+	SnapshotId string `json:"snapshotId"`
+	Succeeded  bool   `json:"succeeded"`
+}
+
+// AppmanageddtoManagedHeldBackResp defines model for appmanageddto.ManagedHeldBackResp.
+type AppmanageddtoManagedHeldBackResp struct {
+	Backups int `json:"backups"`
+	Bytes   int `json:"bytes"`
+}
+
+// AppmanageddtoManagedJobsResp defines model for appmanageddto.ManagedJobsResp.
+type AppmanageddtoManagedJobsResp struct {
+	// Dump Dump is null while dumps are off.
+	Dump        *BasedtoObjectIDResp `json:"dump"`
+	Health      *BasedtoObjectIDResp `json:"health"`
+	Nightly     *BasedtoObjectIDResp `json:"nightly"`
+	RestoreTest *BasedtoObjectIDResp `json:"restoreTest"`
+}
+
+// AppmanageddtoManagedLocksResp defines model for appmanageddto.ManagedLocksResp.
+type AppmanageddtoManagedLocksResp struct {
+	Command   string    `json:"command"`
+	EnvKeys   *[]string `json:"envKeys"`
+	Image     string    `json:"image"`
+	ImageLine string    `json:"imageLine"`
+	Mounts    *[]string `json:"mounts"`
+	Settings  *[]string `json:"settings"`
+}
+
+// AppmanageddtoManagedMemberOfResp defines model for appmanageddto.ManagedMemberOfResp.
+type AppmanageddtoManagedMemberOfResp struct {
+	App  *BasedtoObjectIDResp `json:"app"`
+	Role string               `json:"role"`
+}
+
+// AppmanageddtoManagedMemberResp defines model for appmanageddto.ManagedMemberResp.
+type AppmanageddtoManagedMemberResp struct {
+	App    *BasedtoObjectIDResp `json:"app"`
+	At     string               `json:"at"`
+	Key    string               `json:"key"`
+	Node   string               `json:"node"`
+	Role   string               `json:"role"`
+	Volume *BasedtoObjectIDResp `json:"volume"`
+}
+
+// AppmanageddtoManagedMemberStatusResp defines model for appmanageddto.ManagedMemberStatusResp.
+type AppmanageddtoManagedMemberStatusResp struct {
+	App        *BasedtoObjectIDResp `json:"app"`
+	CheckedAt  *string              `json:"checkedAt"`
+	Key        string               `json:"key"`
+	LagBytes   int                  `json:"lagBytes"`
+	LagSeconds *float32             `json:"lagSeconds"`
+	Node       string               `json:"node"`
+	Role       string               `json:"role"`
+	State      string               `json:"state"`
+}
+
+// AppmanageddtoManagedRestorePointResp defines model for appmanageddto.ManagedRestorePointResp.
+type AppmanageddtoManagedRestorePointResp struct {
+	At string `json:"at"`
+
+	// By By is the user who made it.
+	By        *BasedtoObjectIDResp `json:"by"`
+	KeepUntil *string              `json:"keepUntil"`
+
+	// Kept Kept says retention is held back for it now.
+	Kept bool   `json:"kept"`
+	Name string `json:"name"`
+	Note string `json:"note"`
+
+	// Origin Origin is what made it: person, or deploy for a deployment of an app that
+	// asks for a point before each of its deploys, which the engine removes once
+	// it cannot be restored.
+	Origin string `json:"origin"`
+
+	// Position Position is where the point is, as the engine wrote it: a Postgres LSN, or a
+	// MariaDB GTID list (FILE:OFFSET for a point made before points kept their GTID).
+	Position string `json:"position"`
+
+	// RestorableUntil RestorableUntil is until when it can be restored, as retention's next runs
+	// go; null when no base backup kept reaches it, or the schedule says nothing.
+	RestorableUntil *string `json:"restorableUntil"`
+}
+
+// AppmanageddtoManagedRestoreResp defines model for appmanageddto.ManagedRestoreResp.
+type AppmanageddtoManagedRestoreResp struct {
+	ReadyAt   *string              `json:"readyAt"`
+	SourceApp *BasedtoObjectIDResp `json:"sourceApp"`
+
+	// SwitchedAt SwitchedAt is when the source's consumers were last switched to this one.
+	SwitchedAt *string                                `json:"switchedAt"`
+	Target     *AppmanageddtoManagedRestoreTargetResp `json:"target"`
+}
+
+// AppmanageddtoManagedRestoreTargetReq defines model for appmanageddto.ManagedRestoreTargetReq.
+type AppmanageddtoManagedRestoreTargetReq struct {
+	Backup *string `json:"backup,omitempty"`
+	Kind   string  `json:"kind"`
+	Point  *string `json:"point,omitempty"`
+	Time   *string `json:"time,omitempty"`
+}
+
+// AppmanageddtoManagedRestoreTargetResp defines model for appmanageddto.ManagedRestoreTargetResp.
+type AppmanageddtoManagedRestoreTargetResp struct {
+	Backup string `json:"backup"`
+	Kind   string `json:"kind"`
+	Point  string `json:"point"`
+
+	// Position Position is where the point is, as the engine wrote it: a Postgres LSN, or a
+	// MariaDB GTID list (FILE:OFFSET for a point made before points kept their GTID).
+	Position string  `json:"position"`
+	Time     *string `json:"time"`
+}
+
+// AppmanageddtoManagedRestoreTestCfgRsp defines model for appmanageddto.ManagedRestoreTestCfgRsp.
+type AppmanageddtoManagedRestoreTestCfgRsp struct {
+	CheckQuery string `json:"checkQuery"`
+
+	// KeyAuth KeyAuth is the verifier's narrower key, nil when it has the database's.
+	KeyAuth *BasedtoObjectIDResp `json:"keyAuth"`
+
+	// Mode Mode is container or verifier.
+	Mode        string               `json:"mode"`
+	NodeId      string               `json:"nodeId"`
+	VerifierApp *BasedtoObjectIDResp `json:"verifierApp"`
+}
+
+// AppmanageddtoManagedRestoreTestReq defines model for appmanageddto.ManagedRestoreTestReq.
+type AppmanageddtoManagedRestoreTestReq struct {
+	// KeyAuth KeyAuth is a narrower key for the verifier, read-only where the storage
+	// has one; without, it has the database's. Verifier mode only.
+	KeyAuth *BasedtoObjectIDReq `json:"keyAuth,omitempty"`
+
+	// Mode Mode is container or verifier.
+	Mode string `json:"mode"`
+
+	// Volume Volume is the cluster volume the verifier restores into, pinned to the node
+	// it runs on - preferably not the database's. Verifier mode only.
+	Volume *BasedtoObjectIDReq `json:"volume,omitempty"`
+}
+
+// AppmanageddtoManagedRestoreTestResp defines model for appmanageddto.ManagedRestoreTestResp.
+type AppmanageddtoManagedRestoreTestResp struct {
+	DurationSeconds int    `json:"durationSeconds"`
+	EndedAt         string `json:"endedAt"`
+	Passed          bool   `json:"passed"`
+	RestoredTo      string `json:"restoredTo"`
+}
+
+// AppmanageddtoManagedScriptChangeResp defines model for appmanageddto.ManagedScriptChangeResp.
+type AppmanageddtoManagedScriptChangeResp struct {
+	// Change Change is added, changed or removed.
+	Change string `json:"change"`
+
+	// From From and To are an artifact's versions.
+	From *string `json:"from,omitempty"`
+
+	// Kind Kind is script or artifact.
+	Kind string `json:"kind"`
+
+	// Name Name is a script's path, or an artifact's name.
+	Name string  `json:"name"`
+	To   *string `json:"to,omitempty"`
+}
+
+// AppmanageddtoManagedScriptsMemberResp defines model for appmanageddto.ManagedScriptsMemberResp.
+type AppmanageddtoManagedScriptsMemberResp struct {
+	App *BasedtoObjectIDResp `json:"app"`
+	Key string               `json:"key"`
+}
+
+// AppmanageddtoManagedScriptsResp defines model for appmanageddto.ManagedScriptsResp.
+type AppmanageddtoManagedScriptsResp struct {
+	// Available Available is the installation's revision of the template and the fingerprint
+	// of what it offers: null when it offers nothing.
+	Available *AppmanageddtoManagedScriptsRevisionResp `json:"available"`
+
+	// Changes Changes are what applying it changes: each script by its path, then each
+	// artifact by its name.
+	Changes *[]AppmanageddtoManagedScriptChangeResp `json:"changes"`
+
+	// Current Current is what the database runs: the revision its scripts came from, empty
+	// when that is not known, and their fingerprint.
+	Current *AppmanageddtoManagedScriptsRevisionResp `json:"current"`
+
+	// OutOfStep OutOfStep are the database's members and verifier whose scripts differ from
+	// the database's.
+	OutOfStep *[]AppmanageddtoManagedScriptsMemberResp `json:"outOfStep"`
+
+	// Reason Reason says why the revision is incompatible or unavailable.
+	Reason string `json:"reason"`
+
+	// State State is up-to-date, update-available, incompatible or unavailable.
+	State string `json:"state"`
+}
+
+// AppmanageddtoManagedScriptsRevisionResp defines model for appmanageddto.ManagedScriptsRevisionResp.
+type AppmanageddtoManagedScriptsRevisionResp struct {
+	Fingerprint string `json:"fingerprint"`
+	Revision    string `json:"revision"`
+}
+
+// AppmanageddtoManagedSettingsResp defines model for appmanageddto.ManagedSettingsResp.
+type AppmanageddtoManagedSettingsResp struct {
+	ArchiveTimeout string `json:"archiveTimeout"`
+
+	// BackupFrom BackupFrom is the replica the base backups are taken on, null for the
+	// database itself.
+	BackupFrom         *BasedtoObjectIDResp `json:"backupFrom"`
+	BaseBackupSchedule string               `json:"baseBackupSchedule"`
+
+	// Capabilities Capabilities are what the engine can do that not every engine can: what
+	// it cannot is refused, and not offered.
+	Capabilities AppmanageddtoManagedCapabilitiesResp `json:"capabilities"`
+	Dump         *AppmanageddtoManagedDumpCfgResp     `json:"dump"`
+	Engine       string                               `json:"engine"`
+	EngineApi    int                                  `json:"engineApi"`
+	FencedAt     *string                              `json:"fencedAt"`
+	Jobs         *AppmanageddtoManagedJobsResp        `json:"jobs"`
+	Locks        *AppmanageddtoManagedLocksResp       `json:"locks"`
+
+	// MemberOf MemberOf is the primary this database is a replica of, null for a
+	// database of its own.
+	MemberOf *AppmanageddtoManagedMemberOfResp `json:"memberOf"`
+
+	// Members Members are the database's replicas.
+	Members *[]AppmanageddtoManagedMemberResp `json:"members"`
+
+	// Restore Restore is where the database was restored from, null for one that was
+	// not; it is restoring until readyAt is set.
+	Restore             *AppmanageddtoManagedRestoreResp       `json:"restore"`
+	RestoreTest         *AppmanageddtoManagedRestoreTestCfgRsp `json:"restoreTest"`
+	RestoreTestSchedule string                                 `json:"restoreTestSchedule"`
+	RetainFull          int                                    `json:"retainFull"`
+	Storage             *AppmanageddtoManagedStorageResp       `json:"storage"`
+
+	// SwitchedTo SwitchedTo is the database restored from this one that its consumers were
+	// switched to, null for none: this one's jobs are paused since.
+	SwitchedTo *AppmanageddtoManagedSwitchedToResp `json:"switchedTo"`
+	UpdateVer  int                                 `json:"updateVer"`
+
+	// Writer Writer is the member promoted to the cluster's primary, null while this
+	// database is; FencedAt is when this one was fenced for it.
+	Writer *BasedtoObjectIDResp `json:"writer"`
+}
+
+// AppmanageddtoManagedStatusResp defines model for appmanageddto.ManagedStatusResp.
+type AppmanageddtoManagedStatusResp struct {
+	Archiving *AppmanageddtoManagedArchivingResp `json:"archiving"`
+
+	// Backups Backups are the base backups kept, oldest first: what a restore to a backup
+	// may name.
+	Backups   *[]AppmanageddtoManagedBackupRefResp `json:"backups"`
+	Engine    string                               `json:"engine"`
+	EngineApi int                                  `json:"engineApi"`
+
+	// HeldBack HeldBack is what the kept points make retention keep beyond its own: the
+	// base backups and their size, the log after them not counted. Null when
+	// they keep nothing more.
+	HeldBack   *AppmanageddtoManagedHeldBackResp `json:"heldBack"`
+	LastBackup *AppmanageddtoManagedBackupResp   `json:"lastBackup"`
+
+	// LastDump LastDump is the dump's last run, null while dumps are off or before the
+	// first.
+	LastDump        *AppmanageddtoManagedDumpResp        `json:"lastDump"`
+	LastRestoreTest *AppmanageddtoManagedRestoreTestResp `json:"lastRestoreTest"`
+
+	// Members Members are the replicas, each as the database's last health check saw it.
+	Members *[]AppmanageddtoManagedMemberStatusResp `json:"members"`
+
+	// Placement Placement is where the archive is from the database: off-site, shared or
+	// same-node, which the dashboard warns about.
+	Placement string `json:"placement"`
+
+	// RestorePoints RestorePoints are the points recorded, oldest first.
+	RestorePoints *[]AppmanageddtoManagedRestorePointResp `json:"restorePoints"`
+
+	// RestoreWindow RestoreWindow is what a restore may target; null before the first base
+	// backup.
+	RestoreWindow *AppmanageddtoManagedTimeWindowResp `json:"restoreWindow"`
+
+	// Suggestions Suggestions are changes worth making: verifier, to run the restore test
+	// in a verifier app; dump-apart, to dump at another time than the base
+	// backup, as both read the whole database.
+	Suggestions *[]string `json:"suggestions"`
+}
+
+// AppmanageddtoManagedStorageResp defines model for appmanageddto.ManagedStorageResp.
+type AppmanageddtoManagedStorageResp struct {
+	BackupRepo   *BasedtoObjectIDResp `json:"backupRepo"`
+	CloudStorage *BasedtoObjectIDResp `json:"cloudStorage"`
+	KeyAuth      *BasedtoObjectIDResp `json:"keyAuth"`
+	Placement    string               `json:"placement"`
+	Prefix       string               `json:"prefix"`
+}
+
+// AppmanageddtoManagedSwitchAppResp defines model for appmanageddto.ManagedSwitchAppResp.
+type AppmanageddtoManagedSwitchAppResp struct {
+	Id   string `json:"id"`
+	Key  string `json:"key"`
+	Name string `json:"name"`
+}
+
+// AppmanageddtoManagedSwitchConsumerResp defines model for appmanageddto.ManagedSwitchConsumerResp.
+type AppmanageddtoManagedSwitchConsumerResp struct {
+	App *AppmanageddtoManagedSwitchAppResp `json:"app"`
+
+	// DeployRestorePoint DeployRestorePoint says the app's deployments mark a restore point on the
+	// source.
+	DeployRestorePoint bool `json:"deployRestorePoint"`
+
+	// EnvVars EnvVars are the app's variables that name the source's.
+	EnvVars *[]string `json:"envVars"`
+
+	// PreviewClone PreviewClone says the app's previews clone the source.
+	PreviewClone bool `json:"previewClone"`
+}
+
+// AppmanageddtoManagedSwitchDataResp defines model for appmanageddto.ManagedSwitchDataResp.
+type AppmanageddtoManagedSwitchDataResp struct {
+	// Consumers Consumers are the apps that name the source: by a variable's reference to
+	// its key, by its id among their previews' databases to clone, or as the
+	// database their deployments mark a restore point on.
+	Consumers *[]AppmanageddtoManagedSwitchConsumerResp `json:"consumers"`
+	Source    *AppmanageddtoManagedSwitchAppResp        `json:"source"`
+
+	// SwitchedAt SwitchedAt is when consumers were last switched to this database, null
+	// before the first time.
+	SwitchedAt *string `json:"switchedAt"`
+}
+
+// AppmanageddtoManagedSwitchDeploymentResp defines model for appmanageddto.ManagedSwitchDeploymentResp.
+type AppmanageddtoManagedSwitchDeploymentResp struct {
+	App        *BasedtoObjectIDResp `json:"app"`
+	Deployment *BasedtoObjectIDResp `json:"deployment"`
+	Task       *BasedtoObjectIDResp `json:"task"`
+}
+
+// AppmanageddtoManagedSwitchedToResp defines model for appmanageddto.ManagedSwitchedToResp.
+type AppmanageddtoManagedSwitchedToResp struct {
+	App *BasedtoObjectIDResp `json:"app"`
+	At  string               `json:"at"`
+}
+
+// AppmanageddtoManagedTimeWindowResp defines model for appmanageddto.ManagedTimeWindowResp.
+type AppmanageddtoManagedTimeWindowResp struct {
+	From string `json:"from"`
+	To   string `json:"to"`
+}
+
+// AppmanageddtoPromoteManagedMemberDataResp defines model for appmanageddto.PromoteManagedMemberDataResp.
+type AppmanageddtoPromoteManagedMemberDataResp struct {
+	Fenced    *BasedtoObjectIDResp   `json:"fenced"`
+	Restarted *[]BasedtoObjectIDResp `json:"restarted"`
+	Writer    *BasedtoObjectIDResp   `json:"writer"`
+}
+
+// AppmanageddtoPromoteManagedMemberReq defines model for appmanageddto.PromoteManagedMemberReq.
+type AppmanageddtoPromoteManagedMemberReq struct {
+	Member *BasedtoObjectIDReq `json:"member"`
+}
+
+// AppmanageddtoPromoteManagedMemberResp defines model for appmanageddto.PromoteManagedMemberResp.
+type AppmanageddtoPromoteManagedMemberResp struct {
+	Data *AppmanageddtoPromoteManagedMemberDataResp `json:"data"`
+	Meta *BasedtoMeta                               `json:"meta"`
+}
+
+// AppmanageddtoRefreshManagedCredentialsDataResp defines model for appmanageddto.RefreshManagedCredentialsDataResp.
+type AppmanageddtoRefreshManagedCredentialsDataResp struct {
+	// Changed Changed says the app's credentials changed and are being mounted again,
+	// which restarts the database's task.
+	Changed bool `json:"changed"`
+}
+
+// AppmanageddtoRefreshManagedCredentialsReq defines model for appmanageddto.RefreshManagedCredentialsReq.
+type AppmanageddtoRefreshManagedCredentialsReq = map[string]interface{}
+
+// AppmanageddtoRefreshManagedCredentialsResp defines model for appmanageddto.RefreshManagedCredentialsResp.
+type AppmanageddtoRefreshManagedCredentialsResp struct {
+	Data *AppmanageddtoRefreshManagedCredentialsDataResp `json:"data"`
+	Meta *BasedtoMeta                                    `json:"meta"`
+}
+
+// AppmanageddtoRemoveManagedReplicaResp defines model for appmanageddto.RemoveManagedReplicaResp.
+type AppmanageddtoRemoveManagedReplicaResp struct {
+	Meta *BasedtoMeta `json:"meta"`
+}
+
+// AppmanageddtoRestoreManagedDataResp defines model for appmanageddto.RestoreManagedDataResp.
+type AppmanageddtoRestoreManagedDataResp struct {
+	// App App is the new app, restoring until the task says it is ready.
+	App *BasedtoObjectIDResp `json:"app"`
+
+	// Task Task sees the restore through: the recovery, the first base backup, and
+	// what the app was restored with dropped.
+	Task *BasedtoObjectIDResp `json:"task"`
+}
+
+// AppmanageddtoRestoreManagedReq defines model for appmanageddto.RestoreManagedReq.
+type AppmanageddtoRestoreManagedReq struct {
+	// DataVolume DataVolume is the cluster volume the new app keeps its data on, pinned to
+	// a node the archive can be reached from.
+	DataVolume *BasedtoObjectIDReq `json:"dataVolume"`
+
+	// Name Name is the new app's: <app>-restored-<yyyymmdd-hhmmss> when empty.
+	Name   *string                              `json:"name,omitempty"`
+	Target AppmanageddtoManagedRestoreTargetReq `json:"target"`
+}
+
+// AppmanageddtoRestoreManagedResp defines model for appmanageddto.RestoreManagedResp.
+type AppmanageddtoRestoreManagedResp struct {
+	Data *AppmanageddtoRestoreManagedDataResp `json:"data"`
+	Meta *BasedtoMeta                         `json:"meta"`
+}
+
+// AppmanageddtoSwitchManagedDataResp defines model for appmanageddto.SwitchManagedDataResp.
+type AppmanageddtoSwitchManagedDataResp struct {
+	// Deployments Deployments are the consumers' deployments queued, with redeploy.
+	Deployments *[]AppmanageddtoManagedSwitchDeploymentResp `json:"deployments"`
+
+	// Switched Switched are the consumers switched.
+	Switched *[]BasedtoObjectIDResp `json:"switched"`
+}
+
+// AppmanageddtoSwitchManagedReq defines model for appmanageddto.SwitchManagedReq.
+type AppmanageddtoSwitchManagedReq struct {
+	Consumers *[]BasedtoObjectIDReq `json:"consumers"`
+	Redeploy  bool                  `json:"redeploy"`
+}
+
+// AppmanageddtoSwitchManagedResp defines model for appmanageddto.SwitchManagedResp.
+type AppmanageddtoSwitchManagedResp struct {
+	Data *AppmanageddtoSwitchManagedDataResp `json:"data"`
+	Meta *BasedtoMeta                        `json:"meta"`
+}
+
+// AppmanageddtoUnmanageAppReq defines model for appmanageddto.UnmanageAppReq.
+type AppmanageddtoUnmanageAppReq = map[string]interface{}
+
+// AppmanageddtoUnmanageAppResp defines model for appmanageddto.UnmanageAppResp.
+type AppmanageddtoUnmanageAppResp struct {
+	Meta *BasedtoMeta `json:"meta"`
+}
+
+// AppmanageddtoUpdateManagedSettingsReq defines model for appmanageddto.UpdateManagedSettingsReq.
+type AppmanageddtoUpdateManagedSettingsReq struct {
+	// BackupFrom BackupFrom is the replica the base backups are taken on, sparing the
+	// database: {"id": ""} takes them on the database again. Retention runs on the
+	// database either way.
+	BackupFrom         *BasedtoObjectIDReq `json:"backupFrom,omitempty"`
+	BaseBackupSchedule *string             `json:"baseBackupSchedule,omitempty"`
+
+	// DumpRepo DumpRepo is the backup repository the database is dumped into: one turns
+	// dumps on, {"id": ""} turns them off.
+	DumpRepo *BasedtoObjectIDReq `json:"dumpRepo,omitempty"`
+
+	// DumpSchedule DumpSchedule is when the dump runs, a cron expression read in the
+	// installation's timezone; kept while dumps are off.
+	DumpSchedule *string `json:"dumpSchedule,omitempty"`
+
+	// RestoreTest RestoreTest moves the restore test: into a verifier app, made for it, or
+	// back into the database's container, which deletes the verifier.
+	RestoreTest         *AppmanageddtoManagedRestoreTestReq `json:"restoreTest,omitempty"`
+	RestoreTestQuery    *string                             `json:"restoreTestQuery,omitempty"`
+	RestoreTestSchedule *string                             `json:"restoreTestSchedule,omitempty"`
+	RetainFull          *int                                `json:"retainFull,omitempty"`
+	UpdateVer           int                                 `json:"updateVer"`
+}
+
+// AppmanageddtoUpdateManagedSettingsResp defines model for appmanageddto.UpdateManagedSettingsResp.
+type AppmanageddtoUpdateManagedSettingsResp struct {
+	Meta *BasedtoMeta `json:"meta"`
+}
+
+// AppmanageddtoUpdateRestorePointReq defines model for appmanageddto.UpdateRestorePointReq.
+type AppmanageddtoUpdateRestorePointReq struct {
+	KeepUntil *string `json:"keepUntil"`
+	Note      string  `json:"note"`
+}
+
+// AppmanageddtoUpdateRestorePointResp defines model for appmanageddto.UpdateRestorePointResp.
+type AppmanageddtoUpdateRestorePointResp struct {
+	Meta *BasedtoMeta `json:"meta"`
+}
+
+// AppmanageddtoUpgradeManagedScriptsDataResp defines model for appmanageddto.UpgradeManagedScriptsDataResp.
+type AppmanageddtoUpgradeManagedScriptsDataResp struct {
+	Deployments *[]AppmanageddtoManagedDeploymentResp `json:"deployments"`
+	Fingerprint string                                `json:"fingerprint"`
+	Revision    string                                `json:"revision"`
+}
+
+// AppmanageddtoUpgradeManagedScriptsReq defines model for appmanageddto.UpgradeManagedScriptsReq.
+type AppmanageddtoUpgradeManagedScriptsReq struct {
+	// Fingerprint Fingerprint is the available fingerprint the person reviewed: the upgrade is
+	// refused when the revision offers another since.
+	Fingerprint string `json:"fingerprint"`
+}
+
+// AppmanageddtoUpgradeManagedScriptsResp defines model for appmanageddto.UpgradeManagedScriptsResp.
+type AppmanageddtoUpgradeManagedScriptsResp struct {
+	Data *AppmanageddtoUpgradeManagedScriptsDataResp `json:"data"`
+	Meta *BasedtoMeta                                `json:"meta"`
+}
+
 // AppmetricsdtoAppDependencyAppResp defines model for appmetricsdto.AppDependencyAppResp.
 type AppmetricsdtoAppDependencyAppResp struct {
 	Id   string `json:"id"`
@@ -4993,8 +5760,12 @@ type AppsettingsdtoDeploymentSettingsResp struct {
 	PostDeploymentCommand *string                                  `json:"postDeploymentCommand,omitempty"`
 	PreDeploymentCommand  *string                                  `json:"preDeploymentCommand,omitempty"`
 	RepoSource            *AppsettingsdtoDeploymentRepoSourceResp  `json:"repoSource,omitempty"`
-	UpdateVer             int                                      `json:"updateVer"`
-	WorkingDir            *string                                  `json:"workingDir,omitempty"`
+
+	// RestorePointBeforeDeploy RestorePointBeforeDeploy is the managed database each deployment marks a
+	// restore point on first, null for none.
+	RestorePointBeforeDeploy *BasedtoObjectIDResp `json:"restorePointBeforeDeploy"`
+	UpdateVer                int                  `json:"updateVer"`
+	WorkingDir               *string              `json:"workingDir,omitempty"`
 }
 
 // AppsettingsdtoDockerfileTemplateResp defines model for appsettingsdto.DockerfileTemplateResp.
@@ -5925,8 +6696,13 @@ type AppsettingsdtoUpdateAppDeploymentSettingsReq struct {
 	PostDeploymentCommand string                                     `json:"postDeploymentCommand"`
 	PreDeploymentCommand  string                                     `json:"preDeploymentCommand"`
 	RepoSource            *AppsettingsdtoDeploymentRepoSourceReq     `json:"repoSource"`
-	UpdateVer             int                                        `json:"updateVer"`
-	WorkingDir            string                                     `json:"workingDir"`
+
+	// RestorePointBeforeDeploy RestorePointBeforeDeploy is a managed database of the app's environment
+	// that each deployment marks a restore point on before its pre-deploy
+	// command. Left out, or null, marks none.
+	RestorePointBeforeDeploy *BasedtoObjectIDReq `json:"restorePointBeforeDeploy"`
+	UpdateVer                int                 `json:"updateVer"`
+	WorkingDir               string              `json:"workingDir"`
 }
 
 // AppsettingsdtoUpdateAppDeploymentSettingsResp defines model for appsettingsdto.UpdateAppDeploymentSettingsResp.
@@ -6158,9 +6934,13 @@ type ApptemplatedtoAppTemplateCapabilitiesResp struct {
 // ApptemplatedtoAppTemplateCatalogResp defines model for apptemplatedto.AppTemplateCatalogResp.
 type ApptemplatedtoAppTemplateCatalogResp struct {
 	Categories *[]ApptemplatedtoAppTemplateCategoryResp `json:"categories"`
-	Revision   string                                   `json:"revision"`
-	Source     string                                   `json:"source"`
-	Tags       *[]ApptemplatedtoAppTemplateTagResp      `json:"tags"`
+
+	// ManagedCount ManagedCount is how many managed templates the store would show: what
+	// listing with managed=true returns.
+	ManagedCount int                                 `json:"managedCount"`
+	Revision     string                              `json:"revision"`
+	Source       string                              `json:"source"`
+	Tags         *[]ApptemplatedtoAppTemplateTagResp `json:"tags"`
 }
 
 // ApptemplatedtoAppTemplateCategoryResp defines model for apptemplatedto.AppTemplateCategoryResp.
@@ -6273,6 +7053,14 @@ type ApptemplatedtoAppTemplateLinksResp struct {
 	Website       *string `json:"website,omitempty"`
 }
 
+// ApptemplatedtoAppTemplateManagedDefaultsResp defines model for apptemplatedto.AppTemplateManagedDefaultsResp.
+type ApptemplatedtoAppTemplateManagedDefaultsResp struct {
+	ArchiveTimeout      string `json:"archiveTimeout"`
+	BaseBackupSchedule  string `json:"baseBackupSchedule"`
+	RestoreTestSchedule string `json:"restoreTestSchedule"`
+	RetainFull          int    `json:"retainFull"`
+}
+
 // ApptemplatedtoAppTemplateParamOptionResp defines model for apptemplatedto.AppTemplateParamOptionResp.
 type ApptemplatedtoAppTemplateParamOptionResp struct {
 	Title string `json:"title"`
@@ -6343,24 +7131,33 @@ type ApptemplatedtoAppTemplateResp struct {
 	// DockerApi DockerAPI is the Docker API creating this template gives the app, and is
 	// null for the templates that give none. Creating one needs Write on the
 	// Cluster module, like capabilities.
-	DockerApi  *ApptemplatedtoAppTemplateDockerAPIResp `json:"dockerApi"`
-	IconUrl    string                                  `json:"iconUrl"`
-	License    string                                  `json:"license"`
-	Links      *ApptemplatedtoAppTemplateLinksResp     `json:"links"`
-	Name       string                                  `json:"name"`
-	Parameters *[]ApptemplatedtoAppTemplateParamResp   `json:"parameters"`
+	DockerApi *ApptemplatedtoAppTemplateDockerAPIResp `json:"dockerApi"`
+	IconUrl   string                                  `json:"iconUrl"`
+	License   string                                  `json:"license"`
+	Links     *ApptemplatedtoAppTemplateLinksResp     `json:"links"`
+
+	// Managed Managed, RequiresFeatures and MissingFeatures are the listing's.
+	Managed string `json:"managed"`
+
+	// ManagedDefaults ManagedDefaults are what a managed template's create form starts from; null
+	// for any other template. A zero field is the engine's own default.
+	ManagedDefaults *ApptemplatedtoAppTemplateManagedDefaultsResp `json:"managedDefaults"`
+	MissingFeatures *[]string                                     `json:"missingFeatures"`
+	Name            string                                        `json:"name"`
+	Parameters      *[]ApptemplatedtoAppTemplateParamResp         `json:"parameters"`
 
 	// PublishedPorts PublishedPorts are the addresses this app claims on the cluster itself,
 	// beside the web addresses the reverse proxy serves. Two apps cannot share
 	// one, so they are shown before anybody deploys.
-	PublishedPorts *[]ApptemplatedtoAppTemplatePortResp    `json:"publishedPorts"`
-	Revision       string                                  `json:"revision"`
-	Source         string                                  `json:"source"`
-	Tagline        string                                  `json:"tagline"`
-	Tags           *[]string                               `json:"tags"`
-	Title          string                                  `json:"title"`
-	Variants       *[]ApptemplatedtoAppTemplateVariantResp `json:"variants"`
-	Versions       *[]ApptemplatedtoAppTemplateVersionResp `json:"versions"`
+	PublishedPorts   *[]ApptemplatedtoAppTemplatePortResp    `json:"publishedPorts"`
+	RequiresFeatures *[]string                               `json:"requiresFeatures"`
+	Revision         string                                  `json:"revision"`
+	Source           string                                  `json:"source"`
+	Tagline          string                                  `json:"tagline"`
+	Tags             *[]string                               `json:"tags"`
+	Title            string                                  `json:"title"`
+	Variants         *[]ApptemplatedtoAppTemplateVariantResp `json:"variants"`
+	Versions         *[]ApptemplatedtoAppTemplateVersionResp `json:"versions"`
 }
 
 // ApptemplatedtoAppTemplateSummaryResp defines model for apptemplatedto.AppTemplateSummaryResp.
@@ -6388,7 +7185,12 @@ type ApptemplatedtoAppTemplateSummaryResp struct {
 	Dependencies *[]ApptemplatedtoAppTemplateDependencySummaryResp `json:"dependencies"`
 	IconUrl      string                                            `json:"iconUrl"`
 	License      string                                            `json:"license"`
-	Name         string                                            `json:"name"`
+
+	// Managed Managed is the engine that looks after what the template creates, and ""
+	// for an ordinary template. The store marks the managed ones.
+	Managed         string    `json:"managed"`
+	MissingFeatures *[]string `json:"missingFeatures"`
+	Name            string    `json:"name"`
 
 	// RequiresCapabilities RequiresCapabilities says creating this template grants the app kernel
 	// capabilities, sysctls, ulimits or the GPU. The store marks those, and only
@@ -6398,6 +7200,12 @@ type ApptemplatedtoAppTemplateSummaryResp struct {
 	// RequiresDockerApi RequiresDockerAPI says creating this template gives an app the Docker API,
 	// behind the same permission. The store marks those too.
 	RequiresDockerApi bool `json:"requiresDockerApi"`
+
+	// RequiresFeatures RequiresFeatures are the license features creating the template needs, and
+	// MissingFeatures those of them the license in force does not grant. The
+	// store shows what is missing, and the plans that include it, instead of a
+	// form that would be refused.
+	RequiresFeatures *[]string `json:"requiresFeatures"`
 
 	// Stars Stars are the GitHub stars of the project the template runs, and
 	// StarsGained the ones of the last 28 days; 0 for a project not counted.
@@ -6461,6 +7269,10 @@ type ApptemplatedtoCreateAppFromTemplateDataResp struct {
 	// Deployment Deployment is the app's first deployment, already queued: it pulls the
 	// template's image.
 	Deployment *BasedtoObjectIDResp `json:"deployment"`
+
+	// Managed Managed is what the engine of a managed template set up, and null for any
+	// other template.
+	Managed *ApptemplatedtoCreatedManagedResp `json:"managed"`
 }
 
 // ApptemplatedtoCreateAppFromTemplateReq defines model for apptemplatedto.CreateAppFromTemplateReq.
@@ -6474,7 +7286,12 @@ type ApptemplatedtoCreateAppFromTemplateReq struct {
 	// the template's and is not asked for: everything else the template says is
 	// only correct for that software.
 	ImageTag string `json:"imageTag"`
-	Name     string `json:"name"`
+
+	// Managed Managed is how the engine of a managed template looks after the app: where
+	// it archives, and what the template's defaults are changed to. Required for
+	// a managed template, and refused for any other.
+	Managed *ApptemplatedtoManagedCreateReq `json:"managed,omitempty"`
+	Name    string                          `json:"name"`
 
 	// Params Params are JSON values of each parameter's type; a size is a string such as "1GB".
 	Params *map[string]interface{} `json:"params"`
@@ -6514,6 +7331,11 @@ type ApptemplatedtoCreatedDependencyResp struct {
 	Name string `json:"name"`
 }
 
+// ApptemplatedtoCreatedManagedResp defines model for apptemplatedto.CreatedManagedResp.
+type ApptemplatedtoCreatedManagedResp struct {
+	Placement string `json:"placement"`
+}
+
 // ApptemplatedtoGetAppTemplateBindingResp defines model for apptemplatedto.GetAppTemplateBindingResp.
 type ApptemplatedtoGetAppTemplateBindingResp struct {
 	Data *ApptemplatedtoAppTemplateBindingResp `json:"data"`
@@ -6544,6 +7366,36 @@ type ApptemplatedtoListAppTemplatesResp struct {
 	Meta *BasedtoListMeta                        `json:"meta"`
 }
 
+// ApptemplatedtoManagedCreateReq defines model for apptemplatedto.ManagedCreateReq.
+type ApptemplatedtoManagedCreateReq struct {
+	ArchiveTimeout     *string `json:"archiveTimeout,omitempty"`
+	BaseBackupSchedule *string `json:"baseBackupSchedule,omitempty"`
+
+	// Dump Dump is the database's logical dump (pg_dump, mariadb-dump) into a backup
+	// repository. Left out, a
+	// database that archives into a backup repository is dumped into it too, and
+	// one that archives into cloud storage is not dumped until a repository is
+	// chosen.
+	Dump                *ApptemplatedtoManagedDumpReq   `json:"dump,omitempty"`
+	RestoreTestQuery    *string                         `json:"restoreTestQuery,omitempty"`
+	RestoreTestSchedule *string                         `json:"restoreTestSchedule,omitempty"`
+	RetainFull          *int                            `json:"retainFull,omitempty"`
+	Storage             ApptemplatedtoManagedStorageReq `json:"storage"`
+}
+
+// ApptemplatedtoManagedDumpReq defines model for apptemplatedto.ManagedDumpReq.
+type ApptemplatedtoManagedDumpReq struct {
+	Repo     *BasedtoObjectIDReq `json:"repo"`
+	Schedule *string             `json:"schedule,omitempty"`
+}
+
+// ApptemplatedtoManagedStorageReq defines model for apptemplatedto.ManagedStorageReq.
+type ApptemplatedtoManagedStorageReq struct {
+	BackupRepo   *BasedtoObjectIDReq `json:"backupRepo,omitempty"`
+	CloudStorage *BasedtoObjectIDReq `json:"cloudStorage,omitempty"`
+	KeyAuth      *BasedtoObjectIDReq `json:"keyAuth,omitempty"`
+}
+
 // ApptemplatedtoPreflightAppFromTemplateReq defines model for apptemplatedto.PreflightAppFromTemplateReq.
 type ApptemplatedtoPreflightAppFromTemplateReq struct {
 	// DependencyParams DependencyParams are the values a person gave for each dependency the
@@ -6555,7 +7407,12 @@ type ApptemplatedtoPreflightAppFromTemplateReq struct {
 	// the template's and is not asked for: everything else the template says is
 	// only correct for that software.
 	ImageTag string `json:"imageTag"`
-	Name     string `json:"name"`
+
+	// Managed Managed is how the engine of a managed template looks after the app: where
+	// it archives, and what the template's defaults are changed to. Required for
+	// a managed template, and refused for any other.
+	Managed *ApptemplatedtoManagedCreateReq `json:"managed,omitempty"`
+	Name    string                          `json:"name"`
 
 	// Params Params are JSON values of each parameter's type; a size is a string such as "1GB".
 	Params *map[string]interface{} `json:"params"`
@@ -7197,6 +8054,18 @@ type BaseImageScanSource string
 
 // BaseImageScanStatus defines model for base.ImageScanStatus.
 type BaseImageScanStatus string
+
+// BaseLicenseLimit defines model for base.LicenseLimit.
+type BaseLicenseLimit string
+
+// BaseLicensePlan defines model for base.LicensePlan.
+type BaseLicensePlan string
+
+// BaseLicenseRefreshResult defines model for base.LicenseRefreshResult.
+type BaseLicenseRefreshResult string
+
+// BaseLicenseStatus defines model for base.LicenseStatus.
+type BaseLicenseStatus string
 
 // BaseLoggingBackendType defines model for base.LoggingBackendType.
 type BaseLoggingBackendType string
@@ -8404,7 +9273,13 @@ type EntityAppDeploymentSettings struct {
 	PostDeploymentCommand *string                         `json:"postDeploymentCommand,omitempty"`
 	PreDeploymentCommand  *string                         `json:"preDeploymentCommand,omitempty"`
 	RepoSource            *EntityDeploymentRepoSource     `json:"repoSource"`
-	WorkingDir            *string                         `json:"workingDir,omitempty"`
+
+	// RestorePointBeforeDeploy RestorePointBeforeDeploy is a managed database of the app's environment
+	// that each deployment marks a restore point on before its pre-deploy
+	// command, so that a migration that breaks data has its way back already
+	// marked. Empty marks none.
+	RestorePointBeforeDeploy string  `json:"restorePointBeforeDeploy"`
+	WorkingDir               *string `json:"workingDir,omitempty"`
 }
 
 // EntityBaseEventNotification defines model for entity.BaseEventNotification.
@@ -9575,10 +10450,15 @@ type HperrorsErrorInfo struct {
 	Detail       string                    `json:"detail"`
 	DisplayLevel *HperrorsDisplayLevel     `json:"displayLevel,omitempty"`
 	Errors       *[]HperrorsInnerErrorInfo `json:"errors,omitempty"`
-	StackTrace   *string                   `json:"stackTrace,omitempty"`
-	Status       int                       `json:"status"`
-	Title        string                    `json:"title"`
-	Type         *string                   `json:"type,omitempty"`
+
+	// Params Params are values a client may act on, beside the message they appear in:
+	// the limit a refused creation reached, for one. Most errors have none; which
+	// an error has is part of what its code means.
+	Params     *map[string]interface{} `json:"params,omitempty"`
+	StackTrace *string                 `json:"stackTrace,omitempty"`
+	Status     int                     `json:"status"`
+	Title      string                  `json:"title"`
+	Type       *string                 `json:"type,omitempty"`
 }
 
 // HperrorsInnerErrorInfo defines model for hperrors.InnerErrorInfo.
@@ -10117,6 +10997,111 @@ type KeyauthdtoUpdateKeyAuthStatusReq struct {
 // KeyauthdtoUpdateKeyAuthStatusResp defines model for keyauthdto.UpdateKeyAuthStatusResp.
 type KeyauthdtoUpdateKeyAuthStatusResp struct {
 	Meta *BasedtoMeta `json:"meta"`
+}
+
+// LicensedtoGetLicenseResp defines model for licensedto.GetLicenseResp.
+type LicensedtoGetLicenseResp struct {
+	Data *LicensedtoLicenseResp `json:"data"`
+	Meta *BasedtoMeta           `json:"meta"`
+}
+
+// LicensedtoLicenseLimitResp defines model for licensedto.LicenseLimitResp.
+type LicensedtoLicenseLimitResp struct {
+	Limit BaseLicenseLimit `json:"limit"`
+
+	// Max Max is null when the plan in force does not limit the kind. Sign-in
+	// providers are 0 or null: no paid kind can be added, or every one can.
+	Max *int `json:"max"`
+
+	// Used Used is how many there are, counted as a creation counts them. For sign-in
+	// providers it is the paid ones active.
+	Used int `json:"used"`
+}
+
+// LicensedtoLicensePortalResp defines model for licensedto.LicensePortalResp.
+type LicensedtoLicensePortalResp struct {
+	AccountUrl string `json:"accountUrl"`
+	PricingUrl string `json:"pricingUrl"`
+	TrialUrl   string `json:"trialUrl"`
+	Url        string `json:"url"`
+}
+
+// LicensedtoLicenseRefreshResp defines model for licensedto.LicenseRefreshResp.
+type LicensedtoLicenseRefreshResp struct {
+	// Enabled Enabled is the daily check on. When it is off, a person can still ask now.
+	Enabled bool `json:"enabled"`
+
+	// LastCheckedAt LastCheckedAt is when the portal was last asked, whatever came of it.
+	LastCheckedAt *string `json:"lastCheckedAt,omitempty"`
+
+	// LastError LastError says why the last check failed.
+	LastError  *string                   `json:"lastError,omitempty"`
+	LastResult *BaseLicenseRefreshResult `json:"lastResult,omitempty"`
+}
+
+// LicensedtoLicenseResp defines model for licensedto.LicenseResp.
+type LicensedtoLicenseResp struct {
+	CustomerName *string `json:"customerName,omitempty"`
+
+	// Development Development is a key signed by the development keys, which only a backend
+	// in the development environment accepts.
+	Development bool    `json:"development"`
+	ExpiresAt   *string `json:"expiresAt,omitempty"`
+
+	// GraceEndsAt GraceEndsAt is when a key for this installation stops holding: its grace
+	// after it expires, or after it was moved if that comes first.
+	GraceEndsAt *string `json:"graceEndsAt,omitempty"`
+
+	// InstallationId InstallationID is the ID a key names this installation by: its swarm's.
+	// It is empty when docker cannot say.
+	InstallationId string `json:"installationId"`
+
+	// Installations Installations are the IDs of the installations the key is for.
+	Installations *[]string        `json:"installations,omitempty"`
+	IssuedAt      *string          `json:"issuedAt,omitempty"`
+	KeyPlan       *BaseLicensePlan `json:"keyPlan,omitempty"`
+	LicenseId     *string          `json:"licenseId,omitempty"`
+
+	// Limits Limits has every kind a plan can limit, in the same order every time.
+	Limits *[]LicensedtoLicenseLimitResp `json:"limits"`
+
+	// MovedAt MovedAt is when the key was moved to another installation.
+	MovedAt *string         `json:"movedAt,omitempty"`
+	Plan    BaseLicensePlan `json:"plan"`
+
+	// Portal Portal is where a key is bought, a trial started, and the keys bought kept.
+	Portal *LicensedtoLicensePortalResp `json:"portal"`
+
+	// Reason Reason says why the key is invalid.
+	Reason *string `json:"reason,omitempty"`
+
+	// Refresh Refresh is the daily check with the portal for a newer key.
+	Refresh *LicensedtoLicenseRefreshResp `json:"refresh"`
+	Status  BaseLicenseStatus             `json:"status"`
+	Trial   bool                          `json:"trial"`
+}
+
+// LicensedtoRefreshLicenseDataResp defines model for licensedto.RefreshLicenseDataResp.
+type LicensedtoRefreshLicenseDataResp struct {
+	License *LicensedtoLicenseResp   `json:"license"`
+	Result  BaseLicenseRefreshResult `json:"result"`
+}
+
+// LicensedtoRefreshLicenseResp defines model for licensedto.RefreshLicenseResp.
+type LicensedtoRefreshLicenseResp struct {
+	Data *LicensedtoRefreshLicenseDataResp `json:"data"`
+	Meta *BasedtoMeta                      `json:"meta"`
+}
+
+// LicensedtoUpdateLicenseReq defines model for licensedto.UpdateLicenseReq.
+type LicensedtoUpdateLicenseReq struct {
+	Key string `json:"key"`
+}
+
+// LicensedtoUpdateLicenseResp defines model for licensedto.UpdateLicenseResp.
+type LicensedtoUpdateLicenseResp struct {
+	Data *LicensedtoLicenseResp `json:"data"`
+	Meta *BasedtoMeta           `json:"meta"`
 }
 
 // LoggingdtoBackendReq defines model for loggingdto.BackendReq.
@@ -10866,6 +11851,9 @@ type OauthdtoCreateOAuthReq struct {
 	ProfileURL       string        `json:"profileURL"`
 	Scopes           *[]string     `json:"scopes"`
 	TokenURL         string        `json:"tokenURL"`
+
+	// TrustEmail TrustEmail, for an OpenID Connect provider only, takes the email it gives as verified without email_verified.
+	TrustEmail bool `json:"trustEmail"`
 }
 
 // OauthdtoCreateOAuthResp defines model for oauthdto.CreateOAuthResp.
@@ -10919,6 +11907,7 @@ type OauthdtoOAuthResp struct {
 	Size             *int              `json:"size,omitempty"`
 	Status           BaseSettingStatus `json:"status"`
 	TokenURL         *string           `json:"tokenURL,omitempty"`
+	TrustEmail       *bool             `json:"trustEmail,omitempty"`
 	Type             BaseSettingType   `json:"type"`
 	UpdateVer        int               `json:"updateVer"`
 	UpdatedAt        string            `json:"updatedAt"`
@@ -10938,7 +11927,10 @@ type OauthdtoUpdateOAuthReq struct {
 	ProfileURL       string        `json:"profileURL"`
 	Scopes           *[]string     `json:"scopes"`
 	TokenURL         string        `json:"tokenURL"`
-	UpdateVer        int           `json:"updateVer"`
+
+	// TrustEmail TrustEmail, for an OpenID Connect provider only, takes the email it gives as verified without email_verified.
+	TrustEmail bool `json:"trustEmail"`
+	UpdateVer  int  `json:"updateVer"`
 }
 
 // OauthdtoUpdateOAuthResp defines model for oauthdto.UpdateOAuthResp.
@@ -12138,8 +13130,13 @@ type SchedjobdtoEnvSchedJobResp struct {
 	Inherited       *bool                                  `json:"inherited,omitempty"`
 	JobType         BaseSchedJobType                       `json:"jobType"`
 	Kind            string                                 `json:"kind"`
-	MaxRetry        int                                    `json:"maxRetry"`
-	Name            string                                 `json:"name"`
+
+	// ManagedBy ManagedBy is the app-managed setting of the engine that made the job, and
+	// null for a job a person made. The dashboard shows a managed job read-only:
+	// editing, pausing and deleting it are refused.
+	ManagedBy *BasedtoObjectIDResp `json:"managedBy"`
+	MaxRetry  int                  `json:"maxRetry"`
+	Name      string               `json:"name"`
 
 	// NextRuns Calculated fields
 	NextRuns           *[]string                         `json:"nextRuns,omitempty"`
@@ -12257,8 +13254,13 @@ type SchedjobdtoSchedJobResp struct {
 	Inherited       *bool                                  `json:"inherited,omitempty"`
 	JobType         BaseSchedJobType                       `json:"jobType"`
 	Kind            string                                 `json:"kind"`
-	MaxRetry        int                                    `json:"maxRetry"`
-	Name            string                                 `json:"name"`
+
+	// ManagedBy ManagedBy is the app-managed setting of the engine that made the job, and
+	// null for a job a person made. The dashboard shows a managed job read-only:
+	// editing, pausing and deleting it are refused.
+	ManagedBy *BasedtoObjectIDResp `json:"managedBy"`
+	MaxRetry  int                  `json:"maxRetry"`
+	Name      string               `json:"name"`
 
 	// NextRuns Calculated fields
 	NextRuns           *[]string                         `json:"nextRuns,omitempty"`
@@ -14874,6 +15876,9 @@ type ListAppTemplatesParams struct {
 	// Search matches name, title, tagline, tags and aliases, ignoring case
 	Search *string `form:"search,omitempty" json:"search,omitempty"`
 
+	// Managed true keeps the managed templates: databases HivePaaS backs up and restores
+	Managed *bool `form:"managed,omitempty" json:"managed,omitempty"`
+
 	// Sort name (the default), stars, trending or added; a leading minus reverses it
 	Sort *string `form:"sort,omitempty" json:"sort,omitempty"`
 
@@ -14891,6 +15896,12 @@ type GetAppTemplateImageTagsParams struct {
 
 	// Variant template variant; empty for the default
 	Variant *string `form:"variant,omitempty" json:"variant,omitempty"`
+}
+
+// SsoOAuthBeginParams defines parameters for SsoOAuthBegin.
+type SsoOAuthBeginParams struct {
+	// TrustedDeviceId the device to trust, so no passcode is asked on it for a while
+	TrustedDeviceId *string `form:"trustedDeviceId,omitempty" json:"trustedDeviceId,omitempty"`
 }
 
 // ListClusterNetworkParams defines parameters for ListClusterNetwork.
@@ -15632,6 +16643,9 @@ type ListProjectEnvAppParams struct {
 type DeleteAppParams struct {
 	// RemoveStorage `removeStorage=true` also deletes the data the app keeps on volumes
 	RemoveStorage *bool `form:"removeStorage,omitempty" json:"removeStorage,omitempty"`
+
+	// DeleteCluster `deleteCluster=true` deletes a promoted-over database with its cluster
+	DeleteCluster *bool `form:"deleteCluster,omitempty" json:"deleteCluster,omitempty"`
 }
 
 // GetAppParams defines parameters for GetApp.
@@ -17632,6 +18646,36 @@ type TestRunFunctionJSONRequestBody = AppdtoTestRunFunctionReq
 // UpdateAppKindSettingsJSONRequestBody defines body for UpdateAppKindSettings for application/json ContentType.
 type UpdateAppKindSettingsJSONRequestBody = AppsettingsdtoUpdateAppKindSettingsReq
 
+// AppManagedSettingsUpdateJSONRequestBody defines body for AppManagedSettingsUpdate for application/json ContentType.
+type AppManagedSettingsUpdateJSONRequestBody = AppmanageddtoUpdateManagedSettingsReq
+
+// AppManagedPromoteJSONRequestBody defines body for AppManagedPromote for application/json ContentType.
+type AppManagedPromoteJSONRequestBody = AppmanageddtoPromoteManagedMemberReq
+
+// AppManagedCredentialsRefreshJSONRequestBody defines body for AppManagedCredentialsRefresh for application/json ContentType.
+type AppManagedCredentialsRefreshJSONRequestBody = AppmanageddtoRefreshManagedCredentialsReq
+
+// AppManagedReplicaAddJSONRequestBody defines body for AppManagedReplicaAdd for application/json ContentType.
+type AppManagedReplicaAddJSONRequestBody = AppmanageddtoAddManagedReplicaReq
+
+// AppManagedRestoreJSONRequestBody defines body for AppManagedRestore for application/json ContentType.
+type AppManagedRestoreJSONRequestBody = AppmanageddtoRestoreManagedReq
+
+// AppManagedRestorePointCreateJSONRequestBody defines body for AppManagedRestorePointCreate for application/json ContentType.
+type AppManagedRestorePointCreateJSONRequestBody = AppmanageddtoCreateRestorePointReq
+
+// AppManagedRestorePointUpdateJSONRequestBody defines body for AppManagedRestorePointUpdate for application/json ContentType.
+type AppManagedRestorePointUpdateJSONRequestBody = AppmanageddtoUpdateRestorePointReq
+
+// AppManagedScriptsUpgradeJSONRequestBody defines body for AppManagedScriptsUpgrade for application/json ContentType.
+type AppManagedScriptsUpgradeJSONRequestBody = AppmanageddtoUpgradeManagedScriptsReq
+
+// AppManagedSwitchJSONRequestBody defines body for AppManagedSwitch for application/json ContentType.
+type AppManagedSwitchJSONRequestBody = AppmanageddtoSwitchManagedReq
+
+// AppManagedUnmanageJSONRequestBody defines body for AppManagedUnmanage for application/json ContentType.
+type AppManagedUnmanageJSONRequestBody = AppmanageddtoUnmanageAppReq
+
 // UpdateAppNetworkSettingsJSONRequestBody defines body for UpdateAppNetworkSettings for application/json ContentType.
 type UpdateAppNetworkSettingsJSONRequestBody = AppsettingsdtoUpdateAppNetworkSettingsReq
 
@@ -18208,6 +19252,9 @@ type RevertHivePaaSServiceSettingsJSONRequestBody = HpappsettingsdtoRevertServic
 // UpdateHivePaaSAppVersionJSONRequestBody defines body for UpdateHivePaaSAppVersion for application/json ContentType.
 type UpdateHivePaaSAppVersionJSONRequestBody = HpappdtoUpdateHpAppReq
 
+// UpdateLicenseJSONRequestBody defines body for UpdateLicense for application/json ContentType.
+type UpdateLicenseJSONRequestBody = LicensedtoUpdateLicenseReq
+
 // UpdateSystemBackupSettingsJSONRequestBody defines body for UpdateSystemBackupSettings for application/json ContentType.
 type UpdateSystemBackupSettingsJSONRequestBody = SystembackupdtoUpdateSystemBackupReq
 
@@ -18520,7 +19567,7 @@ type ClientInterface interface {
 	// SsoOAuthBegin Starts OAuth SSO flow
 	//
 	// Corresponds with GET /auth/sso/{provider} (the `SsoOAuthBegin` operationId).
-	SsoOAuthBegin(ctx context.Context, provider string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	SsoOAuthBegin(ctx context.Context, provider string, params *SsoOAuthBeginParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ClearClusterBuildCacheWithBody Clears build cache
 	//
@@ -21113,7 +22160,7 @@ type ClientInterface interface {
 	// and {"type":"end"} as a text message; answers {"type":"done","data":{...}} or
 	// {"type":"error","error":{...}}. Neither the server's nor Traefik's timeouts cut it; a
 	// client sends a message at least every 60 seconds. With progress=true, each binary
-	// message is followed by {"type":"progress","received":<bytes the copy has taken>}.
+	// message is followed by `{"type":"progress","received":<bytes the copy has taken>}`.
 	// Without the websocket upgrade, the request is only checked: 204 when the stream would
 	// be taken, else the error it would get - which a browser cannot read from a refused upgrade.
 	//
@@ -21485,6 +22532,275 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/logs/info (the `GetAppLogsInfo` operationId).
 	GetAppLogsInfo(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedSettingsGet Gets a managed app's settings
+	//
+	// Where the engine archives, how long it keeps what, when its jobs run, and what it owns of the app.
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed (the `AppManagedSettingsGet` operationId).
+	AppManagedSettingsGet(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedSettingsUpdateWithBody Updates a managed app's settings
+	//
+	// Changes the retention, when the base backup and the restore test run, and the restore test's query.
+	// A field left out is left as it is.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/managed (the `AppManagedSettingsUpdate` operationId).
+	AppManagedSettingsUpdateWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedSettingsUpdate Updates a managed app's settings
+	//
+	// Changes the retention, when the base backup and the restore test run, and the restore test's query.
+	// A field left out is left as it is.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/managed (the `AppManagedSettingsUpdate` operationId).
+	AppManagedSettingsUpdate(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedSettingsUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedPromoteWithBody Promotes a replica to a managed database's primary
+	//
+	// In order: what writes now is fenced - kept from starting its server, its service stopped, and
+	// seen stopped; the replica is promoted; the engine's jobs move to it, and the other replicas are
+	// restarted to follow it. Before the replica is promoted, a failure lifts the fence; once whether it
+	// was is not known, the fence stays, and promoting it again finishes the promotion.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/promote (the `AppManagedPromote` operationId).
+	AppManagedPromoteWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedPromote Promotes a replica to a managed database's primary
+	//
+	// In order: what writes now is fenced - kept from starting its server, its service stopped, and
+	// seen stopped; the replica is promoted; the engine's jobs move to it, and the other replicas are
+	// restarted to follow it. Before the replica is promoted, a failure lifts the fence; once whether it
+	// was is not known, the fence stays, and promoting it again finishes the promotion.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/promote (the `AppManagedPromote` operationId).
+	AppManagedPromote(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedPromoteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedCredentialsRefreshWithBody Gives a managed app its archive storage's current credentials
+	//
+	// The credentials were copied into the app when it was made: after rotating the storage's key, this
+	// gives the database the new one. The secrets that changed are mounted again, restarting its task.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/refresh-credentials (the `AppManagedCredentialsRefresh` operationId).
+	AppManagedCredentialsRefreshWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedCredentialsRefresh Gives a managed app its archive storage's current credentials
+	//
+	// The credentials were copied into the app when it was made: after rotating the storage's key, this
+	// gives the database the new one. The secrets that changed are mounted again, restarting its task.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/refresh-credentials (the `AppManagedCredentialsRefresh` operationId).
+	AppManagedCredentialsRefresh(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedCredentialsRefreshJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedReplicaAddWithBody Adds a read replica to a managed database
+	//
+	// An asynchronous replica on a volume of its own, pinned to a node: seeded from the database's
+	// archive, which must be in object storage, then streaming from the database, which is told to
+	// let it in first. The database's scripts must be ones that can run a replica.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas (the `AppManagedReplicaAdd` operationId).
+	AppManagedReplicaAddWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedReplicaAdd Adds a read replica to a managed database
+	//
+	// An asynchronous replica on a volume of its own, pinned to a node: seeded from the database's
+	// archive, which must be in object storage, then streaming from the database, which is told to
+	// let it in first. The database's scripts must be ones that can run a replica.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas (the `AppManagedReplicaAdd` operationId).
+	AppManagedReplicaAdd(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedReplicaAddJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedReplicaRemove Removes a read replica from a managed database
+	//
+	// The replica's app is deleted, with its directory of its volume.
+	//
+	// Corresponds with DELETE /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas/{memberID} (the `AppManagedReplicaRemove` operationId).
+	AppManagedReplicaRemove(ctx context.Context, projectID string, projectEnv string, appID string, memberID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedRestoreWithBody Restores a managed database into a new app
+	//
+	// To the latest, a time, a restore point or a base backup, inside its restore window. The new app is
+	// made from the same template, version and parameters, on the data volume given, and archives to its
+	// own prefix; the source is only read. The task returned sees the restore through.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore (the `AppManagedRestore` operationId).
+	AppManagedRestoreWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedRestore Restores a managed database into a new app
+	//
+	// To the latest, a time, a restore point or a base backup, inside its restore window. The new app is
+	// made from the same template, version and parameters, on the data volume given, and archives to its
+	// own prefix; the source is only read. The task returned sees the restore through.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore (the `AppManagedRestore` operationId).
+	AppManagedRestore(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedRestoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedRestorePointCreateWithBody Names a moment of a managed database, to restore to exactly
+	//
+	// The point is made, and listed once the log it is in (the WAL, for Postgres) is archived; it can
+	// then be restored to for as long as retention keeps the base backup before it, or until keepUntil,
+	// which holds retention back. Names are labels: letters, digits, '.', '_' and '-', at most the
+	// engine's limit (63 for Postgres), not starting with "hp-".
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points (the `AppManagedRestorePointCreate` operationId).
+	AppManagedRestorePointCreateWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedRestorePointCreate Names a moment of a managed database, to restore to exactly
+	//
+	// The point is made, and listed once the log it is in (the WAL, for Postgres) is archived; it can
+	// then be restored to for as long as retention keeps the base backup before it, or until keepUntil,
+	// which holds retention back. Names are labels: letters, digits, '.', '_' and '-', at most the
+	// engine's limit (63 for Postgres), not starting with "hp-".
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points (the `AppManagedRestorePointCreate` operationId).
+	AppManagedRestorePointCreate(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedRestorePointCreateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedRestorePointDelete Removes a restore point's record
+	//
+	// The archive is not touched, and the mark stays in the database's log, harmlessly: restores target
+	// the point's position, never its name.
+	//
+	// Corresponds with DELETE /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points/{name} (the `AppManagedRestorePointDelete` operationId).
+	AppManagedRestorePointDelete(ctx context.Context, projectID string, projectEnv string, appID string, name string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedRestorePointUpdateWithBody Changes how long a restore point is kept, and its note
+	//
+	// Both as given: a null keepUntil keeps the point no longer, and retention moves on at its next run.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points/{name} (the `AppManagedRestorePointUpdate` operationId).
+	AppManagedRestorePointUpdateWithBody(ctx context.Context, projectID string, projectEnv string, appID string, name string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedRestorePointUpdate Changes how long a restore point is kept, and its note
+	//
+	// Both as given: a null keepUntil keeps the point no longer, and retention moves on at its next run.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points/{name} (the `AppManagedRestorePointUpdate` operationId).
+	AppManagedRestorePointUpdate(ctx context.Context, projectID string, projectEnv string, appID string, name string, body AppManagedRestorePointUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedScriptsGet Gets what a managed database's template offers its engine's scripts
+	//
+	// What the installation's revision of the database's template offers of what its engine owns -
+	// its scripts and artifacts - against what the database runs: up-to-date, update-available,
+	// incompatible or unavailable, the changes, and the members out of step. A cluster is read on its
+	// app; a member is refused.
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts (the `AppManagedScriptsGet` operationId).
+	AppManagedScriptsGet(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedScriptsUpgradeWithBody Upgrades a managed database's engine scripts
+	//
+	// Replaces the scripts and artifacts of the database, its members and its verifier with what the
+	// installation's revision of its template offers, in one transaction, then deploys each, the member
+	// that writes last: each restarts once. The fingerprint is the one reviewed (GET .../managed/scripts);
+	// another is refused. A member, a database still restoring, and scripts with nothing to apply are
+	// refused.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts/upgrade (the `AppManagedScriptsUpgrade` operationId).
+	AppManagedScriptsUpgradeWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedScriptsUpgrade Upgrades a managed database's engine scripts
+	//
+	// Replaces the scripts and artifacts of the database, its members and its verifier with what the
+	// installation's revision of its template offers, in one transaction, then deploys each, the member
+	// that writes last: each restarts once. The fingerprint is the one reviewed (GET .../managed/scripts);
+	// another is refused. A member, a database still restoring, and scripts with nothing to apply are
+	// refused.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts/upgrade (the `AppManagedScriptsUpgrade` operationId).
+	AppManagedScriptsUpgrade(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedScriptsUpgradeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedStatusGet Gets a managed app's state
+	//
+	// Archiving, the restore window, the last base backup and restore test, where the archive is,
+	// and suggestions, read from the last run of each of the engine's jobs.
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/status (the `AppManagedStatusGet` operationId).
+	AppManagedStatusGet(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedSwitchGet Lists what switching to a restored database would repoint
+	//
+	// The database this one was restored from, and the apps of the environment that use it: by a
+	// variable naming its key, by its id among their previews' databases, or as their deployments'
+	// restore point. Only for a restored database, once it is ready.
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitchGet` operationId).
+	AppManagedSwitchGet(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedSwitchWithBody Switches consumers to a restored database
+	//
+	// The consumers chosen name this database instead of the one it was restored from: their
+	// variables, their previews' databases and their deployments' restore point. Their variables are
+	// applied to their running services; with redeploy, each whose variables changed is deployed too.
+	// The source keeps running, its jobs paused.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitch` operationId).
+	AppManagedSwitchWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedSwitch Switches consumers to a restored database
+	//
+	// The consumers chosen name this database instead of the one it was restored from: their
+	// variables, their previews' databases and their deployments' restore point. Their variables are
+	// applied to their running services; with redeploy, each whose variables changed is deployed too.
+	// The source keeps running, its jobs paused.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitch` operationId).
+	AppManagedSwitch(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedSwitchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedUnmanageWithBody Makes a managed app an ordinary one
+	//
+	// Removes the engine's state and the jobs it made, and with them the locks. The database keeps
+	// archiving where it did; base backups, retention, the health check and the restore test stop.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/unmanage (the `AppManagedUnmanage` operationId).
+	AppManagedUnmanageWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppManagedUnmanage Makes a managed app an ordinary one
+	//
+	// Removes the engine's state and the jobs it made, and with them the locks. The database keeps
+	// archiving where it did; base backups, retention, the health check and the restore test stop.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/unmanage (the `AppManagedUnmanage` operationId).
+	AppManagedUnmanage(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedUnmanageJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetAppNetworkSettings Gets app network settings
 	//
@@ -25438,6 +26754,55 @@ type ClientInterface interface {
 	// Corresponds with POST /system/hivepaas/update-version (the `UpdateHivePaaSAppVersion` operationId).
 	UpdateHivePaaSAppVersion(ctx context.Context, body UpdateHivePaaSAppVersionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetLicense Gets the license in force
+	//
+	// The plan and status of the license in force, with the key's dates, how many of each limited
+	// kind there are against the plan's limit (max null: no limit), and this installation's ID, which
+	// a key must name. A key that is not in force, such as one for another installation, is described
+	// too. Of the customer only the name is sent, never the email the key carries. With them are the
+	// license portal's pages, for this installation, and whether the daily check for a newer key is on,
+	// with how its last check went.
+	//
+	// Corresponds with GET /system/license (the `GetLicense` operationId).
+	GetLicense(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateLicenseWithBody Installs a license key
+	//
+	// Verifies a license key and stores it in place of the one stored, whatever its plan, and answers
+	// with the license it puts in force. Whitespace in the key is ignored. A key that does not verify,
+	// is for another installation, or is past its grace is refused with 412, and the stored key is
+	// kept. There is no way to remove a key.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /system/license (the `UpdateLicense` operationId).
+	UpdateLicenseWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateLicense Installs a license key
+	//
+	// Verifies a license key and stores it in place of the one stored, whatever its plan, and answers
+	// with the license it puts in force. Whitespace in the key is ignored. A key that does not verify,
+	// is for another installation, or is past its grace is refused with 412, and the stored key is
+	// kept. There is no way to remove a key.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /system/license (the `UpdateLicense` operationId).
+	UpdateLicense(ctx context.Context, body UpdateLicenseJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RefreshLicense Asks the license portal for a newer key
+	//
+	// Asks the license portal now whether there is a newer key than the one stored - a renewal, a plan
+	// change, a paid key replacing a trial - and installs it, or learns that the key was moved to another
+	// installation. Only the stored key and this installation's ID are sent. It asks whether or not the
+	// daily check is switched off. Answers with what the portal said and the license in force after it,
+	// as GET answers it: none, asking nothing, when no key is stored. A portal that cannot be reached is
+	// 503, and one that refuses, or a newer key that cannot be installed, 412; either is recorded as the
+	// last check's error.
+	//
+	// Corresponds with POST /system/license/refresh (the `RefreshLicense` operationId).
+	RefreshLicense(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetSystemBackupSettings Gets backup settings
 	//
 	// Corresponds with GET /system/settings/backup (the `GetSystemBackupSettings` operationId).
@@ -26492,8 +27857,8 @@ func (c *Client) SsoOAuthCallbackPost(ctx context.Context, provider string, reqE
 // SsoOAuthBegin Starts OAuth SSO flow
 //
 // Corresponds with GET /auth/sso/{provider} (the `SsoOAuthBegin` operationId).
-func (c *Client) SsoOAuthBegin(ctx context.Context, provider string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewSsoOAuthBeginRequest(c.Server, provider)
+func (c *Client) SsoOAuthBegin(ctx context.Context, provider string, params *SsoOAuthBeginParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSsoOAuthBeginRequest(c.Server, provider, params)
 	if err != nil {
 		return nil, err
 	}
@@ -33065,7 +34430,7 @@ func (c *Client) UploadFileToAppContainerWithBody(ctx context.Context, projectID
 // and {"type":"end"} as a text message; answers {"type":"done","data":{...}} or
 // {"type":"error","error":{...}}. Neither the server's nor Traefik's timeouts cut it; a
 // client sends a message at least every 60 seconds. With progress=true, each binary
-// message is followed by {"type":"progress","received":<bytes the copy has taken>}.
+// message is followed by `{"type":"progress","received":<bytes the copy has taken>}`.
 // Without the websocket upgrade, the request is only checked: 204 when the stream would
 // be taken, else the error it would get - which a browser cannot read from a refused upgrade.
 //
@@ -33928,6 +35293,535 @@ func (c *Client) GetAppLogHistory(ctx context.Context, projectID string, project
 // Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/logs/info (the `GetAppLogsInfo` operationId).
 func (c *Client) GetAppLogsInfo(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetAppLogsInfoRequest(c.Server, projectID, projectEnv, appID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedSettingsGet Gets a managed app's settings
+//
+// Where the engine archives, how long it keeps what, when its jobs run, and what it owns of the app.
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed (the `AppManagedSettingsGet` operationId).
+func (c *Client) AppManagedSettingsGet(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedSettingsGetRequest(c.Server, projectID, projectEnv, appID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedSettingsUpdateWithBody Updates a managed app's settings
+//
+// Changes the retention, when the base backup and the restore test run, and the restore test's query.
+// A field left out is left as it is.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/managed (the `AppManagedSettingsUpdate` operationId).
+func (c *Client) AppManagedSettingsUpdateWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedSettingsUpdateRequestWithBody(c.Server, projectID, projectEnv, appID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedSettingsUpdate Updates a managed app's settings
+//
+// Changes the retention, when the base backup and the restore test run, and the restore test's query.
+// A field left out is left as it is.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/managed (the `AppManagedSettingsUpdate` operationId).
+func (c *Client) AppManagedSettingsUpdate(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedSettingsUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedSettingsUpdateRequest(c.Server, projectID, projectEnv, appID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedPromoteWithBody Promotes a replica to a managed database's primary
+//
+// In order: what writes now is fenced - kept from starting its server, its service stopped, and
+// seen stopped; the replica is promoted; the engine's jobs move to it, and the other replicas are
+// restarted to follow it. Before the replica is promoted, a failure lifts the fence; once whether it
+// was is not known, the fence stays, and promoting it again finishes the promotion.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/promote (the `AppManagedPromote` operationId).
+func (c *Client) AppManagedPromoteWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedPromoteRequestWithBody(c.Server, projectID, projectEnv, appID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedPromote Promotes a replica to a managed database's primary
+//
+// In order: what writes now is fenced - kept from starting its server, its service stopped, and
+// seen stopped; the replica is promoted; the engine's jobs move to it, and the other replicas are
+// restarted to follow it. Before the replica is promoted, a failure lifts the fence; once whether it
+// was is not known, the fence stays, and promoting it again finishes the promotion.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/promote (the `AppManagedPromote` operationId).
+func (c *Client) AppManagedPromote(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedPromoteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedPromoteRequest(c.Server, projectID, projectEnv, appID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedCredentialsRefreshWithBody Gives a managed app its archive storage's current credentials
+//
+// The credentials were copied into the app when it was made: after rotating the storage's key, this
+// gives the database the new one. The secrets that changed are mounted again, restarting its task.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/refresh-credentials (the `AppManagedCredentialsRefresh` operationId).
+func (c *Client) AppManagedCredentialsRefreshWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedCredentialsRefreshRequestWithBody(c.Server, projectID, projectEnv, appID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedCredentialsRefresh Gives a managed app its archive storage's current credentials
+//
+// The credentials were copied into the app when it was made: after rotating the storage's key, this
+// gives the database the new one. The secrets that changed are mounted again, restarting its task.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/refresh-credentials (the `AppManagedCredentialsRefresh` operationId).
+func (c *Client) AppManagedCredentialsRefresh(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedCredentialsRefreshJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedCredentialsRefreshRequest(c.Server, projectID, projectEnv, appID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedReplicaAddWithBody Adds a read replica to a managed database
+//
+// An asynchronous replica on a volume of its own, pinned to a node: seeded from the database's
+// archive, which must be in object storage, then streaming from the database, which is told to
+// let it in first. The database's scripts must be ones that can run a replica.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas (the `AppManagedReplicaAdd` operationId).
+func (c *Client) AppManagedReplicaAddWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedReplicaAddRequestWithBody(c.Server, projectID, projectEnv, appID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedReplicaAdd Adds a read replica to a managed database
+//
+// An asynchronous replica on a volume of its own, pinned to a node: seeded from the database's
+// archive, which must be in object storage, then streaming from the database, which is told to
+// let it in first. The database's scripts must be ones that can run a replica.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas (the `AppManagedReplicaAdd` operationId).
+func (c *Client) AppManagedReplicaAdd(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedReplicaAddJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedReplicaAddRequest(c.Server, projectID, projectEnv, appID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedReplicaRemove Removes a read replica from a managed database
+//
+// The replica's app is deleted, with its directory of its volume.
+//
+// Corresponds with DELETE /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas/{memberID} (the `AppManagedReplicaRemove` operationId).
+func (c *Client) AppManagedReplicaRemove(ctx context.Context, projectID string, projectEnv string, appID string, memberID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedReplicaRemoveRequest(c.Server, projectID, projectEnv, appID, memberID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedRestoreWithBody Restores a managed database into a new app
+//
+// To the latest, a time, a restore point or a base backup, inside its restore window. The new app is
+// made from the same template, version and parameters, on the data volume given, and archives to its
+// own prefix; the source is only read. The task returned sees the restore through.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore (the `AppManagedRestore` operationId).
+func (c *Client) AppManagedRestoreWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedRestoreRequestWithBody(c.Server, projectID, projectEnv, appID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedRestore Restores a managed database into a new app
+//
+// To the latest, a time, a restore point or a base backup, inside its restore window. The new app is
+// made from the same template, version and parameters, on the data volume given, and archives to its
+// own prefix; the source is only read. The task returned sees the restore through.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore (the `AppManagedRestore` operationId).
+func (c *Client) AppManagedRestore(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedRestoreJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedRestoreRequest(c.Server, projectID, projectEnv, appID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedRestorePointCreateWithBody Names a moment of a managed database, to restore to exactly
+//
+// The point is made, and listed once the log it is in (the WAL, for Postgres) is archived; it can
+// then be restored to for as long as retention keeps the base backup before it, or until keepUntil,
+// which holds retention back. Names are labels: letters, digits, '.', '_' and '-', at most the
+// engine's limit (63 for Postgres), not starting with "hp-".
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points (the `AppManagedRestorePointCreate` operationId).
+func (c *Client) AppManagedRestorePointCreateWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedRestorePointCreateRequestWithBody(c.Server, projectID, projectEnv, appID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedRestorePointCreate Names a moment of a managed database, to restore to exactly
+//
+// The point is made, and listed once the log it is in (the WAL, for Postgres) is archived; it can
+// then be restored to for as long as retention keeps the base backup before it, or until keepUntil,
+// which holds retention back. Names are labels: letters, digits, '.', '_' and '-', at most the
+// engine's limit (63 for Postgres), not starting with "hp-".
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points (the `AppManagedRestorePointCreate` operationId).
+func (c *Client) AppManagedRestorePointCreate(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedRestorePointCreateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedRestorePointCreateRequest(c.Server, projectID, projectEnv, appID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedRestorePointDelete Removes a restore point's record
+//
+// The archive is not touched, and the mark stays in the database's log, harmlessly: restores target
+// the point's position, never its name.
+//
+// Corresponds with DELETE /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points/{name} (the `AppManagedRestorePointDelete` operationId).
+func (c *Client) AppManagedRestorePointDelete(ctx context.Context, projectID string, projectEnv string, appID string, name string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedRestorePointDeleteRequest(c.Server, projectID, projectEnv, appID, name)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedRestorePointUpdateWithBody Changes how long a restore point is kept, and its note
+//
+// Both as given: a null keepUntil keeps the point no longer, and retention moves on at its next run.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points/{name} (the `AppManagedRestorePointUpdate` operationId).
+func (c *Client) AppManagedRestorePointUpdateWithBody(ctx context.Context, projectID string, projectEnv string, appID string, name string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedRestorePointUpdateRequestWithBody(c.Server, projectID, projectEnv, appID, name, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedRestorePointUpdate Changes how long a restore point is kept, and its note
+//
+// Both as given: a null keepUntil keeps the point no longer, and retention moves on at its next run.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points/{name} (the `AppManagedRestorePointUpdate` operationId).
+func (c *Client) AppManagedRestorePointUpdate(ctx context.Context, projectID string, projectEnv string, appID string, name string, body AppManagedRestorePointUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedRestorePointUpdateRequest(c.Server, projectID, projectEnv, appID, name, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedScriptsGet Gets what a managed database's template offers its engine's scripts
+//
+// What the installation's revision of the database's template offers of what its engine owns -
+// its scripts and artifacts - against what the database runs: up-to-date, update-available,
+// incompatible or unavailable, the changes, and the members out of step. A cluster is read on its
+// app; a member is refused.
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts (the `AppManagedScriptsGet` operationId).
+func (c *Client) AppManagedScriptsGet(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedScriptsGetRequest(c.Server, projectID, projectEnv, appID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedScriptsUpgradeWithBody Upgrades a managed database's engine scripts
+//
+// Replaces the scripts and artifacts of the database, its members and its verifier with what the
+// installation's revision of its template offers, in one transaction, then deploys each, the member
+// that writes last: each restarts once. The fingerprint is the one reviewed (GET .../managed/scripts);
+// another is refused. A member, a database still restoring, and scripts with nothing to apply are
+// refused.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts/upgrade (the `AppManagedScriptsUpgrade` operationId).
+func (c *Client) AppManagedScriptsUpgradeWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedScriptsUpgradeRequestWithBody(c.Server, projectID, projectEnv, appID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedScriptsUpgrade Upgrades a managed database's engine scripts
+//
+// Replaces the scripts and artifacts of the database, its members and its verifier with what the
+// installation's revision of its template offers, in one transaction, then deploys each, the member
+// that writes last: each restarts once. The fingerprint is the one reviewed (GET .../managed/scripts);
+// another is refused. A member, a database still restoring, and scripts with nothing to apply are
+// refused.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts/upgrade (the `AppManagedScriptsUpgrade` operationId).
+func (c *Client) AppManagedScriptsUpgrade(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedScriptsUpgradeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedScriptsUpgradeRequest(c.Server, projectID, projectEnv, appID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedStatusGet Gets a managed app's state
+//
+// Archiving, the restore window, the last base backup and restore test, where the archive is,
+// and suggestions, read from the last run of each of the engine's jobs.
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/status (the `AppManagedStatusGet` operationId).
+func (c *Client) AppManagedStatusGet(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedStatusGetRequest(c.Server, projectID, projectEnv, appID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedSwitchGet Lists what switching to a restored database would repoint
+//
+// The database this one was restored from, and the apps of the environment that use it: by a
+// variable naming its key, by its id among their previews' databases, or as their deployments'
+// restore point. Only for a restored database, once it is ready.
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitchGet` operationId).
+func (c *Client) AppManagedSwitchGet(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedSwitchGetRequest(c.Server, projectID, projectEnv, appID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedSwitchWithBody Switches consumers to a restored database
+//
+// The consumers chosen name this database instead of the one it was restored from: their
+// variables, their previews' databases and their deployments' restore point. Their variables are
+// applied to their running services; with redeploy, each whose variables changed is deployed too.
+// The source keeps running, its jobs paused.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitch` operationId).
+func (c *Client) AppManagedSwitchWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedSwitchRequestWithBody(c.Server, projectID, projectEnv, appID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedSwitch Switches consumers to a restored database
+//
+// The consumers chosen name this database instead of the one it was restored from: their
+// variables, their previews' databases and their deployments' restore point. Their variables are
+// applied to their running services; with redeploy, each whose variables changed is deployed too.
+// The source keeps running, its jobs paused.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitch` operationId).
+func (c *Client) AppManagedSwitch(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedSwitchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedSwitchRequest(c.Server, projectID, projectEnv, appID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedUnmanageWithBody Makes a managed app an ordinary one
+//
+// Removes the engine's state and the jobs it made, and with them the locks. The database keeps
+// archiving where it did; base backups, retention, the health check and the restore test stop.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/unmanage (the `AppManagedUnmanage` operationId).
+func (c *Client) AppManagedUnmanageWithBody(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedUnmanageRequestWithBody(c.Server, projectID, projectEnv, appID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppManagedUnmanage Makes a managed app an ordinary one
+//
+// Removes the engine's state and the jobs it made, and with them the locks. The database keeps
+// archiving where it did; base backups, retention, the health check and the restore test stop.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/unmanage (the `AppManagedUnmanage` operationId).
+func (c *Client) AppManagedUnmanage(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedUnmanageJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppManagedUnmanageRequest(c.Server, projectID, projectEnv, appID, body)
 	if err != nil {
 		return nil, err
 	}
@@ -43910,6 +45804,95 @@ func (c *Client) UpdateHivePaaSAppVersion(ctx context.Context, body UpdateHivePa
 	return c.Client.Do(req)
 }
 
+// GetLicense Gets the license in force
+//
+// The plan and status of the license in force, with the key's dates, how many of each limited
+// kind there are against the plan's limit (max null: no limit), and this installation's ID, which
+// a key must name. A key that is not in force, such as one for another installation, is described
+// too. Of the customer only the name is sent, never the email the key carries. With them are the
+// license portal's pages, for this installation, and whether the daily check for a newer key is on,
+// with how its last check went.
+//
+// Corresponds with GET /system/license (the `GetLicense` operationId).
+func (c *Client) GetLicense(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetLicenseRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateLicenseWithBody Installs a license key
+//
+// Verifies a license key and stores it in place of the one stored, whatever its plan, and answers
+// with the license it puts in force. Whitespace in the key is ignored. A key that does not verify,
+// is for another installation, or is past its grace is refused with 412, and the stored key is
+// kept. There is no way to remove a key.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /system/license (the `UpdateLicense` operationId).
+func (c *Client) UpdateLicenseWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateLicenseRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateLicense Installs a license key
+//
+// Verifies a license key and stores it in place of the one stored, whatever its plan, and answers
+// with the license it puts in force. Whitespace in the key is ignored. A key that does not verify,
+// is for another installation, or is past its grace is refused with 412, and the stored key is
+// kept. There is no way to remove a key.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /system/license (the `UpdateLicense` operationId).
+func (c *Client) UpdateLicense(ctx context.Context, body UpdateLicenseJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateLicenseRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// RefreshLicense Asks the license portal for a newer key
+//
+// Asks the license portal now whether there is a newer key than the one stored - a renewal, a plan
+// change, a paid key replacing a trial - and installs it, or learns that the key was moved to another
+// installation. Only the stored key and this installation's ID are sent. It asks whether or not the
+// daily check is switched off. Answers with what the portal said and the license in force after it,
+// as GET answers it: none, asking nothing, when no key is stored. A portal that cannot be reached is
+// 503, and one that refuses, or a newer key that cannot be installed, 412; either is recorded as the
+// last check's error.
+//
+// Corresponds with POST /system/license/refresh (the `RefreshLicense` operationId).
+func (c *Client) RefreshLicense(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRefreshLicenseRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // GetSystemBackupSettings Gets backup settings
 //
 // Corresponds with GET /system/settings/backup (the `GetSystemBackupSettings` operationId).
@@ -45846,6 +47829,18 @@ func NewListAppTemplatesRequest(server string, params *ListAppTemplatesParams) (
 
 		}
 
+		if params.Managed != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "managed", *params.Managed, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
 		if params.Sort != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "sort", *params.Sort, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
@@ -46320,7 +48315,7 @@ func NewSsoOAuthCallbackPostRequest(server string, provider string) (*http.Reque
 }
 
 // NewSsoOAuthBeginRequest constructs an http.Request for the SsoOAuthBegin method
-func NewSsoOAuthBeginRequest(server string, provider string) (*http.Request, error) {
+func NewSsoOAuthBeginRequest(server string, provider string, params *SsoOAuthBeginParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -46343,6 +48338,33 @@ func NewSsoOAuthBeginRequest(server string, provider string) (*http.Request, err
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.TrustedDeviceId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "trustedDeviceId", *params.TrustedDeviceId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
 	}
 
 	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
@@ -60064,6 +62086,18 @@ func NewDeleteAppRequestWithBody(server string, projectID string, projectEnv str
 
 		}
 
+		if params.DeleteCluster != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "deleteCluster", *params.DeleteCluster, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
 		if encoded := queryValues.Encode(); encoded != "" {
 			rawQueryFragments = append(rawQueryFragments, encoded)
 		}
@@ -64820,6 +66854,925 @@ func NewGetAppLogsInfoRequest(server string, projectID string, projectEnv string
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewAppManagedSettingsGetRequest constructs an http.Request for the AppManagedSettingsGet method
+func NewAppManagedSettingsGetRequest(server string, projectID string, projectEnv string, appID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAppManagedSettingsUpdateRequest calls the generic AppManagedSettingsUpdate builder with application/json body
+func NewAppManagedSettingsUpdateRequest(server string, projectID string, projectEnv string, appID string, body AppManagedSettingsUpdateJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAppManagedSettingsUpdateRequestWithBody(server, projectID, projectEnv, appID, "application/json", bodyReader)
+}
+
+// NewAppManagedSettingsUpdateRequestWithBody constructs an http.Request for the AppManagedSettingsUpdate method, with any body, and a specified content type
+func NewAppManagedSettingsUpdateRequestWithBody(server string, projectID string, projectEnv string, appID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewAppManagedPromoteRequest calls the generic AppManagedPromote builder with application/json body
+func NewAppManagedPromoteRequest(server string, projectID string, projectEnv string, appID string, body AppManagedPromoteJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAppManagedPromoteRequestWithBody(server, projectID, projectEnv, appID, "application/json", bodyReader)
+}
+
+// NewAppManagedPromoteRequestWithBody constructs an http.Request for the AppManagedPromote method, with any body, and a specified content type
+func NewAppManagedPromoteRequestWithBody(server string, projectID string, projectEnv string, appID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed/promote", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewAppManagedCredentialsRefreshRequest calls the generic AppManagedCredentialsRefresh builder with application/json body
+func NewAppManagedCredentialsRefreshRequest(server string, projectID string, projectEnv string, appID string, body AppManagedCredentialsRefreshJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAppManagedCredentialsRefreshRequestWithBody(server, projectID, projectEnv, appID, "application/json", bodyReader)
+}
+
+// NewAppManagedCredentialsRefreshRequestWithBody constructs an http.Request for the AppManagedCredentialsRefresh method, with any body, and a specified content type
+func NewAppManagedCredentialsRefreshRequestWithBody(server string, projectID string, projectEnv string, appID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed/refresh-credentials", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewAppManagedReplicaAddRequest calls the generic AppManagedReplicaAdd builder with application/json body
+func NewAppManagedReplicaAddRequest(server string, projectID string, projectEnv string, appID string, body AppManagedReplicaAddJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAppManagedReplicaAddRequestWithBody(server, projectID, projectEnv, appID, "application/json", bodyReader)
+}
+
+// NewAppManagedReplicaAddRequestWithBody constructs an http.Request for the AppManagedReplicaAdd method, with any body, and a specified content type
+func NewAppManagedReplicaAddRequestWithBody(server string, projectID string, projectEnv string, appID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed/replicas", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewAppManagedReplicaRemoveRequest constructs an http.Request for the AppManagedReplicaRemove method
+func NewAppManagedReplicaRemoveRequest(server string, projectID string, projectEnv string, appID string, memberID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam3 string
+
+	pathParam3, err = runtime.StyleParamWithOptions("simple", false, "memberID", memberID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed/replicas/%s", pathParam0, pathParam1, pathParam2, pathParam3)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAppManagedRestoreRequest calls the generic AppManagedRestore builder with application/json body
+func NewAppManagedRestoreRequest(server string, projectID string, projectEnv string, appID string, body AppManagedRestoreJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAppManagedRestoreRequestWithBody(server, projectID, projectEnv, appID, "application/json", bodyReader)
+}
+
+// NewAppManagedRestoreRequestWithBody constructs an http.Request for the AppManagedRestore method, with any body, and a specified content type
+func NewAppManagedRestoreRequestWithBody(server string, projectID string, projectEnv string, appID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed/restore", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewAppManagedRestorePointCreateRequest calls the generic AppManagedRestorePointCreate builder with application/json body
+func NewAppManagedRestorePointCreateRequest(server string, projectID string, projectEnv string, appID string, body AppManagedRestorePointCreateJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAppManagedRestorePointCreateRequestWithBody(server, projectID, projectEnv, appID, "application/json", bodyReader)
+}
+
+// NewAppManagedRestorePointCreateRequestWithBody constructs an http.Request for the AppManagedRestorePointCreate method, with any body, and a specified content type
+func NewAppManagedRestorePointCreateRequestWithBody(server string, projectID string, projectEnv string, appID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed/restore-points", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewAppManagedRestorePointDeleteRequest constructs an http.Request for the AppManagedRestorePointDelete method
+func NewAppManagedRestorePointDeleteRequest(server string, projectID string, projectEnv string, appID string, name string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam3 string
+
+	pathParam3, err = runtime.StyleParamWithOptions("simple", false, "name", name, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed/restore-points/%s", pathParam0, pathParam1, pathParam2, pathParam3)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAppManagedRestorePointUpdateRequest calls the generic AppManagedRestorePointUpdate builder with application/json body
+func NewAppManagedRestorePointUpdateRequest(server string, projectID string, projectEnv string, appID string, name string, body AppManagedRestorePointUpdateJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAppManagedRestorePointUpdateRequestWithBody(server, projectID, projectEnv, appID, name, "application/json", bodyReader)
+}
+
+// NewAppManagedRestorePointUpdateRequestWithBody constructs an http.Request for the AppManagedRestorePointUpdate method, with any body, and a specified content type
+func NewAppManagedRestorePointUpdateRequestWithBody(server string, projectID string, projectEnv string, appID string, name string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam3 string
+
+	pathParam3, err = runtime.StyleParamWithOptions("simple", false, "name", name, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed/restore-points/%s", pathParam0, pathParam1, pathParam2, pathParam3)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewAppManagedScriptsGetRequest constructs an http.Request for the AppManagedScriptsGet method
+func NewAppManagedScriptsGetRequest(server string, projectID string, projectEnv string, appID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed/scripts", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAppManagedScriptsUpgradeRequest calls the generic AppManagedScriptsUpgrade builder with application/json body
+func NewAppManagedScriptsUpgradeRequest(server string, projectID string, projectEnv string, appID string, body AppManagedScriptsUpgradeJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAppManagedScriptsUpgradeRequestWithBody(server, projectID, projectEnv, appID, "application/json", bodyReader)
+}
+
+// NewAppManagedScriptsUpgradeRequestWithBody constructs an http.Request for the AppManagedScriptsUpgrade method, with any body, and a specified content type
+func NewAppManagedScriptsUpgradeRequestWithBody(server string, projectID string, projectEnv string, appID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed/scripts/upgrade", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewAppManagedStatusGetRequest constructs an http.Request for the AppManagedStatusGet method
+func NewAppManagedStatusGetRequest(server string, projectID string, projectEnv string, appID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed/status", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAppManagedSwitchGetRequest constructs an http.Request for the AppManagedSwitchGet method
+func NewAppManagedSwitchGetRequest(server string, projectID string, projectEnv string, appID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed/switch", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAppManagedSwitchRequest calls the generic AppManagedSwitch builder with application/json body
+func NewAppManagedSwitchRequest(server string, projectID string, projectEnv string, appID string, body AppManagedSwitchJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAppManagedSwitchRequestWithBody(server, projectID, projectEnv, appID, "application/json", bodyReader)
+}
+
+// NewAppManagedSwitchRequestWithBody constructs an http.Request for the AppManagedSwitch method, with any body, and a specified content type
+func NewAppManagedSwitchRequestWithBody(server string, projectID string, projectEnv string, appID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed/switch", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewAppManagedUnmanageRequest calls the generic AppManagedUnmanage builder with application/json body
+func NewAppManagedUnmanageRequest(server string, projectID string, projectEnv string, appID string, body AppManagedUnmanageJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAppManagedUnmanageRequestWithBody(server, projectID, projectEnv, appID, "application/json", bodyReader)
+}
+
+// NewAppManagedUnmanageRequestWithBody constructs an http.Request for the AppManagedUnmanage method, with any body, and a specified content type
+func NewAppManagedUnmanageRequestWithBody(server string, projectID string, projectEnv string, appID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "projectID", projectID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "projectEnv", projectEnv, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "appID", appID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/projects/%s/%s/apps/%s/managed/unmanage", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -88283,6 +91236,100 @@ func NewUpdateHivePaaSAppVersionRequestWithBody(server string, contentType strin
 	return req, nil
 }
 
+// NewGetLicenseRequest constructs an http.Request for the GetLicense method
+func NewGetLicenseRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/system/license")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateLicenseRequest calls the generic UpdateLicense builder with application/json body
+func NewUpdateLicenseRequest(server string, body UpdateLicenseJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateLicenseRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewUpdateLicenseRequestWithBody constructs an http.Request for the UpdateLicense method, with any body, and a specified content type
+func NewUpdateLicenseRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/system/license")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewRefreshLicenseRequest constructs an http.Request for the RefreshLicense method
+func NewRefreshLicenseRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/system/license/refresh")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetSystemBackupSettingsRequest constructs an http.Request for the GetSystemBackupSettings method
 func NewGetSystemBackupSettingsRequest(server string, params *GetSystemBackupSettingsParams) (*http.Request, error) {
 	var err error
@@ -91654,7 +94701,7 @@ type ClientWithResponsesInterface interface {
 	// Returns a wrapper object for the known response body format(s).
 	//
 	// Corresponds with GET /auth/sso/{provider} (the `SsoOAuthBegin` operationId).
-	SsoOAuthBeginWithResponse(ctx context.Context, provider string, reqEditors ...RequestEditorFn) (*SsoOAuthBeginResponse, error)
+	SsoOAuthBeginWithResponse(ctx context.Context, provider string, params *SsoOAuthBeginParams, reqEditors ...RequestEditorFn) (*SsoOAuthBeginResponse, error)
 
 	// ClearClusterBuildCacheWithBodyWithResponse Clears build cache
 	//
@@ -94529,7 +97576,7 @@ type ClientWithResponsesInterface interface {
 	// and {"type":"end"} as a text message; answers {"type":"done","data":{...}} or
 	// {"type":"error","error":{...}}. Neither the server's nor Traefik's timeouts cut it; a
 	// client sends a message at least every 60 seconds. With progress=true, each binary
-	// message is followed by {"type":"progress","received":<bytes the copy has taken>}.
+	// message is followed by `{"type":"progress","received":<bytes the copy has taken>}`.
 	// Without the websocket upgrade, the request is only checked: 204 when the stream would
 	// be taken, else the error it would get - which a browser cannot read from a refused upgrade.
 	//
@@ -94957,6 +98004,287 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/logs/info (the `GetAppLogsInfo` operationId).
 	GetAppLogsInfoWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*GetAppLogsInfoResponse, error)
+
+	// AppManagedSettingsGetWithResponse Gets a managed app's settings
+	//
+	// Where the engine archives, how long it keeps what, when its jobs run, and what it owns of the app.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed (the `AppManagedSettingsGet` operationId).
+	AppManagedSettingsGetWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*AppManagedSettingsGetResponse, error)
+
+	// AppManagedSettingsUpdateWithBodyWithResponse Updates a managed app's settings
+	//
+	// Changes the retention, when the base backup and the restore test run, and the restore test's query.
+	// A field left out is left as it is.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/managed (the `AppManagedSettingsUpdate` operationId).
+	AppManagedSettingsUpdateWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedSettingsUpdateResponse, error)
+
+	// AppManagedSettingsUpdateWithResponse Updates a managed app's settings
+	//
+	// Changes the retention, when the base backup and the restore test run, and the restore test's query.
+	// A field left out is left as it is.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/managed (the `AppManagedSettingsUpdate` operationId).
+	AppManagedSettingsUpdateWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedSettingsUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedSettingsUpdateResponse, error)
+
+	// AppManagedPromoteWithBodyWithResponse Promotes a replica to a managed database's primary
+	//
+	// In order: what writes now is fenced - kept from starting its server, its service stopped, and
+	// seen stopped; the replica is promoted; the engine's jobs move to it, and the other replicas are
+	// restarted to follow it. Before the replica is promoted, a failure lifts the fence; once whether it
+	// was is not known, the fence stays, and promoting it again finishes the promotion.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/promote (the `AppManagedPromote` operationId).
+	AppManagedPromoteWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedPromoteResponse, error)
+
+	// AppManagedPromoteWithResponse Promotes a replica to a managed database's primary
+	//
+	// In order: what writes now is fenced - kept from starting its server, its service stopped, and
+	// seen stopped; the replica is promoted; the engine's jobs move to it, and the other replicas are
+	// restarted to follow it. Before the replica is promoted, a failure lifts the fence; once whether it
+	// was is not known, the fence stays, and promoting it again finishes the promotion.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/promote (the `AppManagedPromote` operationId).
+	AppManagedPromoteWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedPromoteJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedPromoteResponse, error)
+
+	// AppManagedCredentialsRefreshWithBodyWithResponse Gives a managed app its archive storage's current credentials
+	//
+	// The credentials were copied into the app when it was made: after rotating the storage's key, this
+	// gives the database the new one. The secrets that changed are mounted again, restarting its task.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/refresh-credentials (the `AppManagedCredentialsRefresh` operationId).
+	AppManagedCredentialsRefreshWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedCredentialsRefreshResponse, error)
+
+	// AppManagedCredentialsRefreshWithResponse Gives a managed app its archive storage's current credentials
+	//
+	// The credentials were copied into the app when it was made: after rotating the storage's key, this
+	// gives the database the new one. The secrets that changed are mounted again, restarting its task.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/refresh-credentials (the `AppManagedCredentialsRefresh` operationId).
+	AppManagedCredentialsRefreshWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedCredentialsRefreshJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedCredentialsRefreshResponse, error)
+
+	// AppManagedReplicaAddWithBodyWithResponse Adds a read replica to a managed database
+	//
+	// An asynchronous replica on a volume of its own, pinned to a node: seeded from the database's
+	// archive, which must be in object storage, then streaming from the database, which is told to
+	// let it in first. The database's scripts must be ones that can run a replica.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas (the `AppManagedReplicaAdd` operationId).
+	AppManagedReplicaAddWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedReplicaAddResponse, error)
+
+	// AppManagedReplicaAddWithResponse Adds a read replica to a managed database
+	//
+	// An asynchronous replica on a volume of its own, pinned to a node: seeded from the database's
+	// archive, which must be in object storage, then streaming from the database, which is told to
+	// let it in first. The database's scripts must be ones that can run a replica.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas (the `AppManagedReplicaAdd` operationId).
+	AppManagedReplicaAddWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedReplicaAddJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedReplicaAddResponse, error)
+
+	// AppManagedReplicaRemoveWithResponse Removes a read replica from a managed database
+	//
+	// The replica's app is deleted, with its directory of its volume.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas/{memberID} (the `AppManagedReplicaRemove` operationId).
+	AppManagedReplicaRemoveWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, memberID string, reqEditors ...RequestEditorFn) (*AppManagedReplicaRemoveResponse, error)
+
+	// AppManagedRestoreWithBodyWithResponse Restores a managed database into a new app
+	//
+	// To the latest, a time, a restore point or a base backup, inside its restore window. The new app is
+	// made from the same template, version and parameters, on the data volume given, and archives to its
+	// own prefix; the source is only read. The task returned sees the restore through.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore (the `AppManagedRestore` operationId).
+	AppManagedRestoreWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedRestoreResponse, error)
+
+	// AppManagedRestoreWithResponse Restores a managed database into a new app
+	//
+	// To the latest, a time, a restore point or a base backup, inside its restore window. The new app is
+	// made from the same template, version and parameters, on the data volume given, and archives to its
+	// own prefix; the source is only read. The task returned sees the restore through.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore (the `AppManagedRestore` operationId).
+	AppManagedRestoreWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedRestoreJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedRestoreResponse, error)
+
+	// AppManagedRestorePointCreateWithBodyWithResponse Names a moment of a managed database, to restore to exactly
+	//
+	// The point is made, and listed once the log it is in (the WAL, for Postgres) is archived; it can
+	// then be restored to for as long as retention keeps the base backup before it, or until keepUntil,
+	// which holds retention back. Names are labels: letters, digits, '.', '_' and '-', at most the
+	// engine's limit (63 for Postgres), not starting with "hp-".
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points (the `AppManagedRestorePointCreate` operationId).
+	AppManagedRestorePointCreateWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedRestorePointCreateResponse, error)
+
+	// AppManagedRestorePointCreateWithResponse Names a moment of a managed database, to restore to exactly
+	//
+	// The point is made, and listed once the log it is in (the WAL, for Postgres) is archived; it can
+	// then be restored to for as long as retention keeps the base backup before it, or until keepUntil,
+	// which holds retention back. Names are labels: letters, digits, '.', '_' and '-', at most the
+	// engine's limit (63 for Postgres), not starting with "hp-".
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points (the `AppManagedRestorePointCreate` operationId).
+	AppManagedRestorePointCreateWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedRestorePointCreateJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedRestorePointCreateResponse, error)
+
+	// AppManagedRestorePointDeleteWithResponse Removes a restore point's record
+	//
+	// The archive is not touched, and the mark stays in the database's log, harmlessly: restores target
+	// the point's position, never its name.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points/{name} (the `AppManagedRestorePointDelete` operationId).
+	AppManagedRestorePointDeleteWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, name string, reqEditors ...RequestEditorFn) (*AppManagedRestorePointDeleteResponse, error)
+
+	// AppManagedRestorePointUpdateWithBodyWithResponse Changes how long a restore point is kept, and its note
+	//
+	// Both as given: a null keepUntil keeps the point no longer, and retention moves on at its next run.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points/{name} (the `AppManagedRestorePointUpdate` operationId).
+	AppManagedRestorePointUpdateWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, name string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedRestorePointUpdateResponse, error)
+
+	// AppManagedRestorePointUpdateWithResponse Changes how long a restore point is kept, and its note
+	//
+	// Both as given: a null keepUntil keeps the point no longer, and retention moves on at its next run.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points/{name} (the `AppManagedRestorePointUpdate` operationId).
+	AppManagedRestorePointUpdateWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, name string, body AppManagedRestorePointUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedRestorePointUpdateResponse, error)
+
+	// AppManagedScriptsGetWithResponse Gets what a managed database's template offers its engine's scripts
+	//
+	// What the installation's revision of the database's template offers of what its engine owns -
+	// its scripts and artifacts - against what the database runs: up-to-date, update-available,
+	// incompatible or unavailable, the changes, and the members out of step. A cluster is read on its
+	// app; a member is refused.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts (the `AppManagedScriptsGet` operationId).
+	AppManagedScriptsGetWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*AppManagedScriptsGetResponse, error)
+
+	// AppManagedScriptsUpgradeWithBodyWithResponse Upgrades a managed database's engine scripts
+	//
+	// Replaces the scripts and artifacts of the database, its members and its verifier with what the
+	// installation's revision of its template offers, in one transaction, then deploys each, the member
+	// that writes last: each restarts once. The fingerprint is the one reviewed (GET .../managed/scripts);
+	// another is refused. A member, a database still restoring, and scripts with nothing to apply are
+	// refused.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts/upgrade (the `AppManagedScriptsUpgrade` operationId).
+	AppManagedScriptsUpgradeWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedScriptsUpgradeResponse, error)
+
+	// AppManagedScriptsUpgradeWithResponse Upgrades a managed database's engine scripts
+	//
+	// Replaces the scripts and artifacts of the database, its members and its verifier with what the
+	// installation's revision of its template offers, in one transaction, then deploys each, the member
+	// that writes last: each restarts once. The fingerprint is the one reviewed (GET .../managed/scripts);
+	// another is refused. A member, a database still restoring, and scripts with nothing to apply are
+	// refused.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts/upgrade (the `AppManagedScriptsUpgrade` operationId).
+	AppManagedScriptsUpgradeWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedScriptsUpgradeJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedScriptsUpgradeResponse, error)
+
+	// AppManagedStatusGetWithResponse Gets a managed app's state
+	//
+	// Archiving, the restore window, the last base backup and restore test, where the archive is,
+	// and suggestions, read from the last run of each of the engine's jobs.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/status (the `AppManagedStatusGet` operationId).
+	AppManagedStatusGetWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*AppManagedStatusGetResponse, error)
+
+	// AppManagedSwitchGetWithResponse Lists what switching to a restored database would repoint
+	//
+	// The database this one was restored from, and the apps of the environment that use it: by a
+	// variable naming its key, by its id among their previews' databases, or as their deployments'
+	// restore point. Only for a restored database, once it is ready.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitchGet` operationId).
+	AppManagedSwitchGetWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*AppManagedSwitchGetResponse, error)
+
+	// AppManagedSwitchWithBodyWithResponse Switches consumers to a restored database
+	//
+	// The consumers chosen name this database instead of the one it was restored from: their
+	// variables, their previews' databases and their deployments' restore point. Their variables are
+	// applied to their running services; with redeploy, each whose variables changed is deployed too.
+	// The source keeps running, its jobs paused.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitch` operationId).
+	AppManagedSwitchWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedSwitchResponse, error)
+
+	// AppManagedSwitchWithResponse Switches consumers to a restored database
+	//
+	// The consumers chosen name this database instead of the one it was restored from: their
+	// variables, their previews' databases and their deployments' restore point. Their variables are
+	// applied to their running services; with redeploy, each whose variables changed is deployed too.
+	// The source keeps running, its jobs paused.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitch` operationId).
+	AppManagedSwitchWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedSwitchJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedSwitchResponse, error)
+
+	// AppManagedUnmanageWithBodyWithResponse Makes a managed app an ordinary one
+	//
+	// Removes the engine's state and the jobs it made, and with them the locks. The database keeps
+	// archiving where it did; base backups, retention, the health check and the restore test stop.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/unmanage (the `AppManagedUnmanage` operationId).
+	AppManagedUnmanageWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedUnmanageResponse, error)
+
+	// AppManagedUnmanageWithResponse Makes a managed app an ordinary one
+	//
+	// Removes the engine's state and the jobs it made, and with them the locks. The database keeps
+	// archiving where it did; base backups, retention, the health check and the restore test stop.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/unmanage (the `AppManagedUnmanage` operationId).
+	AppManagedUnmanageWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedUnmanageJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedUnmanageResponse, error)
 
 	// GetAppNetworkSettingsWithResponse Gets app network settings
 	//
@@ -99346,6 +102674,59 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /system/hivepaas/update-version (the `UpdateHivePaaSAppVersion` operationId).
 	UpdateHivePaaSAppVersionWithResponse(ctx context.Context, body UpdateHivePaaSAppVersionJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateHivePaaSAppVersionResponse, error)
 
+	// GetLicenseWithResponse Gets the license in force
+	//
+	// The plan and status of the license in force, with the key's dates, how many of each limited
+	// kind there are against the plan's limit (max null: no limit), and this installation's ID, which
+	// a key must name. A key that is not in force, such as one for another installation, is described
+	// too. Of the customer only the name is sent, never the email the key carries. With them are the
+	// license portal's pages, for this installation, and whether the daily check for a newer key is on,
+	// with how its last check went.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /system/license (the `GetLicense` operationId).
+	GetLicenseWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetLicenseResponse, error)
+
+	// UpdateLicenseWithBodyWithResponse Installs a license key
+	//
+	// Verifies a license key and stores it in place of the one stored, whatever its plan, and answers
+	// with the license it puts in force. Whitespace in the key is ignored. A key that does not verify,
+	// is for another installation, or is past its grace is refused with 412, and the stored key is
+	// kept. There is no way to remove a key.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /system/license (the `UpdateLicense` operationId).
+	UpdateLicenseWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateLicenseResponse, error)
+
+	// UpdateLicenseWithResponse Installs a license key
+	//
+	// Verifies a license key and stores it in place of the one stored, whatever its plan, and answers
+	// with the license it puts in force. Whitespace in the key is ignored. A key that does not verify,
+	// is for another installation, or is past its grace is refused with 412, and the stored key is
+	// kept. There is no way to remove a key.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /system/license (the `UpdateLicense` operationId).
+	UpdateLicenseWithResponse(ctx context.Context, body UpdateLicenseJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateLicenseResponse, error)
+
+	// RefreshLicenseWithResponse Asks the license portal for a newer key
+	//
+	// Asks the license portal now whether there is a newer key than the one stored - a renewal, a plan
+	// change, a paid key replacing a trial - and installs it, or learns that the key was moved to another
+	// installation. Only the stored key and this installation's ID are sent. It asks whether or not the
+	// daily check is switched off. Answers with what the portal said and the license in force after it,
+	// as GET answers it: none, asking nothing, when no key is stored. A portal that cannot be reached is
+	// 503, and one that refuses, or a newer key that cannot be installed, 412; either is recorded as the
+	// last check's error.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /system/license/refresh (the `RefreshLicense` operationId).
+	RefreshLicenseWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*RefreshLicenseResponse, error)
+
 	// GetSystemBackupSettingsWithResponse Gets backup settings
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -100729,20 +104110,6 @@ func (r LoginWithPasswordResponse) ContentType() string {
 type SsoOAuthCallbackResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	// JSON400 the response for an HTTP 400 `application/json` response
-	JSON400 *HperrorsErrorInfo
-	// JSON500 the response for an HTTP 500 `application/json` response
-	JSON500 *HperrorsErrorInfo
-}
-
-// GetJSON400 returns the response for an HTTP 400 `application/json` response
-func (r SsoOAuthCallbackResponse) GetJSON400() *HperrorsErrorInfo {
-	return r.JSON400
-}
-
-// GetJSON500 returns the response for an HTTP 500 `application/json` response
-func (r SsoOAuthCallbackResponse) GetJSON500() *HperrorsErrorInfo {
-	return r.JSON500
 }
 
 // GetBody returns the raw response body bytes
@@ -100777,20 +104144,6 @@ func (r SsoOAuthCallbackResponse) ContentType() string {
 type SsoOAuthCallbackPostResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	// JSON400 the response for an HTTP 400 `application/json` response
-	JSON400 *HperrorsErrorInfo
-	// JSON500 the response for an HTTP 500 `application/json` response
-	JSON500 *HperrorsErrorInfo
-}
-
-// GetJSON400 returns the response for an HTTP 400 `application/json` response
-func (r SsoOAuthCallbackPostResponse) GetJSON400() *HperrorsErrorInfo {
-	return r.JSON400
-}
-
-// GetJSON500 returns the response for an HTTP 500 `application/json` response
-func (r SsoOAuthCallbackPostResponse) GetJSON500() *HperrorsErrorInfo {
-	return r.JSON500
 }
 
 // GetBody returns the raw response body bytes
@@ -100825,20 +104178,6 @@ func (r SsoOAuthCallbackPostResponse) ContentType() string {
 type SsoOAuthBeginResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	// JSON400 the response for an HTTP 400 `application/json` response
-	JSON400 *HperrorsErrorInfo
-	// JSON500 the response for an HTTP 500 `application/json` response
-	JSON500 *HperrorsErrorInfo
-}
-
-// GetJSON400 returns the response for an HTTP 400 `application/json` response
-func (r SsoOAuthBeginResponse) GetJSON400() *HperrorsErrorInfo {
-	return r.JSON400
-}
-
-// GetJSON500 returns the response for an HTTP 500 `application/json` response
-func (r SsoOAuthBeginResponse) GetJSON500() *HperrorsErrorInfo {
-	return r.JSON500
 }
 
 // GetBody returns the raw response body bytes
@@ -117733,6 +121072,1033 @@ func (r GetAppLogsInfoResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetAppLogsInfoResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedSettingsGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppmanageddtoGetManagedSettingsResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AppManagedSettingsGetResponse) GetJSON200() *AppmanageddtoGetManagedSettingsResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedSettingsGetResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedSettingsGetResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedSettingsGetResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedSettingsGetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedSettingsGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedSettingsGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedSettingsGetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedSettingsUpdateResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppmanageddtoUpdateManagedSettingsResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AppManagedSettingsUpdateResponse) GetJSON200() *AppmanageddtoUpdateManagedSettingsResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedSettingsUpdateResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedSettingsUpdateResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedSettingsUpdateResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedSettingsUpdateResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedSettingsUpdateResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedSettingsUpdateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedSettingsUpdateResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedPromoteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppmanageddtoPromoteManagedMemberResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON412 the response for an HTTP 412 `application/json` response
+	JSON412 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AppManagedPromoteResponse) GetJSON200() *AppmanageddtoPromoteManagedMemberResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedPromoteResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedPromoteResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON412 returns the response for an HTTP 412 `application/json` response
+func (r AppManagedPromoteResponse) GetJSON412() *HperrorsErrorInfo {
+	return r.JSON412
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedPromoteResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedPromoteResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedPromoteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedPromoteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedPromoteResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedCredentialsRefreshResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppmanageddtoRefreshManagedCredentialsResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AppManagedCredentialsRefreshResponse) GetJSON200() *AppmanageddtoRefreshManagedCredentialsResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedCredentialsRefreshResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedCredentialsRefreshResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedCredentialsRefreshResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedCredentialsRefreshResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedCredentialsRefreshResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedCredentialsRefreshResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedCredentialsRefreshResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedReplicaAddResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *AppmanageddtoAddManagedReplicaResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON412 the response for an HTTP 412 `application/json` response
+	JSON412 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r AppManagedReplicaAddResponse) GetJSON201() *AppmanageddtoAddManagedReplicaResp {
+	return r.JSON201
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedReplicaAddResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedReplicaAddResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON412 returns the response for an HTTP 412 `application/json` response
+func (r AppManagedReplicaAddResponse) GetJSON412() *HperrorsErrorInfo {
+	return r.JSON412
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedReplicaAddResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedReplicaAddResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedReplicaAddResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedReplicaAddResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedReplicaAddResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedReplicaRemoveResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppmanageddtoRemoveManagedReplicaResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AppManagedReplicaRemoveResponse) GetJSON200() *AppmanageddtoRemoveManagedReplicaResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedReplicaRemoveResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedReplicaRemoveResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedReplicaRemoveResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedReplicaRemoveResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedReplicaRemoveResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedReplicaRemoveResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedReplicaRemoveResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedRestoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppmanageddtoRestoreManagedResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AppManagedRestoreResponse) GetJSON200() *AppmanageddtoRestoreManagedResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedRestoreResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedRestoreResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedRestoreResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedRestoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedRestoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedRestoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedRestoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedRestorePointCreateResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppmanageddtoCreateRestorePointResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AppManagedRestorePointCreateResponse) GetJSON200() *AppmanageddtoCreateRestorePointResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedRestorePointCreateResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedRestorePointCreateResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedRestorePointCreateResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedRestorePointCreateResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedRestorePointCreateResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedRestorePointCreateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedRestorePointCreateResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedRestorePointDeleteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppmanageddtoDeleteRestorePointResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AppManagedRestorePointDeleteResponse) GetJSON200() *AppmanageddtoDeleteRestorePointResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedRestorePointDeleteResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedRestorePointDeleteResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedRestorePointDeleteResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedRestorePointDeleteResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedRestorePointDeleteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedRestorePointDeleteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedRestorePointDeleteResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedRestorePointUpdateResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppmanageddtoUpdateRestorePointResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AppManagedRestorePointUpdateResponse) GetJSON200() *AppmanageddtoUpdateRestorePointResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedRestorePointUpdateResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedRestorePointUpdateResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedRestorePointUpdateResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedRestorePointUpdateResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedRestorePointUpdateResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedRestorePointUpdateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedRestorePointUpdateResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedScriptsGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppmanageddtoGetManagedScriptsResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AppManagedScriptsGetResponse) GetJSON200() *AppmanageddtoGetManagedScriptsResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedScriptsGetResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedScriptsGetResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedScriptsGetResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedScriptsGetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedScriptsGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedScriptsGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedScriptsGetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedScriptsUpgradeResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppmanageddtoUpgradeManagedScriptsResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AppManagedScriptsUpgradeResponse) GetJSON200() *AppmanageddtoUpgradeManagedScriptsResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedScriptsUpgradeResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedScriptsUpgradeResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r AppManagedScriptsUpgradeResponse) GetJSON409() *HperrorsErrorInfo {
+	return r.JSON409
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedScriptsUpgradeResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedScriptsUpgradeResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedScriptsUpgradeResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedScriptsUpgradeResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedScriptsUpgradeResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedStatusGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppmanageddtoGetManagedStatusResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AppManagedStatusGetResponse) GetJSON200() *AppmanageddtoGetManagedStatusResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedStatusGetResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedStatusGetResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedStatusGetResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedStatusGetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedStatusGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedStatusGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedStatusGetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedSwitchGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppmanageddtoGetManagedSwitchResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON412 the response for an HTTP 412 `application/json` response
+	JSON412 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AppManagedSwitchGetResponse) GetJSON200() *AppmanageddtoGetManagedSwitchResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedSwitchGetResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedSwitchGetResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON412 returns the response for an HTTP 412 `application/json` response
+func (r AppManagedSwitchGetResponse) GetJSON412() *HperrorsErrorInfo {
+	return r.JSON412
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedSwitchGetResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedSwitchGetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedSwitchGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedSwitchGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedSwitchGetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedSwitchResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppmanageddtoSwitchManagedResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON412 the response for an HTTP 412 `application/json` response
+	JSON412 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AppManagedSwitchResponse) GetJSON200() *AppmanageddtoSwitchManagedResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedSwitchResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedSwitchResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON412 returns the response for an HTTP 412 `application/json` response
+func (r AppManagedSwitchResponse) GetJSON412() *HperrorsErrorInfo {
+	return r.JSON412
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedSwitchResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedSwitchResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedSwitchResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedSwitchResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedSwitchResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppManagedUnmanageResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AppmanageddtoUnmanageAppResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AppManagedUnmanageResponse) GetJSON200() *AppmanageddtoUnmanageAppResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r AppManagedUnmanageResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r AppManagedUnmanageResponse) GetJSON404() *HperrorsErrorInfo {
+	return r.JSON404
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r AppManagedUnmanageResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r AppManagedUnmanageResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppManagedUnmanageResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppManagedUnmanageResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppManagedUnmanageResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -140191,6 +144557,192 @@ func (r UpdateHivePaaSAppVersionResponse) ContentType() string {
 	return ""
 }
 
+type GetLicenseResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *LicensedtoGetLicenseResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetLicenseResponse) GetJSON200() *LicensedtoGetLicenseResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetLicenseResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetLicenseResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetLicenseResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetLicenseResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetLicenseResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetLicenseResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateLicenseResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *LicensedtoUpdateLicenseResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON412 the response for an HTTP 412 `application/json` response
+	JSON412 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateLicenseResponse) GetJSON200() *LicensedtoUpdateLicenseResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r UpdateLicenseResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON412 returns the response for an HTTP 412 `application/json` response
+func (r UpdateLicenseResponse) GetJSON412() *HperrorsErrorInfo {
+	return r.JSON412
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r UpdateLicenseResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateLicenseResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateLicenseResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateLicenseResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateLicenseResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type RefreshLicenseResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *LicensedtoRefreshLicenseResp
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *HperrorsErrorInfo
+	// JSON412 the response for an HTTP 412 `application/json` response
+	JSON412 *HperrorsErrorInfo
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *HperrorsErrorInfo
+	// JSON503 the response for an HTTP 503 `application/json` response
+	JSON503 *HperrorsErrorInfo
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r RefreshLicenseResponse) GetJSON200() *LicensedtoRefreshLicenseResp {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r RefreshLicenseResponse) GetJSON400() *HperrorsErrorInfo {
+	return r.JSON400
+}
+
+// GetJSON412 returns the response for an HTTP 412 `application/json` response
+func (r RefreshLicenseResponse) GetJSON412() *HperrorsErrorInfo {
+	return r.JSON412
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r RefreshLicenseResponse) GetJSON500() *HperrorsErrorInfo {
+	return r.JSON500
+}
+
+// GetJSON503 returns the response for an HTTP 503 `application/json` response
+func (r RefreshLicenseResponse) GetJSON503() *HperrorsErrorInfo {
+	return r.JSON503
+}
+
+// GetBody returns the raw response body bytes
+func (r RefreshLicenseResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r RefreshLicenseResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RefreshLicenseResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r RefreshLicenseResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetSystemBackupSettingsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -144338,8 +148890,8 @@ func (c *ClientWithResponses) SsoOAuthCallbackPostWithResponse(ctx context.Conte
 // Returns a wrapper object for the known response body format(s).
 //
 // Corresponds with GET /auth/sso/{provider} (the `SsoOAuthBegin` operationId).
-func (c *ClientWithResponses) SsoOAuthBeginWithResponse(ctx context.Context, provider string, reqEditors ...RequestEditorFn) (*SsoOAuthBeginResponse, error) {
-	rsp, err := c.SsoOAuthBegin(ctx, provider, reqEditors...)
+func (c *ClientWithResponses) SsoOAuthBeginWithResponse(ctx context.Context, provider string, params *SsoOAuthBeginParams, reqEditors ...RequestEditorFn) (*SsoOAuthBeginResponse, error) {
+	rsp, err := c.SsoOAuthBegin(ctx, provider, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -149601,7 +154153,7 @@ func (c *ClientWithResponses) UploadFileToAppContainerWithBodyWithResponse(ctx c
 // and {"type":"end"} as a text message; answers {"type":"done","data":{...}} or
 // {"type":"error","error":{...}}. Neither the server's nor Traefik's timeouts cut it; a
 // client sends a message at least every 60 seconds. With progress=true, each binary
-// message is followed by {"type":"progress","received":<bytes the copy has taken>}.
+// message is followed by `{"type":"progress","received":<bytes the copy has taken>}`.
 // Without the websocket upgrade, the request is only checked: 204 when the stream would
 // be taken, else the error it would get - which a browser cannot read from a refused upgrade.
 //
@@ -150328,6 +154880,443 @@ func (c *ClientWithResponses) GetAppLogsInfoWithResponse(ctx context.Context, pr
 		return nil, err
 	}
 	return ParseGetAppLogsInfoResponse(rsp)
+}
+
+// AppManagedSettingsGetWithResponse Gets a managed app's settings
+//
+// Where the engine archives, how long it keeps what, when its jobs run, and what it owns of the app.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed (the `AppManagedSettingsGet` operationId).
+func (c *ClientWithResponses) AppManagedSettingsGetWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*AppManagedSettingsGetResponse, error) {
+	rsp, err := c.AppManagedSettingsGet(ctx, projectID, projectEnv, appID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedSettingsGetResponse(rsp)
+}
+
+// AppManagedSettingsUpdateWithBodyWithResponse Updates a managed app's settings
+//
+// Changes the retention, when the base backup and the restore test run, and the restore test's query.
+// A field left out is left as it is.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/managed (the `AppManagedSettingsUpdate` operationId).
+func (c *ClientWithResponses) AppManagedSettingsUpdateWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedSettingsUpdateResponse, error) {
+	rsp, err := c.AppManagedSettingsUpdateWithBody(ctx, projectID, projectEnv, appID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedSettingsUpdateResponse(rsp)
+}
+
+// AppManagedSettingsUpdateWithResponse Updates a managed app's settings
+//
+// Changes the retention, when the base backup and the restore test run, and the restore test's query.
+// A field left out is left as it is.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/managed (the `AppManagedSettingsUpdate` operationId).
+func (c *ClientWithResponses) AppManagedSettingsUpdateWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedSettingsUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedSettingsUpdateResponse, error) {
+	rsp, err := c.AppManagedSettingsUpdate(ctx, projectID, projectEnv, appID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedSettingsUpdateResponse(rsp)
+}
+
+// AppManagedPromoteWithBodyWithResponse Promotes a replica to a managed database's primary
+//
+// In order: what writes now is fenced - kept from starting its server, its service stopped, and
+// seen stopped; the replica is promoted; the engine's jobs move to it, and the other replicas are
+// restarted to follow it. Before the replica is promoted, a failure lifts the fence; once whether it
+// was is not known, the fence stays, and promoting it again finishes the promotion.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/promote (the `AppManagedPromote` operationId).
+func (c *ClientWithResponses) AppManagedPromoteWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedPromoteResponse, error) {
+	rsp, err := c.AppManagedPromoteWithBody(ctx, projectID, projectEnv, appID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedPromoteResponse(rsp)
+}
+
+// AppManagedPromoteWithResponse Promotes a replica to a managed database's primary
+//
+// In order: what writes now is fenced - kept from starting its server, its service stopped, and
+// seen stopped; the replica is promoted; the engine's jobs move to it, and the other replicas are
+// restarted to follow it. Before the replica is promoted, a failure lifts the fence; once whether it
+// was is not known, the fence stays, and promoting it again finishes the promotion.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/promote (the `AppManagedPromote` operationId).
+func (c *ClientWithResponses) AppManagedPromoteWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedPromoteJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedPromoteResponse, error) {
+	rsp, err := c.AppManagedPromote(ctx, projectID, projectEnv, appID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedPromoteResponse(rsp)
+}
+
+// AppManagedCredentialsRefreshWithBodyWithResponse Gives a managed app its archive storage's current credentials
+//
+// The credentials were copied into the app when it was made: after rotating the storage's key, this
+// gives the database the new one. The secrets that changed are mounted again, restarting its task.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/refresh-credentials (the `AppManagedCredentialsRefresh` operationId).
+func (c *ClientWithResponses) AppManagedCredentialsRefreshWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedCredentialsRefreshResponse, error) {
+	rsp, err := c.AppManagedCredentialsRefreshWithBody(ctx, projectID, projectEnv, appID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedCredentialsRefreshResponse(rsp)
+}
+
+// AppManagedCredentialsRefreshWithResponse Gives a managed app its archive storage's current credentials
+//
+// The credentials were copied into the app when it was made: after rotating the storage's key, this
+// gives the database the new one. The secrets that changed are mounted again, restarting its task.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/refresh-credentials (the `AppManagedCredentialsRefresh` operationId).
+func (c *ClientWithResponses) AppManagedCredentialsRefreshWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedCredentialsRefreshJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedCredentialsRefreshResponse, error) {
+	rsp, err := c.AppManagedCredentialsRefresh(ctx, projectID, projectEnv, appID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedCredentialsRefreshResponse(rsp)
+}
+
+// AppManagedReplicaAddWithBodyWithResponse Adds a read replica to a managed database
+//
+// An asynchronous replica on a volume of its own, pinned to a node: seeded from the database's
+// archive, which must be in object storage, then streaming from the database, which is told to
+// let it in first. The database's scripts must be ones that can run a replica.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas (the `AppManagedReplicaAdd` operationId).
+func (c *ClientWithResponses) AppManagedReplicaAddWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedReplicaAddResponse, error) {
+	rsp, err := c.AppManagedReplicaAddWithBody(ctx, projectID, projectEnv, appID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedReplicaAddResponse(rsp)
+}
+
+// AppManagedReplicaAddWithResponse Adds a read replica to a managed database
+//
+// An asynchronous replica on a volume of its own, pinned to a node: seeded from the database's
+// archive, which must be in object storage, then streaming from the database, which is told to
+// let it in first. The database's scripts must be ones that can run a replica.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas (the `AppManagedReplicaAdd` operationId).
+func (c *ClientWithResponses) AppManagedReplicaAddWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedReplicaAddJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedReplicaAddResponse, error) {
+	rsp, err := c.AppManagedReplicaAdd(ctx, projectID, projectEnv, appID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedReplicaAddResponse(rsp)
+}
+
+// AppManagedReplicaRemoveWithResponse Removes a read replica from a managed database
+//
+// The replica's app is deleted, with its directory of its volume.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /projects/{projectID}/{projectEnv}/apps/{appID}/managed/replicas/{memberID} (the `AppManagedReplicaRemove` operationId).
+func (c *ClientWithResponses) AppManagedReplicaRemoveWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, memberID string, reqEditors ...RequestEditorFn) (*AppManagedReplicaRemoveResponse, error) {
+	rsp, err := c.AppManagedReplicaRemove(ctx, projectID, projectEnv, appID, memberID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedReplicaRemoveResponse(rsp)
+}
+
+// AppManagedRestoreWithBodyWithResponse Restores a managed database into a new app
+//
+// To the latest, a time, a restore point or a base backup, inside its restore window. The new app is
+// made from the same template, version and parameters, on the data volume given, and archives to its
+// own prefix; the source is only read. The task returned sees the restore through.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore (the `AppManagedRestore` operationId).
+func (c *ClientWithResponses) AppManagedRestoreWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedRestoreResponse, error) {
+	rsp, err := c.AppManagedRestoreWithBody(ctx, projectID, projectEnv, appID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedRestoreResponse(rsp)
+}
+
+// AppManagedRestoreWithResponse Restores a managed database into a new app
+//
+// To the latest, a time, a restore point or a base backup, inside its restore window. The new app is
+// made from the same template, version and parameters, on the data volume given, and archives to its
+// own prefix; the source is only read. The task returned sees the restore through.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore (the `AppManagedRestore` operationId).
+func (c *ClientWithResponses) AppManagedRestoreWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedRestoreJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedRestoreResponse, error) {
+	rsp, err := c.AppManagedRestore(ctx, projectID, projectEnv, appID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedRestoreResponse(rsp)
+}
+
+// AppManagedRestorePointCreateWithBodyWithResponse Names a moment of a managed database, to restore to exactly
+//
+// The point is made, and listed once the log it is in (the WAL, for Postgres) is archived; it can
+// then be restored to for as long as retention keeps the base backup before it, or until keepUntil,
+// which holds retention back. Names are labels: letters, digits, '.', '_' and '-', at most the
+// engine's limit (63 for Postgres), not starting with "hp-".
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points (the `AppManagedRestorePointCreate` operationId).
+func (c *ClientWithResponses) AppManagedRestorePointCreateWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedRestorePointCreateResponse, error) {
+	rsp, err := c.AppManagedRestorePointCreateWithBody(ctx, projectID, projectEnv, appID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedRestorePointCreateResponse(rsp)
+}
+
+// AppManagedRestorePointCreateWithResponse Names a moment of a managed database, to restore to exactly
+//
+// The point is made, and listed once the log it is in (the WAL, for Postgres) is archived; it can
+// then be restored to for as long as retention keeps the base backup before it, or until keepUntil,
+// which holds retention back. Names are labels: letters, digits, '.', '_' and '-', at most the
+// engine's limit (63 for Postgres), not starting with "hp-".
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points (the `AppManagedRestorePointCreate` operationId).
+func (c *ClientWithResponses) AppManagedRestorePointCreateWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedRestorePointCreateJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedRestorePointCreateResponse, error) {
+	rsp, err := c.AppManagedRestorePointCreate(ctx, projectID, projectEnv, appID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedRestorePointCreateResponse(rsp)
+}
+
+// AppManagedRestorePointDeleteWithResponse Removes a restore point's record
+//
+// The archive is not touched, and the mark stays in the database's log, harmlessly: restores target
+// the point's position, never its name.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points/{name} (the `AppManagedRestorePointDelete` operationId).
+func (c *ClientWithResponses) AppManagedRestorePointDeleteWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, name string, reqEditors ...RequestEditorFn) (*AppManagedRestorePointDeleteResponse, error) {
+	rsp, err := c.AppManagedRestorePointDelete(ctx, projectID, projectEnv, appID, name, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedRestorePointDeleteResponse(rsp)
+}
+
+// AppManagedRestorePointUpdateWithBodyWithResponse Changes how long a restore point is kept, and its note
+//
+// Both as given: a null keepUntil keeps the point no longer, and retention moves on at its next run.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points/{name} (the `AppManagedRestorePointUpdate` operationId).
+func (c *ClientWithResponses) AppManagedRestorePointUpdateWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, name string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedRestorePointUpdateResponse, error) {
+	rsp, err := c.AppManagedRestorePointUpdateWithBody(ctx, projectID, projectEnv, appID, name, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedRestorePointUpdateResponse(rsp)
+}
+
+// AppManagedRestorePointUpdateWithResponse Changes how long a restore point is kept, and its note
+//
+// Both as given: a null keepUntil keeps the point no longer, and retention moves on at its next run.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /projects/{projectID}/{projectEnv}/apps/{appID}/managed/restore-points/{name} (the `AppManagedRestorePointUpdate` operationId).
+func (c *ClientWithResponses) AppManagedRestorePointUpdateWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, name string, body AppManagedRestorePointUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedRestorePointUpdateResponse, error) {
+	rsp, err := c.AppManagedRestorePointUpdate(ctx, projectID, projectEnv, appID, name, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedRestorePointUpdateResponse(rsp)
+}
+
+// AppManagedScriptsGetWithResponse Gets what a managed database's template offers its engine's scripts
+//
+// What the installation's revision of the database's template offers of what its engine owns -
+// its scripts and artifacts - against what the database runs: up-to-date, update-available,
+// incompatible or unavailable, the changes, and the members out of step. A cluster is read on its
+// app; a member is refused.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts (the `AppManagedScriptsGet` operationId).
+func (c *ClientWithResponses) AppManagedScriptsGetWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*AppManagedScriptsGetResponse, error) {
+	rsp, err := c.AppManagedScriptsGet(ctx, projectID, projectEnv, appID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedScriptsGetResponse(rsp)
+}
+
+// AppManagedScriptsUpgradeWithBodyWithResponse Upgrades a managed database's engine scripts
+//
+// Replaces the scripts and artifacts of the database, its members and its verifier with what the
+// installation's revision of its template offers, in one transaction, then deploys each, the member
+// that writes last: each restarts once. The fingerprint is the one reviewed (GET .../managed/scripts);
+// another is refused. A member, a database still restoring, and scripts with nothing to apply are
+// refused.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts/upgrade (the `AppManagedScriptsUpgrade` operationId).
+func (c *ClientWithResponses) AppManagedScriptsUpgradeWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedScriptsUpgradeResponse, error) {
+	rsp, err := c.AppManagedScriptsUpgradeWithBody(ctx, projectID, projectEnv, appID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedScriptsUpgradeResponse(rsp)
+}
+
+// AppManagedScriptsUpgradeWithResponse Upgrades a managed database's engine scripts
+//
+// Replaces the scripts and artifacts of the database, its members and its verifier with what the
+// installation's revision of its template offers, in one transaction, then deploys each, the member
+// that writes last: each restarts once. The fingerprint is the one reviewed (GET .../managed/scripts);
+// another is refused. A member, a database still restoring, and scripts with nothing to apply are
+// refused.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/scripts/upgrade (the `AppManagedScriptsUpgrade` operationId).
+func (c *ClientWithResponses) AppManagedScriptsUpgradeWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedScriptsUpgradeJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedScriptsUpgradeResponse, error) {
+	rsp, err := c.AppManagedScriptsUpgrade(ctx, projectID, projectEnv, appID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedScriptsUpgradeResponse(rsp)
+}
+
+// AppManagedStatusGetWithResponse Gets a managed app's state
+//
+// Archiving, the restore window, the last base backup and restore test, where the archive is,
+// and suggestions, read from the last run of each of the engine's jobs.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/status (the `AppManagedStatusGet` operationId).
+func (c *ClientWithResponses) AppManagedStatusGetWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*AppManagedStatusGetResponse, error) {
+	rsp, err := c.AppManagedStatusGet(ctx, projectID, projectEnv, appID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedStatusGetResponse(rsp)
+}
+
+// AppManagedSwitchGetWithResponse Lists what switching to a restored database would repoint
+//
+// The database this one was restored from, and the apps of the environment that use it: by a
+// variable naming its key, by its id among their previews' databases, or as their deployments'
+// restore point. Only for a restored database, once it is ready.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitchGet` operationId).
+func (c *ClientWithResponses) AppManagedSwitchGetWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, reqEditors ...RequestEditorFn) (*AppManagedSwitchGetResponse, error) {
+	rsp, err := c.AppManagedSwitchGet(ctx, projectID, projectEnv, appID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedSwitchGetResponse(rsp)
+}
+
+// AppManagedSwitchWithBodyWithResponse Switches consumers to a restored database
+//
+// The consumers chosen name this database instead of the one it was restored from: their
+// variables, their previews' databases and their deployments' restore point. Their variables are
+// applied to their running services; with redeploy, each whose variables changed is deployed too.
+// The source keeps running, its jobs paused.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitch` operationId).
+func (c *ClientWithResponses) AppManagedSwitchWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedSwitchResponse, error) {
+	rsp, err := c.AppManagedSwitchWithBody(ctx, projectID, projectEnv, appID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedSwitchResponse(rsp)
+}
+
+// AppManagedSwitchWithResponse Switches consumers to a restored database
+//
+// The consumers chosen name this database instead of the one it was restored from: their
+// variables, their previews' databases and their deployments' restore point. Their variables are
+// applied to their running services; with redeploy, each whose variables changed is deployed too.
+// The source keeps running, its jobs paused.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/switch (the `AppManagedSwitch` operationId).
+func (c *ClientWithResponses) AppManagedSwitchWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedSwitchJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedSwitchResponse, error) {
+	rsp, err := c.AppManagedSwitch(ctx, projectID, projectEnv, appID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedSwitchResponse(rsp)
+}
+
+// AppManagedUnmanageWithBodyWithResponse Makes a managed app an ordinary one
+//
+// Removes the engine's state and the jobs it made, and with them the locks. The database keeps
+// archiving where it did; base backups, retention, the health check and the restore test stop.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/unmanage (the `AppManagedUnmanage` operationId).
+func (c *ClientWithResponses) AppManagedUnmanageWithBodyWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppManagedUnmanageResponse, error) {
+	rsp, err := c.AppManagedUnmanageWithBody(ctx, projectID, projectEnv, appID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedUnmanageResponse(rsp)
+}
+
+// AppManagedUnmanageWithResponse Makes a managed app an ordinary one
+//
+// Removes the engine's state and the jobs it made, and with them the locks. The database keeps
+// archiving where it did; base backups, retention, the health check and the restore test stop.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /projects/{projectID}/{projectEnv}/apps/{appID}/managed/unmanage (the `AppManagedUnmanage` operationId).
+func (c *ClientWithResponses) AppManagedUnmanageWithResponse(ctx context.Context, projectID string, projectEnv string, appID string, body AppManagedUnmanageJSONRequestBody, reqEditors ...RequestEditorFn) (*AppManagedUnmanageResponse, error) {
+	rsp, err := c.AppManagedUnmanage(ctx, projectID, projectEnv, appID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppManagedUnmanageResponse(rsp)
 }
 
 // GetAppNetworkSettingsWithResponse Gets app network settings
@@ -158330,6 +163319,83 @@ func (c *ClientWithResponses) UpdateHivePaaSAppVersionWithResponse(ctx context.C
 	return ParseUpdateHivePaaSAppVersionResponse(rsp)
 }
 
+// GetLicenseWithResponse Gets the license in force
+//
+// The plan and status of the license in force, with the key's dates, how many of each limited
+// kind there are against the plan's limit (max null: no limit), and this installation's ID, which
+// a key must name. A key that is not in force, such as one for another installation, is described
+// too. Of the customer only the name is sent, never the email the key carries. With them are the
+// license portal's pages, for this installation, and whether the daily check for a newer key is on,
+// with how its last check went.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /system/license (the `GetLicense` operationId).
+func (c *ClientWithResponses) GetLicenseWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetLicenseResponse, error) {
+	rsp, err := c.GetLicense(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetLicenseResponse(rsp)
+}
+
+// UpdateLicenseWithBodyWithResponse Installs a license key
+//
+// Verifies a license key and stores it in place of the one stored, whatever its plan, and answers
+// with the license it puts in force. Whitespace in the key is ignored. A key that does not verify,
+// is for another installation, or is past its grace is refused with 412, and the stored key is
+// kept. There is no way to remove a key.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /system/license (the `UpdateLicense` operationId).
+func (c *ClientWithResponses) UpdateLicenseWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateLicenseResponse, error) {
+	rsp, err := c.UpdateLicenseWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateLicenseResponse(rsp)
+}
+
+// UpdateLicenseWithResponse Installs a license key
+//
+// Verifies a license key and stores it in place of the one stored, whatever its plan, and answers
+// with the license it puts in force. Whitespace in the key is ignored. A key that does not verify,
+// is for another installation, or is past its grace is refused with 412, and the stored key is
+// kept. There is no way to remove a key.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /system/license (the `UpdateLicense` operationId).
+func (c *ClientWithResponses) UpdateLicenseWithResponse(ctx context.Context, body UpdateLicenseJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateLicenseResponse, error) {
+	rsp, err := c.UpdateLicense(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateLicenseResponse(rsp)
+}
+
+// RefreshLicenseWithResponse Asks the license portal for a newer key
+//
+// Asks the license portal now whether there is a newer key than the one stored - a renewal, a plan
+// change, a paid key replacing a trial - and installs it, or learns that the key was moved to another
+// installation. Only the stored key and this installation's ID are sent. It asks whether or not the
+// daily check is switched off. Answers with what the portal said and the license in force after it,
+// as GET answers it: none, asking nothing, when no key is stored. A portal that cannot be reached is
+// 503, and one that refuses, or a newer key that cannot be installed, 412; either is recorded as the
+// last check's error.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /system/license/refresh (the `RefreshLicense` operationId).
+func (c *ClientWithResponses) RefreshLicenseWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*RefreshLicenseResponse, error) {
+	rsp, err := c.RefreshLicense(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRefreshLicenseResponse(rsp)
+}
+
 // GetSystemBackupSettingsWithResponse Gets backup settings
 //
 // Returns a wrapper object for the known response body format(s).
@@ -160229,26 +165295,6 @@ func ParseSsoOAuthCallbackResponse(rsp *http.Response) (*SsoOAuthCallbackRespons
 		HTTPResponse: rsp,
 	}
 
-	switch {
-	case rsp.StatusCode == 302:
-		break // No content-type
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest HperrorsErrorInfo
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest HperrorsErrorInfo
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
-
-	}
-
 	return response, nil
 }
 
@@ -160265,26 +165311,6 @@ func ParseSsoOAuthCallbackPostResponse(rsp *http.Response) (*SsoOAuthCallbackPos
 		HTTPResponse: rsp,
 	}
 
-	switch {
-	case rsp.StatusCode == 302:
-		break // No content-type
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest HperrorsErrorInfo
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest HperrorsErrorInfo
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
-
-	}
-
 	return response, nil
 }
 
@@ -160299,26 +165325,6 @@ func ParseSsoOAuthBeginResponse(rsp *http.Response) (*SsoOAuthBeginResponse, err
 	response := &SsoOAuthBeginResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
-	}
-
-	switch {
-	case rsp.StatusCode == 302:
-		break // No content-type
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest HperrorsErrorInfo
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest HperrorsErrorInfo
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
-
 	}
 
 	return response, nil
@@ -172551,6 +177557,793 @@ func ParseGetAppLogsInfoResponse(rsp *http.Response) (*GetAppLogsInfoResponse, e
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedSettingsGetResponse parses an HTTP response from a AppManagedSettingsGetWithResponse call
+func ParseAppManagedSettingsGetResponse(rsp *http.Response) (*AppManagedSettingsGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedSettingsGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppmanageddtoGetManagedSettingsResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedSettingsUpdateResponse parses an HTTP response from a AppManagedSettingsUpdateWithResponse call
+func ParseAppManagedSettingsUpdateResponse(rsp *http.Response) (*AppManagedSettingsUpdateResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedSettingsUpdateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppmanageddtoUpdateManagedSettingsResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedPromoteResponse parses an HTTP response from a AppManagedPromoteWithResponse call
+func ParseAppManagedPromoteResponse(rsp *http.Response) (*AppManagedPromoteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedPromoteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppmanageddtoPromoteManagedMemberResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON412 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedCredentialsRefreshResponse parses an HTTP response from a AppManagedCredentialsRefreshWithResponse call
+func ParseAppManagedCredentialsRefreshResponse(rsp *http.Response) (*AppManagedCredentialsRefreshResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedCredentialsRefreshResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppmanageddtoRefreshManagedCredentialsResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedReplicaAddResponse parses an HTTP response from a AppManagedReplicaAddWithResponse call
+func ParseAppManagedReplicaAddResponse(rsp *http.Response) (*AppManagedReplicaAddResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedReplicaAddResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest AppmanageddtoAddManagedReplicaResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON412 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedReplicaRemoveResponse parses an HTTP response from a AppManagedReplicaRemoveWithResponse call
+func ParseAppManagedReplicaRemoveResponse(rsp *http.Response) (*AppManagedReplicaRemoveResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedReplicaRemoveResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppmanageddtoRemoveManagedReplicaResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedRestoreResponse parses an HTTP response from a AppManagedRestoreWithResponse call
+func ParseAppManagedRestoreResponse(rsp *http.Response) (*AppManagedRestoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedRestoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppmanageddtoRestoreManagedResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedRestorePointCreateResponse parses an HTTP response from a AppManagedRestorePointCreateWithResponse call
+func ParseAppManagedRestorePointCreateResponse(rsp *http.Response) (*AppManagedRestorePointCreateResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedRestorePointCreateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppmanageddtoCreateRestorePointResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedRestorePointDeleteResponse parses an HTTP response from a AppManagedRestorePointDeleteWithResponse call
+func ParseAppManagedRestorePointDeleteResponse(rsp *http.Response) (*AppManagedRestorePointDeleteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedRestorePointDeleteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppmanageddtoDeleteRestorePointResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedRestorePointUpdateResponse parses an HTTP response from a AppManagedRestorePointUpdateWithResponse call
+func ParseAppManagedRestorePointUpdateResponse(rsp *http.Response) (*AppManagedRestorePointUpdateResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedRestorePointUpdateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppmanageddtoUpdateRestorePointResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedScriptsGetResponse parses an HTTP response from a AppManagedScriptsGetWithResponse call
+func ParseAppManagedScriptsGetResponse(rsp *http.Response) (*AppManagedScriptsGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedScriptsGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppmanageddtoGetManagedScriptsResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedScriptsUpgradeResponse parses an HTTP response from a AppManagedScriptsUpgradeWithResponse call
+func ParseAppManagedScriptsUpgradeResponse(rsp *http.Response) (*AppManagedScriptsUpgradeResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedScriptsUpgradeResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppmanageddtoUpgradeManagedScriptsResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedStatusGetResponse parses an HTTP response from a AppManagedStatusGetWithResponse call
+func ParseAppManagedStatusGetResponse(rsp *http.Response) (*AppManagedStatusGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedStatusGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppmanageddtoGetManagedStatusResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedSwitchGetResponse parses an HTTP response from a AppManagedSwitchGetWithResponse call
+func ParseAppManagedSwitchGetResponse(rsp *http.Response) (*AppManagedSwitchGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedSwitchGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppmanageddtoGetManagedSwitchResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON412 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedSwitchResponse parses an HTTP response from a AppManagedSwitchWithResponse call
+func ParseAppManagedSwitchResponse(rsp *http.Response) (*AppManagedSwitchResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedSwitchResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppmanageddtoSwitchManagedResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON412 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppManagedUnmanageResponse parses an HTTP response from a AppManagedUnmanageWithResponse call
+func ParseAppManagedUnmanageResponse(rsp *http.Response) (*AppManagedUnmanageResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppManagedUnmanageResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppmanageddtoUnmanageAppResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest HperrorsErrorInfo
@@ -188845,6 +194638,147 @@ func ParseUpdateHivePaaSAppVersionResponse(rsp *http.Response) (*UpdateHivePaaSA
 			return nil, err
 		}
 		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetLicenseResponse parses an HTTP response from a GetLicenseWithResponse call
+func ParseGetLicenseResponse(rsp *http.Response) (*GetLicenseResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetLicenseResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LicensedtoGetLicenseResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateLicenseResponse parses an HTTP response from a UpdateLicenseWithResponse call
+func ParseUpdateLicenseResponse(rsp *http.Response) (*UpdateLicenseResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateLicenseResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LicensedtoUpdateLicenseResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON412 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRefreshLicenseResponse parses an HTTP response from a RefreshLicenseWithResponse call
+func ParseRefreshLicenseResponse(rsp *http.Response) (*RefreshLicenseResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RefreshLicenseResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LicensedtoRefreshLicenseResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON412 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest HperrorsErrorInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
 
 	}
 

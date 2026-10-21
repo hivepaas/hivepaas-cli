@@ -1,6 +1,6 @@
 {
   "channels": {
-    "beta": "v1.0.0-beta1"
+    "beta": "v1.0.0-beta2"
   },
   "releases": {
     "v1.0.0-beta1": {
@@ -29,6 +29,35 @@
         "windows_arm64": {
           "file": "hivepaas_1.0.0-beta1_windows_arm64.zip",
           "sha256": "39ce655f52d2a100c620840f88d7e7a806b891e07423c8a18aa563dacb2cc69e"
+        }
+      }
+    },
+    "v1.0.0-beta2": {
+      "releaseDate": "2026-10-21",
+      "archives": {
+        "darwin_amd64": {
+          "file": "hivepaas_1.0.0-beta2_darwin_amd64.tar.gz",
+          "sha256": "466eb7e1716d16b5964afd10fa03284588033a809bf165f6b1a6ebec0c66c0ae"
+        },
+        "darwin_arm64": {
+          "file": "hivepaas_1.0.0-beta2_darwin_arm64.tar.gz",
+          "sha256": "7f39012d008f991a418e933236e2b6b00012a2df5a4705fb35c62bf86ae2357b"
+        },
+        "linux_amd64": {
+          "file": "hivepaas_1.0.0-beta2_linux_amd64.tar.gz",
+          "sha256": "9d732765dd56e3e93ab203829ebd7d37b0d6e6971191d7689f1e2139339711c6"
+        },
+        "linux_arm64": {
+          "file": "hivepaas_1.0.0-beta2_linux_arm64.tar.gz",
+          "sha256": "af629536c0f01c90998c90b052ae32f215e45de63632a065d4b32be430157e70"
+        },
+        "windows_amd64": {
+          "file": "hivepaas_1.0.0-beta2_windows_amd64.zip",
+          "sha256": "e67ce8b6bd4a253918372263b3e57ffad84f8f328bdf036a0251ce19a1aecc20"
+        },
+        "windows_arm64": {
+          "file": "hivepaas_1.0.0-beta2_windows_arm64.zip",
+          "sha256": "feb39ac9c50c8663ac4ded18ff31469840f209c2ab5fa3e140fc2999022fb10e"
         }
       }
     }

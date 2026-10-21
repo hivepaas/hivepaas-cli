@@ -44,6 +44,7 @@ hivepaas secret set SENTRY_DSN --scope project   # the project's, for its apps
 hivepaas logs -f --since 10m
 hivepaas status                            # what needs attention on the installation
 hivepaas backup ls && hivepaas backup restore a1b2c3d4 --stop-app
+hivepaas db mark before-v42 -a shop-db   # a managed database's moment, to restore to exactly
 hivepaas preview create --ref feature/checkout
 hivepaas compose up -p shop -e staging     # a compose file's services as apps
 hivepaas env set LOG_LEVEL=debug
@@ -85,7 +86,8 @@ hivepaas function deploy                            # linked to it: no flags
 | `make spec-check SPEC=<file>` | build and test against another spec, as hivepaas's CI does for every change of its API |
 | `make release-manifest TAG=<tag>` | add a release to `release.json`, the list `hivepaas update` installs from: [docs/RELEASING.md](docs/RELEASING.md) |
 | `make keys-check RELEASEKEYS=<dir>` | the CLI trusts the release keys hivepaas signs with |
-| `make e2e` | the built CLI against a throwaway installation: the dashboard's `e2e/env/up.sh` first, then `HP_E2E_BASE_URL=http://localhost:10100`; [the design](docs/superpowers/specs/2026-10-09-cli-e2e-design.md) |
+| `make docs` | the docs' command reference, from each command's help, into `hivepaas-website` beside this checkout (`DOCS_DIR=<dir>` elsewhere) |
+| `make e2e` | the built CLI against a throwaway installation: the dashboard's `e2e/env/up.sh` first, then `HP_E2E_BASE_URL=http://localhost:10010`; [the design](docs/superpowers/specs/2026-10-09-cli-e2e-design.md) |
 
 A command that writes an object back - the deployment settings, the environment
 variables - carries every field of it through `internal/carry`, whose tests fail on

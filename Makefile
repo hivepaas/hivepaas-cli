@@ -1,7 +1,7 @@
 VERSION ?= dev
 LDFLAGS := -s -w -X github.com/hivepaas/hivepaas-cli/internal/version.Version=$(VERSION)
 
-.PHONY: build test lint e2e gen update-spec spec-check release-manifest keys-check
+.PHONY: build test lint e2e gen update-spec spec-check release-manifest keys-check docs
 
 build:
 	go build -ldflags "$(LDFLAGS)" -o bin/hivepaas ./cmd/hivepaas
@@ -49,3 +49,10 @@ release-manifest:
 # RELEASEKEYS=<hivepaas>/hivepaas_app/pkg/releasesig/releasekeys.
 keys-check:
 	./scripts/keys-check.sh
+
+# The docs' command reference, from the CLI's own help: a page for each command,
+# written into hivepaas-website's docs/docs/cli/commands, beside this checkout
+# unless DOCS_DIR says where.
+DOCS_DIR ?= ../hivepaas-website/docs/docs/cli/commands
+docs:
+	go run ./tools/clidocs $(DOCS_DIR)

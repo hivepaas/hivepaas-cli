@@ -69,7 +69,7 @@ jobs:
       - name: The CLI's end-to-end tests
         working-directory: hivepaas-cli
         env:
-          HP_E2E_BASE_URL: http://localhost:10100
+          HP_E2E_BASE_URL: http://localhost:10010
         run: make e2e
 
       - name: What the backend and its agent logged

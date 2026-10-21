@@ -6934,9 +6934,13 @@ type ApptemplatedtoAppTemplateCapabilitiesResp struct {
 // ApptemplatedtoAppTemplateCatalogResp defines model for apptemplatedto.AppTemplateCatalogResp.
 type ApptemplatedtoAppTemplateCatalogResp struct {
 	Categories *[]ApptemplatedtoAppTemplateCategoryResp `json:"categories"`
-	Revision   string                                   `json:"revision"`
-	Source     string                                   `json:"source"`
-	Tags       *[]ApptemplatedtoAppTemplateTagResp      `json:"tags"`
+
+	// ManagedCount ManagedCount is how many managed templates the store would show: what
+	// listing with managed=true returns.
+	ManagedCount int                                 `json:"managedCount"`
+	Revision     string                              `json:"revision"`
+	Source       string                              `json:"source"`
+	Tags         *[]ApptemplatedtoAppTemplateTagResp `json:"tags"`
 }
 
 // ApptemplatedtoAppTemplateCategoryResp defines model for apptemplatedto.AppTemplateCategoryResp.
@@ -15871,6 +15875,9 @@ type ListAppTemplatesParams struct {
 
 	// Search matches name, title, tagline, tags and aliases, ignoring case
 	Search *string `form:"search,omitempty" json:"search,omitempty"`
+
+	// Managed true keeps the managed templates: databases HivePaaS backs up and restores
+	Managed *bool `form:"managed,omitempty" json:"managed,omitempty"`
 
 	// Sort name (the default), stars, trending or added; a leading minus reverses it
 	Sort *string `form:"sort,omitempty" json:"sort,omitempty"`
@@ -47813,6 +47820,18 @@ func NewListAppTemplatesRequest(server string, params *ListAppTemplatesParams) (
 		if params.Search != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "search", *params.Search, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Managed != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "managed", *params.Managed, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
